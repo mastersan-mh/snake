@@ -76,7 +76,7 @@ void text_cursor_setxy(char page,char x,char y)
  * x             -столбец
  * y             -строка
  */
-void text_cursor_get(char page,char *line_st,char *line_end,char *x,char *y)
+void text_cursor_get(int page, int *line_st, int *line_end, int *x, int *y)
 {
 }
 
@@ -114,7 +114,7 @@ void text_fill_screen()
  * y             -координата Y
  * s             -указатель на строку
  */
-void text_writeATR(char x,char y,char *s)
+void text_writeATR(char x, char y, const char *s)
 {
 }
 

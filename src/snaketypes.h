@@ -14,7 +14,6 @@
 #include <stdio.h>
 
 #define LEVEL_MAX 11
-#define CHART_RMAX 10
 
 #define MAP_SX 80
 #define MAP_SY 24
@@ -36,15 +35,6 @@ typedef enum
     DIRECTION_WEST,
     DIRECTION_EAST
 } direction_t;
-
-//конопля
-#define OBJ_MARIJUANA 0
-//посаженая конопля
-#define OBJ_MARIJUANAP 1
-//слабительное
-#define OBJ_PURGEN 2
-//дерьмо
-#define OBJ_SHIRT  3
 
 typedef unsigned long DWORD;
 typedef long SDWORD;
@@ -95,25 +85,5 @@ typedef struct obj_st
     int id;
     int timer;
 } obj_t;
-
-/**
- * @brief запись таблицы победителей
- */
-typedef struct
-{
-    char     name[16];
-    uint32_t weight;
-    uint32_t scores;
-} chartrec_t;
-
-/**
- * @brief таблица победителей
- */
-typedef struct
-{
-    FILE *F;
-    chartrec_t r[CHART_RMAX];
-    short num;//количество записей
-} chart_t;
 
 #endif /* SRC_SNAKETYPES_H_ */

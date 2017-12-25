@@ -5,6 +5,7 @@
 #include "snaketypes.h"
 #include "menu.h"
 #include "game.h"
+#include "chart.h"
 
 #include "fakefunc.h"
 #include "_text.h"
@@ -84,8 +85,7 @@ int menu_main()
 /////////////////////////////////////////////////
 int menu_newgame0(){
     snake_init(&info_snake[0]);
-    game_main();
-    snake_done();
+    game_start();
     return(IMENU_MAIN);
 }
 
@@ -94,8 +94,7 @@ int menu_newgame0(){
 /////////////////////////////////////////////////
 int menu_newgame1(){
     snake_init(&info_snake[1]);
-    game_main();
-    snake_done();
+    game_start();
     return(IMENU_MAIN);
 }
 
@@ -104,29 +103,35 @@ int menu_newgame1(){
 /////////////////////////////////////////////////
 int menu_newgame2(){
     snake_init(&info_snake[2]);
-    game_main();
-    snake_done();
+    game_start();
     return(IMENU_MAIN);
 }
 
 int menu_chart(){
     char str[12];
-    int count;
-    DWORD lev;
+    size_t row;
+    int lev;
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
     text.c.atr=0x09;
     text_writeATR(20+ 1,7+0,"МЕСТО ИМЯ             ФРАГИ ВЕС   СТАТУС");
-    for(count=0;count<chart.num;count++){
-        lev=chart.r[count].scores/SCORES_PER_LEVEL;
-        if(lev>LEVEL_MAX-1) lev=LEVEL_MAX-1;
 
-        text_writeATR(20+ 1,7+1+count,str_WORD2strDEC(str,count+1));
-        text_writeATR(20+ 7,7+1+count,chart.r[count].name);
-        text_writeATR(20+23,7+1+count,str_WORD2strDEC(str,chart.r[count].scores));
-        text_writeATR(20+29,7+1+count,str_WORD2strDEC(str,chart.r[count].weight));
-        text_writeATR(20+35,7+1+count,level[lev]);
+    size_t len = chart_len();
+
+    for(row = 1; row <= len; ++row)
+    {
+        const chartrec_t *rec = chart_row_get(row - 1);
+        lev = rec->scores/SCORES_PER_LEVEL;
+        if(lev > LEVEL_MAX - 1)
+            lev = LEVEL_MAX - 1;
+
+
+        text_writeATR(20 +  1, 7 + row, str_WORD2strDEC(str, row));
+        text_writeATR(20 +  7, 7 + row, rec->name);
+        text_writeATR(20 + 23, 7 + row, str_WORD2strDEC(str,rec->scores));
+        text_writeATR(20 + 29, 7 + row, str_WORD2strDEC(str,rec->weight));
+        text_writeATR(20 + 35, 7 + row, level[lev]);
     }
 
     text.c.atr=0x5F;
@@ -194,10 +199,10 @@ void menu_snake_die(void)
     text_writeATR(30,17," **              ** ");
     text_writeATR(30,18,"   **************   ");
     text_writeATR(26,20,"СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_writeATR(26+20,20,str_WORD2strDEC(str,snake.scores));
+    text_writeATR(26+20,20,str_WORD2strDEC(str,player_scores()));
 
-    rec.weight=snake.weight;
-    rec.scores=snake.scores;
+    rec.weight=player_weight();
+    rec.scores=player_scores();
     rec.name[0]=0x00;
 
     if(!chart_top(&rec)){//не попали в 10 лучших
@@ -249,9 +254,8 @@ void menu_snake_die(void)
 
 static int Imenu = IMENU_MAIN;
 
-int menu(void)
+void menu(void)
 {
-    int quit = 0;
     switch(Imenu)
     {
         case(IMENU_MAIN    ): Imenu = menu_main();break;
@@ -260,7 +264,6 @@ int menu(void)
         case(IMENU_NEWGAME2): Imenu = menu_newgame2();break;
         case(IMENU_CHART   ): Imenu = menu_chart();break;
         case(IMENU_HELP    ): Imenu = menu_help();break;
-        case(IMENU_QUIT    ): quit = 1;
+        case(IMENU_QUIT    ): game_quit(); break;
     }
-    return quit;
 }

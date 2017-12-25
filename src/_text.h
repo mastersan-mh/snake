@@ -36,12 +36,12 @@ void text_init80X25X8();
 void text_videopage_set(char page);
 void text_blink(char on);
 void text_cursor_set(char line_st,char line_end);
-void text_cursor_get(char page,char *line_st,char *line_end,char *x,char *y);
+void text_cursor_get(int page, int *line_st, int *line_end, int *x, int *y);
 void text_cursor_setxy(char page,char x,char y);
 
-void text_setch(char x,char y);
-void text_setchchr(char x,char y);
+void text_setch(char x, char y);
+void text_setchchr(char x, char y);
 void text_fill_screen();
-void text_writeATR(char x,char y,char *s);
+void text_writeATR(char x, char y, const char *s);
 
 #endif

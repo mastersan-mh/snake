@@ -20,6 +20,6 @@
 
 void menu_snake_die(void);
 
-int menu(void);
+void menu(void);
 
 #endif /* SRC_MENU_H_ */
