@@ -205,7 +205,7 @@ void menu_snake_die(void)
     rec.scores=player_scores();
     rec.name[0]=0x00;
 
-    if(!chart_top(&rec)){//не попали в 10 лучших
+    if(!chart_in_chart(&rec)){//не попали в 10 лучших
         text_writeATR(35,21,"ТЫ ХУДШИЙ!");
         if(!getch())getch();
     }
@@ -237,7 +237,7 @@ void menu_snake_die(void)
              }
                 break;
                 case(KB_ENTER):
-             chart_newrec(&rec);
+             chart_insert(&rec);
                 quit=1;
                 break;
                 default:{

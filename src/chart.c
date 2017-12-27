@@ -15,53 +15,78 @@
  */
 typedef struct
 {
-    FILE *F;
     chartrec_t r[CHART_RMAX];
-    short num;//количество записей
+    int num;//количество записей
 } chart_t;
 
 static chart_t chart;
 
-//////////////////////////////////////////////////
-//прочитать файл с таблицей
-//////////////////////////////////////////////////
+/*
+ * прочитать файл с таблицей
+ */
 void chart_load(void)
 {
-    chart.num=0;
-    if((chart.F=fopen("snake.frg","rb"))!=NULL){ //файл присутствует
-        do{
-            if(fread(&chart.r[chart.num],sizeof(chartrec_t),1,chart.F)==1) chart.num++;
-            else break;
-        }while(chart.num<CHART_RMAX);
-        fclose(chart.F);
+    FILE *F;
+    chart.num = 0;
+    if((F = fopen("snake.frg","rb")) == NULL)
+    {
+        return;
     }
+
+    do{
+        if(fread(&chart.r[chart.num], sizeof(chartrec_t), 1, F) == 1)
+        {
+            chart.num++;
+        }
+        else
+        {
+            break;
+        }
+    }while(chart.num < CHART_RMAX);
+    fclose(F);
 }
 
-//////////////////////////////////////////////////
-//запмсать таблицу в файл
-//////////////////////////////////////////////////
+/**
+ * @brief Write table to file
+ */
 void chart_save(void)
 {
-    if(chart.num){
-        if((chart.F=fopen("snake.frg","wb"))!=NULL){
-            fwrite(chart.r,sizeof(chartrec_t)*chart.num,1,chart.F);
-            fclose(chart.F);
-        }
+    FILE *F;
+    if(chart.num == 0)
+    {
+        return;
     }
+
+    if((F = fopen("snake.frg","wb")) == NULL)
+    {
+        return;
+    }
+    fwrite(chart.r, sizeof(chartrec_t), chart.num, F);
+    fclose(F);
 }
 
-//////////////////////////////////////////////////
-//добавить игрока в таблицу
-//////////////////////////////////////////////////
-void chart_newrec(chartrec_t *rec)
+/**
+ * @brief insert player's scores into chart
+ */
+void chart_insert(const chartrec_t *rec)
 {
-    short count,c;
+    int count;
+    int i;
     count=0;
-    while(count<chart.num && rec->scores<chart.r[count].scores)count++;
-    if(count>=CHART_RMAX)return;//не вошли в таблицу
-    if(chart.num<CHART_RMAX)chart.num++;
-    for(c=chart.num-1;c>count;c--) chart.r[c]=chart.r[c-1];
-    chart.r[count]=*rec;
+    while(count < chart.num && rec->scores < chart.r[count].scores)
+    {
+        count++;
+    }
+    if(count >= CHART_RMAX)
+    {
+        return; /* out of chart */
+    }
+    chart.num++;
+    for(i = chart.num - 1; i > count; --i)
+    {
+        chart.r[i] = chart.r[i - 1];
+    }
+    chart.r[count] = *rec;
 }
 
 size_t chart_len(void)
@@ -75,23 +100,30 @@ size_t chart_len(void)
 const chartrec_t * chart_row_get(size_t row)
 {
     if(row >= chart.num)
+    {
         return NULL;
+    }
     return &chart.r[row];
 }
 
-
-//////////////////////////////////////////////////
-//попали в таблицу рекордов или нет
-//вход:
-//rec - данные игрока
-//выход:
-//0 - не попали
-//1 - попали
-//////////////////////////////////////////////////
-int chart_top(chartrec_t *rec)
+/**
+ * попали в таблицу рекордов или нет
+ * вход:
+ * rec - данные игрока
+ * выход:
+ * 0 - не попали
+ * 1 - попали
+ */
+int chart_in_chart(const chartrec_t *rec)
 {
-    int count=0;
-    while(count<chart.num && rec->scores<chart.r[count].scores)count++;
-    if(count>=CHART_RMAX)return(0);//не вошли в таблицу
-    return(1);
+    int count = 0;
+    while(count < chart.num && rec->scores < chart.r[count].scores)
+    {
+        count++;
+    }
+    if(count >= CHART_RMAX)
+    {
+        return 0; /* out of chart */
+    }
+    return 1;
 }
