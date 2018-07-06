@@ -251,7 +251,7 @@ void snake_init(const snake_pattern_t * pat)
     snake.H = NULL;
     snake.movedir = pat->dir;
     snake.level = 0;
-    snake.die = 0;
+    snake.dead = 0;
     snake.weight = 0;
     snake.scores = 0;
 
@@ -323,7 +323,7 @@ static void snake_draw()
     P=snake.H;
     while(P)
     {
-        if(snake.die) text.c.atr=0x44;
+        if(snake.dead) text.c.atr=0x44;
         else          text.c.atr=0x1F;
         if(!P->prev) text.c.chr=0x01;//голова
         else{
@@ -457,49 +457,49 @@ static void snake_think(void)
             snake.H      =p;
             p=p->next;//прошлая голова
             switch(snake.movedir){
-                case(DIRECTION_NORTH):snake.H->x=p->x  ;snake.H->y=p->y-1;break;
-                case(DIRECTION_SOUTH):snake.H->x=p->x  ;snake.H->y=p->y+1;break;
-                case(DIRECTION_WEST):snake.H->x=p->x-1;snake.H->y=p->y  ;break;
-                case(DIRECTION_EAST):snake.H->x=p->x+1;snake.H->y=p->y  ;break;
+                case DIRECTION_NORTH: snake.H->x=p->x  ; snake.H->y=p->y-1; break;
+                case DIRECTION_SOUTH: snake.H->x=p->x  ; snake.H->y=p->y+1; break;
+                case DIRECTION_WEST : snake.H->x=p->x-1; snake.H->y=p->y  ; break;
+                case DIRECTION_EAST : snake.H->x=p->x+1; snake.H->y=p->y  ; break;
             }
         }
     }
     //проверка на самопересечение
     pt=snake.H;
-    while(pt && !snake.die){
+    while(pt && !snake.dead){
         p=pt->next;
-        while(p && !snake.die){
-            if(pt->x==p->x && pt->y==p->y) snake.die=1;
+        while(p && !snake.dead){
+            if(pt->x==p->x && pt->y==p->y) snake.dead=1;
             p=p->next;
         }
         pt=pt->next;
     }
-    //проверка на выход за границу карты
+    /* проверка на выход за границу карты */
     if(snake.H->x<0 || MAP_SX<=snake.H->x
-            || snake.H->y<0 || MAP_SY<=snake.H->y) snake.die=1;
+            || snake.H->y<0 || MAP_SY<=snake.H->y) snake.dead=1;
 }
 
 void snake_die(void)
 {
-    snake.die = true;
+    snake.dead = true;
 }
 
 bool snake_is_dead(void)
 {
-    return snake.die;
+    return snake.dead;
 }
 
-//////////////////////////////////////////////////
-//установить новое направление движние
-//вход:
-//player  - змея
-//movedir - направление
-//////////////////////////////////////////////////
+/**
+ * @brief установить новое направление движние
+ * @param[in] player    змея
+ * @param[in] movedir   направление
+ */
 void player_setdir(direction_t movedir)
 {
     snake_seg_t *neck;//шея змеи :)
     neck = snake.H->next;
-    switch(movedir){
+    switch(movedir)
+    {
         case DIRECTION_NORTH:
         case DIRECTION_SOUTH:
             if(!neck || neck->x!=snake.H->x)

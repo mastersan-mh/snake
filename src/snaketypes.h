@@ -20,14 +20,6 @@
 
 #define SCORES_PER_LEVEL 100
 
-#define KB_BACKSPACE 8
-#define KB_ENTER 13
-#define KB_ESC   27
-#define KB_UP    72
-#define KB_DN    80
-#define KB_LF    75
-#define KB_RT    77
-
 typedef enum
 {
     DIRECTION_NORTH,
@@ -70,7 +62,7 @@ typedef struct
     /* направление движения */
     direction_t movedir;
     int       level;   //уровень развитости
-    bool      die;     //умерла?
+    bool      dead;     //умерла?
     long      weight;  //вес змеи
     long      scores;  //очки
 } snake_t;

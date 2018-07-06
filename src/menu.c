@@ -2,6 +2,7 @@
  * menu.c
  */
 
+#include "io.h"
 #include "snaketypes.h"
 #include "menu.h"
 #include "game.h"
@@ -50,31 +51,40 @@ int menu_main()
     text_writeATR( 7,22,"Mad House Software");
     text_writeATR(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
 
-    for(;;){
+    for(;;)
+    {
         text.c.atr=0x05;
         text_writeATR((80-10)/2-2,12+sub,"->");
         text_writeATR((80-10)/2+10,12+sub,"<-");
-        key=getch();
+        key=io_getch();
         text_writeATR((80-10)/2-2,12+sub,"  ");
         text_writeATR((80-10)/2+10,12+sub,"  ");
-        switch(key){
-            case(0x00):
-            key=getch();
-            switch(key){
-                case(KB_UP):if(sub>0) sub--;else sub=5;break;
-                case(KB_DN):if(sub<5) sub++;else sub=0;
-            }
-            break;
-                case(KB_ENTER):
-            switch(sub){
-                case(0):return(IMENU_NEWGAME0);
-                case(1):return(IMENU_NEWGAME1);
-                case(2):return(IMENU_NEWGAME2);
-                case(3):return(IMENU_CHART);
-                case(4):return(IMENU_HELP);
-                case(5):return(IMENU_QUIT);
-            }
+
+        switch(key)
+        {
+            case(IO_KB_UP):
+            {
+                if(sub>0) sub--; else sub=5;
                 break;
+            }
+            case(IO_KB_DN):
+            {
+                if(sub<5) sub++; else sub=0;
+                break;
+            }
+            case(IO_KB_ENTER):
+            {
+                switch(sub)
+                {
+                    case 0:return(IMENU_NEWGAME0);
+                    case 1:return(IMENU_NEWGAME1);
+                    case 2:return(IMENU_NEWGAME2);
+                    case 3:return(IMENU_CHART);
+                    case 4:return(IMENU_HELP);
+                    case 5:return(IMENU_QUIT);
+                }
+                break;
+            }
         }
     }
     return IMENU_MAIN;
@@ -138,7 +148,7 @@ int menu_chart(){
     text_writeATR((80-29)/2,22,anti_war);
     text.c.atr=0x8F;
     text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
-    if(!getch())getch();
+    io_getch();
     return(IMENU_MAIN);
 }
 
@@ -166,7 +176,9 @@ int menu_help(void)
 
     text.c.atr=0x8F;
     text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
-    if(!getch())getch();
+
+    io_getch();
+
     return(IMENU_MAIN);
 }
 
@@ -207,47 +219,56 @@ void menu_snake_die(void)
 
     if(!chart_in_chart(&rec)){//не попали в 10 лучших
         text_writeATR(35,21,"ТЫ ХУДШИЙ!");
-        if(!getch())getch();
+        io_getch();
+        return;
     }
-    else{
-        text_writeATR(26,21,"ИМЯ>");
 
-        count=0;
-        while(!quit){
-            text.c.atr=0x0F;
-            c = 0;
-            while(c<count && rec.name[c]){
-                text.c.chr=rec.name[c];
-                text_setch(30+c,21);
-                c++;
-            }
-            text.c.chr=176;
-            while(c<16){
-                text_setch(30+c,21);
-                c++;
-            }
+    text_writeATR(26,21,"ИМЯ>");
 
-            key=getch();
-            switch(key){
-                case(0x00):getch();break;
-                case(KB_BACKSPACE):
-             if(count>0){
-                 rec.name[count]=0x00;
-                 count--;
-             }
+    count=0;
+    while(!quit)
+    {
+        text.c.atr=0x0F;
+        c = 0;
+        while(c<count && rec.name[c]){
+            text.c.chr = rec.name[c];
+            text_setch(30+c,21);
+            c++;
+        }
+        text.c.chr = 176;
+        while(c<16)
+        {
+            text_setch(30+c,21);
+            c++;
+        }
+
+        key = io_getch();
+        switch(key)
+        {
+            case IO_KB_BACKSPACE:
+            {
+                if(count>0){
+                    rec.name[count]=0x00;
+                    --count;
+                }
                 break;
-                case(KB_ENTER):
-             chart_insert(&rec);
+            }
+            case IO_KB_ENTER:
+            {
+                chart_insert(&rec);
                 quit=1;
                 break;
-                default:{
-                    if(count<15 && str_char_find1st(valid_chars,key)!=-1){
-                        rec.name[count]=key;
-                        count++;
-                        rec.name[count]=0x00;
-                    }
+            }
+            default:
+            {
+                if(count<15 && str_char_find1st(valid_chars,key)!=-1)
+                {
+                    rec.name[count] = key;
+                    ++count;
+                    rec.name[count] = 0x00;
                 }
-            }//end switch(key)
+                break;
+            }
         }
     }
 }

@@ -5,6 +5,7 @@
  *      Author: mastersan
  */
 
+#include "io.h"
 #include "game.h"
 
 #include "snaketypes.h"
@@ -22,9 +23,6 @@
 #include <time.h>
 
 #include <stdlib.h>
-//#include <ncurses.h>
-
-
 
 static game_t game = {};
 
@@ -134,6 +132,7 @@ void game_start(void)
     text_fill_screen();
     game.timing = 5;
     game.state = GSTATE_START;
+    game.showmenu = false;
 }
 
 void game_stop(void)
@@ -147,9 +146,9 @@ void game_events_pump(void)
 
     mhtime_delay(game.delay);
 
-    if(kbhit())
+    if(io_kbhit())
     {
-        key = getch();
+        key = io_getch();
         switch(key)
         {
             case('P'):
@@ -157,10 +156,9 @@ void game_events_pump(void)
             {
                 text.c.atr = 0x8F;
                 text_writeATR((80-13)/2,12,"-=P A U S E=-");
-                do{
-                    key = getch();
-                    if(key == 0)
-                        getch();
+                do
+                {
+                    key = io_getch();
                 } while(key != 'P' && key != 'p');
                 text.c.atr=0x1F;
                 text_writeATR((80-13)/2,12,"             ");
@@ -174,7 +172,6 @@ void game_events_pump(void)
                     game.timing++;
                 }
                 game.showtiming = 110 - game.timing;
-
                 break;
             }
             case('-'):
@@ -187,38 +184,30 @@ void game_events_pump(void)
                 game.showtiming = 110 - game.timing;
                 break;
             }
-            case 0x00 :
-            {
-                key = getch();
-                switch(key){
-                    case KB_UP:
-                        player_setdir(DIRECTION_NORTH);
-                        game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
-                        break;
-                    case KB_DN:
-                        player_setdir(DIRECTION_SOUTH);
-                        game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
-                        break;
-                    case KB_LF:
-                        player_setdir(DIRECTION_WEST);
-                        game.delay = game.timing;
-                        break;
-                    case KB_RT:
-                        player_setdir(DIRECTION_EAST);
-                        game.delay = game.timing;
-                        break;
-                }
+            case IO_KB_UP:
+                player_setdir(DIRECTION_NORTH);
+                game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
                 break;
-
-            }
-            case(KB_ESC):
+            case IO_KB_DN:
+                player_setdir(DIRECTION_SOUTH);
+                game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
+                break;
+            case IO_KB_LF:
+                player_setdir(DIRECTION_WEST);
+                game.delay = game.timing;
+                break;
+            case IO_KB_RT:
+                player_setdir(DIRECTION_EAST);
+                game.delay = game.timing;
+                break;
+            case(IO_KB_ESC):
             {
                 text.c.atr = 0x0F;
                 text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]");
-                do{
-                    key = getch();
-                    if(!key) getch();
-                }while(!key);
+                do
+                {
+                    key = io_getch();
+                }while(key == IO_KB_NOKEY);
                 if(key=='Y' || key=='y')
                 { /* клавиша 'Y' */
                     snake_die();
@@ -322,6 +311,7 @@ void game_draw(void)
         {
 
             case GSTATE_NO:
+                game.showmenu = true;
                 break;
             case GSTATE_START:
                 break;

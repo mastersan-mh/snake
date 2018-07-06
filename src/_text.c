@@ -10,6 +10,7 @@
 #define TEXT_C
 
 #include "_text.h"
+#include <curses.h>
 
 struct TTEXT text = {};
 
@@ -31,15 +32,6 @@ void text_init80X25X8(){
  * page      -номер активной страницы[0..7]
  */
 void text_videopage_set(char page)
-{
-}
-
-/**
- * включить/выключить бит мигания
- * вход:
- * on       -вкл/выкл (0/1)
- */
-void text_blink(char on)
 {
 }
 
@@ -114,8 +106,11 @@ void text_fill_screen()
  * y             -координата Y
  * s             -указатель на строку
  */
-void text_writeATR(char x, char y, const char *s)
+void text_writeATR(int x, int y, const char *s)
 {
+    int res = mvprintw(y, x, s);
+    if(res != 0)
+        fprintf(stderr, "res = %d\n", res);
 }
 
 #endif

@@ -8,7 +8,4 @@
 #ifndef SRC_FAKEFUNC_H_
 #define SRC_FAKEFUNC_H_
 
-int kbhit(void);
-int getch(void);
-
 #endif /* SRC_FAKEFUNC_H_ */

@@ -3,10 +3,12 @@
 //змея
 //
 
+#include "io.h"
 #include "game.h"
 
 int main()
 {
+    io_init();
     game_init();
     while(!game_is_quit())
     {
@@ -15,5 +17,6 @@ int main()
         game_draw();
     }
     game_done();
+    io_done();
     return 0 ;
 }
