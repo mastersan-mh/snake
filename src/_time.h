@@ -1,27 +1,13 @@
-/****************************************************************************/
-/*                                                                          */
-/*        Модуль работы с системным таймером                                */
-/*        version 1.00                                                      */
-/*                                                                          */
-/*        2002, MH Software(r) Corporation                                  */
-/*        Author: Master San[MH]                                            */
-/*                                                                          */
-/****************************************************************************/
-#ifndef __TIME_H
-#define __TIME_H
+/**
+ * system timer
+ */
+#ifndef SRC_TIME_H_
+#define SRC_TIME_H_
 
-typedef struct Smhtime
-{
-    unsigned char h ;                      //часы
-    unsigned char m ;                      //минуты
-    unsigned char s ;                      //секунды
-    unsigned char ms;                      //милисекунды
-} Tmhtime;
+typedef unsigned long game_time_s_t;
+typedef unsigned long game_time_ms_t;
 
-extern Tmhtime mhtime;
-
-void mhtime_get();
-void mhtime_set();
-void mhtime_delay(short t);
+game_time_s_t system_getTime_realTime_s(void);
+game_time_ms_t system_getTime_realTime_ms(void);
 
 #endif

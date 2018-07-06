@@ -1,14 +1,6 @@
-/****************************************************************************
- *                                                                          *
- *        Модуль работы с текстовым режимом int 10h fn 3h REAL MODE         *
- *                                                                          *
- *        2005 MH Software(r) Corporation                                   *
- *        Author: Master San[MH]                                            *
- *                                                                          *
- ****************************************************************************/
-#ifndef TEXT_C
-#define TEXT_C
-
+/**
+ * text
+ */
 #include "_text.h"
 #include <curses.h>
 
@@ -17,69 +9,45 @@ struct TTEXT text = {};
 /**
  * инициализация текстового режима
  */
-void text_init80X25X8(){
+void text_init80X25X8(void)
+{
     text.c.chr=0x00;
     text.c.atr=0x00;
-    text.WIN.x0=0;
-    text.WIN.y0=0;
-    text.WIN.x1=TEXT_SCRsx-1;
-    text.WIN.y1=TEXT_SCRsy-1;
 }
 
 /**
- * переключить видеостраницу
- * вход:
- * page      -номер активной страницы[0..7]
+ * @brief Put the char with it attributes (clipped)
+ * @param[in] x		coord. x
+ * @param[in] y         coord. x
  */
-void text_videopage_set(char page)
+void text_setch(int x, int y)
 {
-}
-
-/**
- * установка типа курсора
- * вход:
- * line_st       -строка начала курсора(значимые биты 0-4)
- * line_end      -строка конца курсора(значимые биты 0-4)
- */
-void text_cursor_set(char line_st, char line_end)
-{
-    line_st  &= 31;//значимые биты 0-4
-    line_end &= 31;//значимые биты 0-4
-}
-
-/**
- * установка позиции курсора
- * вход:
- * page          -видеостраница
- * x             -столбец
- * y             -строка
- */
-void text_cursor_setxy(char page,char x,char y)
-{
-}
-
-/**
- * получить состояние курсора
- * вход:
- * page          -видеостраница
- * выход:
- * line_st       -строка начала курсора(значимые биты 0-4)
- * line_end      -строка конца курсора(значимые биты 0-4)
- * x             -столбец
- * y             -строка
- */
-void text_cursor_get(int page, int *line_st, int *line_end, int *x, int *y)
-{
-}
-
-/**
- * поместить символ с атрибутами на экран(с клиппингом)
- * вход:
- * x             -координата X
- * y             -координата Y
- */
-void text_setch(char x,char y)
-{
+    int res = -1;
+    char tmp[2] = {0, 0};
+    switch(text.c.chr)
+    {
+        case 0x01: res = mvprintw(y, x, "0"); break; /* голова */
+        case '*' : res = mvprintw(y, x, "*"); break; /* хвост */
+        case 186 : res = mvprintw(y, x, "*"); break;
+        case 205 : res = mvprintw(y, x, "*"); break;
+        case 201 : res = mvprintw(y, x, "*"); break;
+        case 187 : res = mvprintw(y, x, "*"); break;
+        case 200 : res = mvprintw(y, x, "*"); break;
+        case 188 : res = mvprintw(y, x, "*"); break;
+        case 0   : res = mvprintw(y, x, " "); break;
+        case ' ' : res = mvprintw(y, x, " "); break;
+        case 0x05: res = mvprintw(y, x, "m"); break; /* OBJ_MARIJUANA */
+        case 0x06: res = mvprintw(y, x, "M"); break; /* OBJ_MARIJUANAP */
+        case 0x0B: res = mvprintw(y, x, "P"); break; /* OBJ_PURGEN */
+        case '@' : res = mvprintw(y, x, "@"); break; /* OBJ_SHIRT */
+        case 176 : res = mvprintw(y, x, "#"); break; /*  */
+        default:
+            tmp[0] = text.c.chr;
+            res = mvprintw(y, x, tmp);
+            break;
+    }
+    if(res != 0)
+        fprintf(stderr, "res = %d\n", res);
 }
 
 /**
@@ -88,23 +56,38 @@ void text_setch(char x,char y)
  * x             -координата X
  * y             -координата Y
  */
-void text_setchchr(char x,char y)
+void text_setchchr(int x, int y)
 {
+    text_setch(x, y);
 }
 
 /**
  * заполнить экран текущими символами и атрибутами
  */
-void text_fill_screen()
+void text_fill_screen(void)
 {
+/*
+TODO:
+    Please try bkgd, or wbkgd for specifying a window.
+    First you have to enable color support with start_color().
+    And then define color pair. Example:init_pair(1,COLOR_BLUE, COLOR_RED)
+    The order is pair_number, foreground, background
+    Finally, set colors: wbkgd(WindowName, COLOR_PAIR(1)).
+*/
+/*
+    start_color();
+    init_pair(1, COLOR_BLUE, COLOR_RED);
+    bkgd(COLOR_PAIR(1)).
+    */
+
+    erase();
 }
 
 /**
- * вывести на экран ASCIIZ строку с атрибутами
- * вход:
- * x             -координата X
- * y             -координата Y
- * s             -указатель на строку
+ * @brief Print string with it attributes
+ * @param[in] x		coord. x
+ * @param[in] y         coord. x
+ * @param[in] s         string
  */
 void text_writeATR(int x, int y, const char *s)
 {
@@ -112,5 +95,3 @@ void text_writeATR(int x, int y, const char *s)
     if(res != 0)
         fprintf(stderr, "res = %d\n", res);
 }
-
-#endif

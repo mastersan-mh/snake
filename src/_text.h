@@ -1,11 +1,6 @@
-/****************************************************************************/
-/*                                                                          */
-/*        Модуль работы с текстовым режимом int 10h fn 3h REAL MODE         */
-/*                                                                          */
-/*        2005 MH Software(r) Corporation                                   */
-/*        Author: Master San[MH]                                            */
-/*                                                                          */
-/****************************************************************************/
+/**
+ * text
+ */
 #ifndef __TEXT_H
 #define __TEXT_H
 
@@ -16,31 +11,21 @@
 
 struct TTEXTchar
 {
-	char chr;
-	char atr;
-};
-
-struct TTEXTwin{
-	char           x0,y0;          //координаты левого верхнего угла окна
-	char           x1,y1;          //координаты правого нижнего угла окна
+    unsigned char chr;
+    unsigned char atr;
 };
 
 struct TTEXT{
-	struct TTEXTchar c;
-	struct TTEXTwin WIN;
+    struct TTEXTchar c;
 };
 
 extern struct TTEXT text;
 
-void text_init80X25X8();
-void text_videopage_set(char page);
-void text_cursor_set(char line_st,char line_end);
-void text_cursor_get(int page, int *line_st, int *line_end, int *x, int *y);
-void text_cursor_setxy(char page,char x,char y);
+void text_init80X25X8(void);
 
-void text_setch(char x, char y);
-void text_setchchr(char x, char y);
-void text_fill_screen();
+void text_setch(int x, int y);
+void text_setchchr(int x, int y);
+void text_fill_screen(void);
 void text_writeATR(int x, int y, const char *s);
 
 #endif

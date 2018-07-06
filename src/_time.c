@@ -1,52 +1,74 @@
-/****************************************************************************/
-/*                                                                          */
-/*        Модуль работы с системным таймером                                */
-/*        version 1.00                                                      */
-/*                                                                          */
-/*        2002, MH Software(r) Corporation                                  */
-/*        Author: Master San[MH]                                            */
-/*                                                                          */
-/****************************************************************************/
-#ifndef __TIME_C
-#define __TIME_C
+/**
+ * system timer
+ */
 #include "_time.h"
 
-Tmhtime mhtime = {};
+#include <inttypes.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/time.h>
 
-//////////////////////////////////////////////////////////////////////
-//получение системного времени
-//////////////////////////////////////////////////////////////////////
-void mhtime_get()
+#define TICRATE 1
+
+static game_time_s_t lasttimereply_s = 0;
+static game_time_s_t basetime_s = 0;
+
+static game_time_ms_t lasttimereply_ms = 0;
+static game_time_ms_t basetime_ms = 0;
+
+/**
+ * @brief time, seconds
+ */
+game_time_s_t system_getTime_realTime_s(void)
 {
+    struct timeval tv;
+    game_time_s_t thistimereply;
+
+    gettimeofday(&tv, NULL);
+
+    thistimereply = (tv.tv_sec * TICRATE + (tv.tv_usec * TICRATE) / 1000000);
+
+    /* Fix for time problem */
+    if (basetime_s == 0)
+    {
+        basetime_s = thistimereply;
+        thistimereply = 0;
+    }
+    else
+    {
+        thistimereply -= basetime_s;
+    }
+    if (thistimereply < lasttimereply_s)
+        thistimereply = lasttimereply_s;
+
+    return (lasttimereply_s = thistimereply);
 }
 
-//////////////////////////////////////////////////////////////////////
-//установка системного времени
-//////////////////////////////////////////////////////////////////////
-void mhtime_set()
+/**
+ * @brief time, ms
+ */
+game_time_ms_t system_getTime_realTime_ms(void)
 {
+    struct timeval tv;
+    game_time_ms_t thistimereply;
+
+    gettimeofday(&tv, NULL);
+
+    thistimereply = (tv.tv_sec * TICRATE * 1000 + (tv.tv_usec * TICRATE) / 1000);
+
+    /* Fix for time problem */
+    if (!basetime_ms)
+    {
+        basetime_ms = thistimereply;
+        thistimereply = 0;
+    }
+    else
+    {
+        thistimereply -= basetime_ms;
+    }
+    if (thistimereply < lasttimereply_ms)
+        thistimereply = lasttimereply_ms;
+
+    return (lasttimereply_ms = thistimereply);
 }
 
-//////////////////////////////////////////////////////////////////////
-//ожидание
-//вход:
-//t  -миллисекунды( <=100*60 мсек)
-//////////////////////////////////////////////////////////////////////
-void mhtime_delay(short t)
-{
-    if(!t)return;
-    int t0, t1;
-    char ok;
-    mhtime_get();
-    t0 = mhtime.ms+100*(mhtime.s);
-    do{
-        mhtime_get();
-        t1=mhtime.ms+100*mhtime.s;
-        if(t0 <= t1)
-            ok = (t1 - t0 >= t);
-        else
-            ok = (t1 + 100 * 60 - t0 >= t); //на границе минуты
-    }while(!ok);
-}
-
-#endif

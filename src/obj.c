@@ -6,6 +6,7 @@
  */
 
 #include "snaketypes.h"
+#include "game.h"
 #include "obj.h"
 
 #include "fakefunc.h"
@@ -104,8 +105,9 @@ obj_t *obj_free(obj_t **obj)
 void obj_put(int id)
 {
     snake_seg_t *Ps;
-    char x,y;
-    char clean;//можно создавать объект
+    int x;
+    int y;
+    bool clean;//можно создавать объект
     int trycount=0;
 
     do{
@@ -115,15 +117,16 @@ void obj_put(int id)
         if(x<0 || MAP_SX<=x || y<0 || MAP_SY<=y)continue;
 
         //проверим попадание на змеюку
-        clean=1;
-        Ps=snake.H;
-        while(Ps && clean){
-            clean=(x!=Ps->x || y!=Ps->y);
-            Ps=Ps->next;
+        Ps = snake.H;
+        clean = true;
+        while(Ps && clean)
+        {
+            clean = (x != Ps->x || y != Ps->y);
+            Ps = Ps->next;
         }
         trycount++;
 
-    }while(!clean || trycount<16);//чобы объект все-таки был создан
+    }while(clean != true && trycount < 16);//чобы объект все-таки был создан
     obj_new(x,y,id);
 }
 
@@ -182,7 +185,8 @@ void obj_draw(void)
     P=Hobj;
     while(P){
 
-        switch(P->id){
+        switch(P->id)
+        {
             case(OBJ_MARIJUANA ):text.c.chr=0x05;break;
             case(OBJ_MARIJUANAP):text.c.chr=0x06;break;
             case(OBJ_PURGEN    ):text.c.chr=0x0B;break;
@@ -250,6 +254,9 @@ void snake_init(const snake_pattern_t * pat)
 
     snake.H = NULL;
     snake.movedir = pat->dir;
+
+    game_delay_update(snake.movedir);
+
     snake.level = 0;
     snake.dead = 0;
     snake.weight = 0;
@@ -469,14 +476,16 @@ static void snake_think(void)
     while(pt && !snake.dead){
         p=pt->next;
         while(p && !snake.dead){
-            if(pt->x==p->x && pt->y==p->y) snake.dead=1;
+            if(pt->x==p->x && pt->y==p->y)
+                snake.dead = 1;
             p=p->next;
         }
         pt=pt->next;
     }
     /* проверка на выход за границу карты */
     if(snake.H->x<0 || MAP_SX<=snake.H->x
-            || snake.H->y<0 || MAP_SY<=snake.H->y) snake.dead=1;
+            || snake.H->y<0 || MAP_SY<=snake.H->y)
+        snake.dead = 1;
 }
 
 void snake_die(void)

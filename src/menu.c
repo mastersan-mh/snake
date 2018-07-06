@@ -93,16 +93,18 @@ int menu_main()
 /////////////////////////////////////////////////
 //новая игра 0
 /////////////////////////////////////////////////
-int menu_newgame0(){
-    snake_init(&info_snake[0]);
+int menu_newgame0(void)
+{
     game_start();
+    snake_init(&info_snake[0]);
     return(IMENU_MAIN);
 }
 
 /////////////////////////////////////////////////
 //новая игра 1
 /////////////////////////////////////////////////
-int menu_newgame1(){
+int menu_newgame1(void)
+{
     snake_init(&info_snake[1]);
     game_start();
     return(IMENU_MAIN);
@@ -111,13 +113,15 @@ int menu_newgame1(){
 /////////////////////////////////////////////////
 //новая игра 2
 /////////////////////////////////////////////////
-int menu_newgame2(){
+int menu_newgame2(void)
+{
     snake_init(&info_snake[2]);
     game_start();
     return(IMENU_MAIN);
 }
 
-int menu_chart(){
+int menu_chart(void)
+{
     char str[12];
     size_t row;
     int lev;
@@ -261,7 +265,7 @@ void menu_snake_die(void)
             }
             default:
             {
-                if(count<15 && str_char_find1st(valid_chars,key)!=-1)
+                if(count<15 && str_char_find1st(valid_chars, key)!=-1)
                 {
                     rec.name[count] = key;
                     ++count;

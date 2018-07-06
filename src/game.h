@@ -9,6 +9,7 @@
 #define SRC_GAME_H_
 
 #include "snaketypes.h"
+#include "_time.h"
 #include "obj.h"
 
 typedef enum
@@ -28,6 +29,10 @@ typedef struct
     int timing;
     int showtiming;
     int delay;
+
+    game_time_ms_t prev;
+    game_time_ms_t now;
+
 } game_t;
 
 extern char valid_chars[];
@@ -45,6 +50,8 @@ bool game_is_quit(void);
 void game_quit(void);
 void game_start(void);
 void game_stop(void);
+
+void game_delay_update(direction_t direction);
 
 void game_events_pump(void);
 void game_tick(void);

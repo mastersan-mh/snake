@@ -9,7 +9,7 @@
 #define SRC_IO_H_
 
 #define IO_KB_NOKEY -1
-#define IO_KB_BACKSPACE 8
+#define IO_KB_BACKSPACE 263
 #define IO_KB_ENTER 10
 #define IO_KB_ESC   27
 #define IO_KB_UP    259

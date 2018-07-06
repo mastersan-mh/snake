@@ -80,38 +80,24 @@ char *level[LEVEL_MAX] =
 
 void game_init(void)
 {
-    int line_st;
-    int line_end;
-    int cur_x;
-    int cur_y;
-
     game.showmenu = true;
 
     text_init80X25X8();
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
-    text_videopage_set(0);
-    text_cursor_get(0, &line_st,&line_end,&cur_x,&cur_y);
-    text_cursor_setxy(0,80,25);
     srand(time(NULL));
     chart_load();
 }
 
 void game_done(void)
 {
-    int line_st = 0;
-    int line_end = 0;
-    int cur_x = 0;
-    int cur_y = 0;
     chart_save();
     text.c.atr=0x0F;
     text.c.chr=0x00;
     text_fill_screen();
-    text_cursor_set(line_st,line_end);
-    text_cursor_setxy(0,cur_x,cur_y);
     game.showtiming = 0;
-    game.timing = 5; //задержка(мс)
+    game.timing = 500; //задержка(мс)
 
 }
 
@@ -130,9 +116,13 @@ void game_start(void)
     text.c.atr=0x1F;
     text.c.chr=0x00;
     text_fill_screen();
-    game.timing = 5;
+    game.timing = 500;
     game.state = GSTATE_START;
     game.showmenu = false;
+
+    game.prev = 0;
+    game.now  = 0;
+
 }
 
 void game_stop(void)
@@ -140,11 +130,30 @@ void game_stop(void)
     game.state = GSTATE_NO;
 }
 
+void game_delay_update(direction_t direction)
+{
+    switch(direction)
+    {
+        case DIRECTION_NORTH:
+            game.delay = game.timing * 3 / 2; /* FIXME: 80 / 25 */
+            break;
+        case DIRECTION_SOUTH:
+            game.delay = game.timing * 3 / 2; /* FIXME: 80 / 25 */
+            break;
+        case DIRECTION_WEST:
+            game.delay = game.timing;
+            break;
+        case DIRECTION_EAST:
+            game.delay = game.timing;
+            break;
+    }
+}
+
+
 void game_events_pump(void)
 {
     int key;
 
-    mhtime_delay(game.delay);
 
     if(io_kbhit())
     {
@@ -155,50 +164,50 @@ void game_events_pump(void)
             case('p'):
             {
                 text.c.atr = 0x8F;
-                text_writeATR((80-13)/2,12,"-=P A U S E=-");
+                text_writeATR((80-13)/2,12,"-= P A U S E =-");
                 do
                 {
                     key = io_getch();
                 } while(key != 'P' && key != 'p');
                 text.c.atr=0x1F;
-                text_writeATR((80-13)/2,12,"             ");
+                text_writeATR((80-13)/2,12,"               ");
                 break;
             }
             case('='):
             case('+'):
             {
-                if(game.timing<100)
+                if(game.timing < 1000)
                 {
                     game.timing++;
                 }
-                game.showtiming = 110 - game.timing;
+                game.showtiming = 1100 - game.timing;
                 break;
             }
             case('-'):
             case('_'):
             {
-                if(game.timing>0)
+                if(game.timing > 10)
                 {
                     game.timing--;
                 }
-                game.showtiming = 110 - game.timing;
+                game.showtiming = 1100 - game.timing;
                 break;
             }
             case IO_KB_UP:
                 player_setdir(DIRECTION_NORTH);
-                game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
+                game_delay_update(DIRECTION_NORTH);
                 break;
             case IO_KB_DN:
                 player_setdir(DIRECTION_SOUTH);
-                game.delay = game.timing*3/2; /* FIXME: 80 / 25 */
+                game_delay_update(DIRECTION_SOUTH);
                 break;
             case IO_KB_LF:
                 player_setdir(DIRECTION_WEST);
-                game.delay = game.timing;
+                game_delay_update(DIRECTION_WEST);
                 break;
             case IO_KB_RT:
                 player_setdir(DIRECTION_EAST);
-                game.delay = game.timing;
+                game_delay_update(DIRECTION_EAST);
                 break;
             case(IO_KB_ESC):
             {
@@ -224,9 +233,19 @@ void game_events_pump(void)
     }
 }
 
+void game_tick_1(void)
+{
+    obj_think();
+}
+
 void game_fsm(void)
 {
     game_state_t newstate = game.state;
+
+    bool tick_allow = false;
+
+    game.now = system_getTime_realTime_ms();
+
     switch(game.state)
     {
         case GSTATE_NO:
@@ -236,13 +255,17 @@ void game_fsm(void)
             newstate = GSTATE_RUN;
             break;
         case GSTATE_RUN:
-            obj_think();
 
-            if(snake_is_dead())
+            tick_allow = ((game.now - game.prev) > game.delay);
+            if(tick_allow)
             {
-                newstate = GSTATE_LOSE;
+                game.prev = game.now;
+                game_tick_1();
+                if(snake_is_dead())
+                {
+                    newstate = GSTATE_LOSE;
+                }
             }
-
             break;
         case GSTATE_WIN:
             newstate = GSTATE_STOP;
@@ -254,6 +277,7 @@ void game_fsm(void)
         case GSTATE_STOP:
             obj_freeall();
             snake_done();
+            game.showmenu = true;
             break;
     }
     game.state = newstate;
