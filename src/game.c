@@ -12,7 +12,6 @@
 #include "chart.h"
 #include "menu.h"
 
-#include "fakefunc.h"
 #include "_text.h"
 #include "_time.h"
 #include "str.h"

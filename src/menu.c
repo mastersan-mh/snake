@@ -8,7 +8,6 @@
 #include "game.h"
 #include "chart.h"
 
-#include "fakefunc.h"
 #include "_text.h"
 #include "str.h"
 

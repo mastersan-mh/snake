@@ -9,7 +9,6 @@
 #include "game.h"
 #include "obj.h"
 
-#include "fakefunc.h"
 #include "_text.h"
 #include "_time.h"
 #include "str.h"
