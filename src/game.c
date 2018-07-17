@@ -153,15 +153,25 @@ void game_events_pump(void)
 {
     int key;
 
+    if(game.state == GSTATE_NO)
+    {
+        return;
+    }
+
 
     if(io_kbhit())
     {
         key = io_getch();
         switch(key)
         {
-            case('P'):
-            case('p'):
+            case 'P':
+            case 'p':
             {
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
+
                 text.c.atr = 0x8F;
                 text_writeATR((80-13)/2,12,"-= P A U S E =-");
                 do
@@ -172,9 +182,13 @@ void game_events_pump(void)
                 text_writeATR((80-13)/2,12,"               ");
                 break;
             }
-            case('='):
-            case('+'):
+            case '=':
+            case '+':
             {
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 if(game.timing < 1000)
                 {
                     game.timing++;
@@ -182,9 +196,13 @@ void game_events_pump(void)
                 game.showtiming = 1100 - game.timing;
                 break;
             }
-            case('-'):
-            case('_'):
+            case '-':
+            case '_':
             {
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 if(game.timing > 10)
                 {
                     game.timing--;
@@ -193,23 +211,43 @@ void game_events_pump(void)
                 break;
             }
             case IO_KB_UP:
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 player_setdir(DIRECTION_NORTH);
                 game_delay_update(DIRECTION_NORTH);
                 break;
             case IO_KB_DN:
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 player_setdir(DIRECTION_SOUTH);
                 game_delay_update(DIRECTION_SOUTH);
                 break;
             case IO_KB_LF:
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 player_setdir(DIRECTION_WEST);
                 game_delay_update(DIRECTION_WEST);
                 break;
             case IO_KB_RT:
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 player_setdir(DIRECTION_EAST);
                 game_delay_update(DIRECTION_EAST);
                 break;
-            case(IO_KB_ESC):
+            case IO_KB_ESC:
             {
+                if(game.state == GSTATE_NO)
+                {
+                    break;
+                }
                 text.c.atr = 0x0F;
                 text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]");
                 do
@@ -235,6 +273,12 @@ void game_events_pump(void)
 void game_tick_1(void)
 {
     obj_think();
+}
+
+void game_snake_die()
+{
+    game.showmenu = true;
+    menu_show_menu(IMENU_DEATH);
 }
 
 void game_fsm(void)
@@ -270,7 +314,7 @@ void game_fsm(void)
             newstate = GSTATE_STOP;
             break;
         case GSTATE_LOSE:
-            menu_snake_die();
+            game_snake_die();
             newstate = GSTATE_STOP;
             break;
         case GSTATE_STOP:
@@ -289,7 +333,7 @@ void game_tick(void)
 {
     if(game.showmenu)
     {
-        menu();
+        menu_handle();
     }
     else
     {

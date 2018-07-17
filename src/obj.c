@@ -505,6 +505,10 @@ bool snake_is_dead(void)
 void player_setdir(direction_t movedir)
 {
     snake_seg_t *neck;//шея змеи :)
+    if(snake.H == NULL)
+    {
+        return;
+    }
     neck = snake.H->next;
     switch(movedir)
     {

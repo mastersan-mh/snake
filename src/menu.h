@@ -8,18 +8,23 @@
 #ifndef SRC_MENU_H_
 #define SRC_MENU_H_
 
-#define IMENU_MAIN     0x0000
-#define IMENU_NEWGAME0 0x0001
-#define IMENU_NEWGAME1 0x0101
-#define IMENU_NEWGAME2 0x0201
-#define IMENU_CHART    0x0301
-#define IMENU_HELP     0x0401
-#define IMENU_QUIT     0xFFFF
-
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
 
-void menu_snake_die(void);
+typedef enum
+{
+    IMENU_NONE    ,
+    IMENU_MAIN    ,
+    IMENU_NEWGAME0,
+    IMENU_NEWGAME1,
+    IMENU_NEWGAME2,
+    IMENU_CHART   ,
+    IMENU_HELP    ,
+    IMENU_QUIT    ,
+    IMENU_DEATH   ,
+} menu_index_t;
 
-void menu(void);
+void menu_handle(void);
+
+void menu_show_menu(menu_index_t IMENU_DEATH);
 
 #endif /* SRC_MENU_H_ */

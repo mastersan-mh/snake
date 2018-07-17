@@ -11,18 +11,71 @@
 #include "_text.h"
 #include "str.h"
 
+#include <string.h>
+
+typedef struct
+{
+    void (*event_on_enter)(void * ctx);
+    void (*event_on_exit)(void * ctx);
+    menu_index_t (*event_on_event)(int key, void * ctx);
+    void (*draw_on_enter)(void * ctx);
+    void (*draw_on_exit)(void * ctx);
+    void (*draw_on_update)(void * ctx);
+    void * ctx;
+} menu_t;
+
 char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
 char sys_special    [] = "Здесь никогда не будет вашей рекламы";
 
 char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
-/////////////////////////////////////////////////
-//главное меню
-/////////////////////////////////////////////////
-int menu_main()
+/*
+ * @brief Main menu
+ */
+
+static struct menu_main_ctx
 {
-    int key;
-    int sub=0;
+    int sub;
+    int sub_prev;
+} menu_main_ctx = {};
+
+static menu_index_t menu_main_on_event(int key, void * ctx_)
+{
+    struct menu_main_ctx * ctx = ctx_;
+
+    switch(key)
+    {
+        case IO_KB_UP:
+        {
+            if(ctx->sub > 0) ctx->sub--; else ctx->sub = 5;
+            break;
+        }
+        case IO_KB_DN:
+        {
+            if(ctx->sub < 5) ctx->sub++; else ctx->sub = 0;
+            break;
+        }
+        case IO_KB_ENTER:
+        {
+            switch(ctx->sub)
+            {
+                case 0: return IMENU_NEWGAME0;
+                case 1: return IMENU_NEWGAME1;
+                case 2: return IMENU_NEWGAME2;
+                case 3: return IMENU_CHART;
+                case 4: return IMENU_HELP;
+                case 5: return IMENU_QUIT;
+            }
+            break;
+        }
+    }
+
+    return IMENU_MAIN;
+}
+
+static void menu_main_draw_on_enter(void * ctx_)
+{
+    struct menu_main_ctx * ctx = ctx_;
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
@@ -49,77 +102,60 @@ int menu_main()
     text.c.atr=0x0F;
     text_writeATR( 7,22,"Mad House Software");
     text_writeATR(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
+    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
 
-    for(;;)
-    {
-        text.c.atr=0x05;
-        text_writeATR((80-10)/2-2,12+sub,"->");
-        text_writeATR((80-10)/2+10,12+sub,"<-");
-        key=io_getch();
-        text_writeATR((80-10)/2-2,12+sub,"  ");
-        text_writeATR((80-10)/2+10,12+sub,"  ");
-
-        switch(key)
-        {
-            case(IO_KB_UP):
-            {
-                if(sub>0) sub--; else sub=5;
-                break;
-            }
-            case(IO_KB_DN):
-            {
-                if(sub<5) sub++; else sub=0;
-                break;
-            }
-            case(IO_KB_ENTER):
-            {
-                switch(sub)
-                {
-                    case 0:return(IMENU_NEWGAME0);
-                    case 1:return(IMENU_NEWGAME1);
-                    case 2:return(IMENU_NEWGAME2);
-                    case 3:return(IMENU_CHART);
-                    case 4:return(IMENU_HELP);
-                    case 5:return(IMENU_QUIT);
-                }
-                break;
-            }
-        }
-    }
-    return IMENU_MAIN;
 }
 
-/////////////////////////////////////////////////
-//новая игра 0
-/////////////////////////////////////////////////
-int menu_newgame0(void)
+static void menu_main_draw_on_update(void * ctx_)
+{
+    struct menu_main_ctx * ctx = ctx_;
+
+    text.c.atr=0x05;
+    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub_prev, "  ");
+    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub_prev, "  ");
+    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
+    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
+    ctx->sub_prev = ctx->sub;
+
+}
+
+/**
+ * @brief New game 0
+ */
+static void menu_newgame0_on_enter(void * ctx_)
 {
     game_start();
     snake_init(&info_snake[0]);
-    return(IMENU_MAIN);
 }
 
-/////////////////////////////////////////////////
-//новая игра 1
-/////////////////////////////////////////////////
-int menu_newgame1(void)
+/**
+ * @brief New game 1
+ */
+static void menu_newgame1_on_enter(void * ctx_)
 {
     snake_init(&info_snake[1]);
     game_start();
-    return(IMENU_MAIN);
 }
 
-/////////////////////////////////////////////////
-//новая игра 2
-/////////////////////////////////////////////////
-int menu_newgame2(void)
+/**
+ * @brief New game 2
+ */
+static void menu_newgame2_on_enter(void * ctx_)
 {
     snake_init(&info_snake[2]);
     game_start();
-    return(IMENU_MAIN);
 }
 
-int menu_chart(void)
+/**
+ * @brief Chart table
+ */
+static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
+{
+    return IMENU_MAIN;
+}
+
+static void menu_chart_draw_on_enter(void * ctx_)
 {
     char str[12];
     size_t row;
@@ -137,9 +173,9 @@ int menu_chart(void)
         const chartrec_t *rec = chart_row_get(row - 1);
         lev = rec->scores/SCORES_PER_LEVEL;
         if(lev > LEVEL_MAX - 1)
+        {
             lev = LEVEL_MAX - 1;
-
-
+        }
         text_writeATR(20 +  1, 7 + row, str_WORD2strDEC(str, row));
         text_writeATR(20 +  7, 7 + row, rec->name);
         text_writeATR(20 + 23, 7 + row, str_WORD2strDEC(str,rec->scores));
@@ -151,14 +187,17 @@ int menu_chart(void)
     text_writeATR((80-29)/2,22,anti_war);
     text.c.atr=0x8F;
     text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
-    io_getch();
-    return(IMENU_MAIN);
 }
 
-/////////////////////////////////////////////////
-//помощь
-/////////////////////////////////////////////////
-int menu_help(void)
+/**
+ * @brief Help
+ */
+static menu_index_t menu_help_event_on_event(int key, void * ctx_)
+{
+    return IMENU_MAIN;
+}
+
+static void menu_help_draw_on_enter(void * ctx_)
 {
     text.c.atr=0x00;
     text.c.chr=0x00;
@@ -180,22 +219,99 @@ int menu_help(void)
     text.c.atr=0x8F;
     text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
 
-    io_getch();
-
-    return(IMENU_MAIN);
 }
 
-//////////////////////////////////////////////////
-//меню "змеиной смерти"
-//////////////////////////////////////////////////
-void menu_snake_die(void)
+static void menu_quit_on_enter(void * ctx_)
 {
-    int key;
-    int quit=0;
+    game_quit();
+}
+
+/**
+ * @brif The "Death" menu
+ */
+static struct menu_death_ctx
+{
+    bool top10;
+    chartrec_t rec;
+} menu_death_ctx = {};
+
+static void menu_death_on_enter(void * ctx_)
+{
+    struct menu_death_ctx * ctx = ctx_;
+    memset(&ctx->rec, 0, sizeof(ctx->rec));
+    ctx->rec.weight = player_weight();
+    ctx->rec.scores = player_scores();
+    ctx->rec.name[0] = '\0';
+    ctx->top10 = chart_in_chart(&ctx->rec);
+}
+
+static menu_index_t menu_death_on_event(int key, void * ctx_)
+{
+    struct menu_death_ctx * ctx = ctx_;
+
     int c;
     int count;
-    char str[6];
-    chartrec_t rec;
+
+    chartrec_t * rec = &ctx->rec;
+
+    if(!ctx->top10)
+    {
+        return IMENU_MAIN;
+    }
+
+
+
+    count=0;
+    text.c.atr=0x0F;
+    c = 0;
+    while(c<count && rec->name[c]){
+        text.c.chr = rec->name[c];
+        text_setch(30+c,21);
+        c++;
+    }
+    text.c.chr = 176;
+    while(c<16)
+    {
+        text_setch(30+c,21);
+        c++;
+    }
+
+    switch(key)
+    {
+        case IO_KB_BACKSPACE:
+        {
+            if(count>0)
+            {
+                rec->name[count]=0x00;
+                --count;
+            }
+            break;
+        }
+        case IO_KB_ENTER:
+        {
+            chart_insert(rec);
+            return IMENU_MAIN;
+        }
+        default:
+        {
+            if(count<15 && str_char_find1st(valid_chars, key)!=-1)
+            {
+                rec->name[count] = key;
+                ++count;
+                rec->name[count] = 0x00;
+            }
+            break;
+        }
+    }
+
+    return IMENU_DEATH;
+}
+
+static void menu_death_draw_on_enter(void * ctx_)
+{
+    struct menu_death_ctx * ctx = ctx_;
+    char str[12];
+
     text.c.atr=0x0F;
     text_writeATR(32, 3,"Tы типа сдох :-(");
     text.c.atr=0x2F;
@@ -216,78 +332,91 @@ void menu_snake_die(void)
     text_writeATR(26,20,"СОЖРАЛ КОНОПЛИ(КГ): ");
     text_writeATR(26+20,20,str_WORD2strDEC(str,player_scores()));
 
-    rec.weight=player_weight();
-    rec.scores=player_scores();
-    rec.name[0]=0x00;
-
-    if(!chart_in_chart(&rec)){//не попали в 10 лучших
-        text_writeATR(35,21,"ТЫ ХУДШИЙ!");
-        io_getch();
-        return;
-    }
-
-    text_writeATR(26,21,"ИМЯ>");
-
-    count=0;
-    while(!quit)
+    if(!ctx->top10)
     {
-        text.c.atr=0x0F;
-        c = 0;
-        while(c<count && rec.name[c]){
-            text.c.chr = rec.name[c];
-            text_setch(30+c,21);
-            c++;
-        }
-        text.c.chr = 176;
-        while(c<16)
-        {
-            text_setch(30+c,21);
-            c++;
-        }
-
-        key = io_getch();
-        switch(key)
-        {
-            case IO_KB_BACKSPACE:
-            {
-                if(count>0){
-                    rec.name[count]=0x00;
-                    --count;
-                }
-                break;
-            }
-            case IO_KB_ENTER:
-            {
-                chart_insert(&rec);
-                quit=1;
-                break;
-            }
-            default:
-            {
-                if(count<15 && str_char_find1st(valid_chars, key)!=-1)
-                {
-                    rec.name[count] = key;
-                    ++count;
-                    rec.name[count] = 0x00;
-                }
-                break;
-            }
-        }
+        text_writeATR(35, 21, "ТЫ ХУДШИЙ!");
+    }
+    else
+    {
+        text_writeATR(26, 21, "ИМЯ>");
     }
 }
 
-static int Imenu = IMENU_MAIN;
 
-void menu(void)
+static const menu_t menus[] =
 {
-    switch(Imenu)
+        { NULL, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NONE     */
+        { NULL, NULL, menu_main_on_event, menu_main_draw_on_enter , NULL, menu_main_draw_on_update, &menu_main_ctx },/* IMENU_MAIN     */
+        { menu_newgame0_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
+        { menu_newgame1_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
+        { menu_newgame2_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME2 */
+        { NULL, NULL, menu_chart_event_on_event, menu_chart_draw_on_enter, NULL, NULL, NULL },/* IMENU_CHART    */
+        { NULL, NULL, menu_help_event_on_event , menu_help_draw_on_enter, NULL, NULL, NULL },/* IMENU_HELP     */
+        { menu_quit_on_enter    , NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
+        { menu_death_on_enter, NULL, menu_death_on_event, menu_death_draw_on_enter, NULL, NULL, &menu_death_ctx }/* IMENU_DEATH */
+};
+
+static menu_index_t m_imenu_prev = IMENU_NONE;
+static menu_index_t m_imenu = IMENU_MAIN;
+
+void menu_handle(void)
+{
+    const menu_t * menu = &menus[m_imenu];
+    void * ctx = menu->ctx;
+    if(m_imenu_prev != m_imenu)
     {
-        case(IMENU_MAIN    ): Imenu = menu_main();break;
-        case(IMENU_NEWGAME0): Imenu = menu_newgame0();break;
-        case(IMENU_NEWGAME1): Imenu = menu_newgame1();break;
-        case(IMENU_NEWGAME2): Imenu = menu_newgame2();break;
-        case(IMENU_CHART   ): Imenu = menu_chart();break;
-        case(IMENU_HELP    ): Imenu = menu_help();break;
-        case(IMENU_QUIT    ): game_quit(); break;
+        if(menu->event_on_enter)
+        {
+            menu->event_on_enter(ctx);
+        }
+        if(menu->draw_on_enter)
+        {
+            menu->draw_on_enter(ctx);
+        }
+        m_imenu_prev = m_imenu;
     }
+
+
+    int key;
+    if(io_kbhit())
+    {
+        key = io_getch();
+
+        if(menu->event_on_event)
+        {
+            m_imenu = menu->event_on_event(key, ctx);
+        }
+        else
+        {
+            m_imenu = IMENU_MAIN;
+        }
+
+        if(menu->draw_on_update)
+        {
+            menu->draw_on_update(ctx);
+        }
+
+        if(m_imenu_prev != m_imenu)
+        {
+            if(menu->event_on_exit)
+            {
+                menu->event_on_exit(ctx);
+            }
+            if(menu->draw_on_exit)
+            {
+                menu->draw_on_exit(ctx);
+            }
+        }
+
+    }
+
 }
+
+
+
+void menu_show_menu(menu_index_t imenu)
+{
+    m_imenu = imenu;
+}
+
+
