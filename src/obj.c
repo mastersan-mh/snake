@@ -5,9 +5,11 @@
  *      Author: mastersan
  */
 
+#include "obj.h"
+
+#include "Z_mem.h"
 #include "snaketypes.h"
 #include "game.h"
-#include "obj.h"
 
 #include "_text.h"
 #include "_time.h"
@@ -39,7 +41,7 @@ void obj_new(int x, int y, int id)
     }
     if(!clean)return;
 
-    P=malloc(sizeof(obj_t));
+    P=Z_malloc(sizeof(obj_t));
     P->next=Hobj;
     Hobj=P;
 
@@ -230,7 +232,7 @@ int snake_obj_check(obj_t **obj){
 void snake_newseg(int  x, int y)
 {
     snake_seg_t *P;
-    P     = malloc(sizeof(snake_seg_t));
+    P     = Z_malloc(sizeof(snake_seg_t));
     P->x  =x;
     P->y  =y;
     P->prev=NULL;
@@ -440,13 +442,14 @@ static void snake_think(void)
     { /* движение */
         if(!snake.H->next)
         {
-            snake.lastx=snake.H->x;
-            snake.lasty=snake.H->y;
-            switch(snake.movedir){
-                case(DIRECTION_NORTH):snake.H->y--;break;
-                case(DIRECTION_SOUTH):snake.H->y++;break;
-                case(DIRECTION_WEST):snake.H->x--;break;
-                case(DIRECTION_EAST):snake.H->x++;break;
+            snake.lastx = snake.H->x;
+            snake.lasty = snake.H->y;
+            switch(snake.movedir)
+            {
+                case DIRECTION_NORTH: snake.H->y--;break;
+                case DIRECTION_SOUTH: snake.H->y++;break;
+                case DIRECTION_WEST : snake.H->x--;break;
+                case DIRECTION_EAST : snake.H->x++;break;
             }
         }
         else{         //если более одного сегмента

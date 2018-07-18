@@ -67,15 +67,4 @@ typedef struct
     long      scores;  //очки
 } snake_t;
 
-/**
- * @brief объекты на карте
- */
-typedef struct obj_st
-{
-    struct obj_st *next;
-    int x,y;
-    int id;
-    int timer;
-} obj_t;
-
 #endif /* SRC_SNAKETYPES_H_ */

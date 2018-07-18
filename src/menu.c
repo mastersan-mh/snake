@@ -13,6 +13,8 @@
 
 #include <string.h>
 
+#define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
+
 typedef struct
 {
     void (*event_on_enter)(void * ctx);
@@ -359,8 +361,15 @@ static const menu_t menus[] =
 static menu_index_t m_imenu_prev = IMENU_NONE;
 static menu_index_t m_imenu = IMENU_MAIN;
 
-void menu_handle(void)
+static void menu_handle_event_tick(const event_t * event)
 {
+    /* empty */
+}
+
+
+void menu_handle(const event_t * event)
+{
+
     const menu_t * menu = &menus[m_imenu];
     void * ctx = menu->ctx;
     if(m_imenu_prev != m_imenu)
@@ -377,41 +386,54 @@ void menu_handle(void)
     }
 
 
-    int key;
-    if(io_kbhit())
+    switch(event->type)
     {
-        key = io_getch();
-
-        if(menu->event_on_event)
+        case G_EVENT_TICK:
         {
-            m_imenu = menu->event_on_event(key, ctx);
+            menu_handle_event_tick(event);
+            break;
         }
-        else
+        case G_EVENT_KEYBOARD:
         {
-            m_imenu = IMENU_MAIN;
-        }
 
-        if(menu->draw_on_update)
-        {
-            menu->draw_on_update(ctx);
-        }
-
-        if(m_imenu_prev != m_imenu)
-        {
-            if(menu->event_on_exit)
+            if(menu->event_on_event)
             {
-                menu->event_on_exit(ctx);
+                m_imenu = menu->event_on_event(event->data.KEYBOARD.key, ctx);
             }
-            if(menu->draw_on_exit)
+            else
             {
-                menu->draw_on_exit(ctx);
+                m_imenu = IMENU_MAIN;
             }
-        }
 
+            if(menu->draw_on_update)
+            {
+                menu->draw_on_update(ctx);
+            }
+
+            break;
+        }
     }
+
+
+    if(m_imenu_prev != m_imenu)
+    {
+        if(menu->event_on_exit)
+        {
+            menu->event_on_exit(ctx);
+        }
+        if(menu->draw_on_exit)
+        {
+            menu->draw_on_exit(ctx);
+        }
+    }
+
 
 }
 
+void menu_draw(void)
+{
+
+}
 
 
 void menu_show_menu(menu_index_t imenu)

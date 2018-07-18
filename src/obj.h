@@ -8,6 +8,8 @@
 #ifndef SRC_OBJ_H_
 #define SRC_OBJ_H_
 
+#include "snaketypes.h"
+
 /* конопля */
 #define OBJ_MARIJUANA 0
 /* посаженая конопля */
@@ -16,6 +18,17 @@
 #define OBJ_PURGEN 2
 /* дерьмо */
 #define OBJ_SHIRT  3
+
+/**
+ * @brief объекты на карте
+ */
+typedef struct obj_st
+{
+    struct obj_st *next;
+    int x,y;
+    int id;
+    int timer;
+} obj_t;
 
 void obj_new(int x, int y, int id);
 void obj_freeall(void);

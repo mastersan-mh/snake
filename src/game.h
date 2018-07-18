@@ -12,6 +12,8 @@
 #include "_time.h"
 #include "obj.h"
 
+#include "g_events.h"
+
 typedef enum
 {
     GSTATE_NO,
@@ -21,6 +23,7 @@ typedef enum
     GSTATE_LOSE,
     GSTATE_STOP
 } game_state_t;
+
 typedef struct
 {
     bool quit;
@@ -32,6 +35,9 @@ typedef struct
 
     game_time_ms_t prev;
     game_time_ms_t now;
+
+    bool paused;
+    bool exit_request;
 
 } game_t;
 
@@ -54,7 +60,9 @@ void game_stop(void);
 void game_delay_update(direction_t direction);
 
 void game_events_pump(void);
-void game_tick(void);
+void game_loop(void);
 void game_draw(void);
+
+void g_fsm(const event_t * event);
 
 #endif /* SRC_GAME_H_ */

@@ -13,7 +13,7 @@ int main()
     while(!game_is_quit())
     {
         game_events_pump();
-        game_tick();
+        game_loop();
         game_draw();
     }
     game_done();

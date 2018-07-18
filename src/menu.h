@@ -8,7 +8,7 @@
 #ifndef SRC_MENU_H_
 #define SRC_MENU_H_
 
-#define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
+#include "g_events.h"
 
 typedef enum
 {
@@ -23,7 +23,8 @@ typedef enum
     IMENU_DEATH   ,
 } menu_index_t;
 
-void menu_handle(void);
+void menu_handle(const event_t * event);
+void menu_draw(void);
 
 void menu_show_menu(menu_index_t IMENU_DEATH);
 

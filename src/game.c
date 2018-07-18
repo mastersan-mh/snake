@@ -7,6 +7,7 @@
 
 #include "io.h"
 #include "game.h"
+#include "g_events.h"
 
 #include "snaketypes.h"
 #include "chart.h"
@@ -81,12 +82,18 @@ void game_init(void)
 {
     game.showmenu = true;
 
+    game.paused = false;
+    game.exit_request = false;
+    game.prev = 0;
+    game.now  = 0;
+
     text_init80X25X8();
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
     srand(time(NULL));
     chart_load();
+    g_events_init();
 }
 
 void game_done(void)
@@ -118,9 +125,8 @@ void game_start(void)
     game.timing = 500;
     game.state = GSTATE_START;
     game.showmenu = false;
-
-    game.prev = 0;
-    game.now  = 0;
+    game.paused = false;
+    game.exit_request = false;
 
 }
 
@@ -151,128 +157,21 @@ void game_delay_update(direction_t direction)
 
 void game_events_pump(void)
 {
-    int key;
-
-    if(game.state == GSTATE_NO)
+    event_data_t data;
+    game.now = system_getTime_realTime_ms();
+    bool tick_allow = ((game.now - game.prev) > game.delay);
+    if(tick_allow)
     {
-        return;
+        game.prev = game.now;
+        g_event_send(G_EVENT_TICK, NULL);
     }
-
 
     if(io_kbhit())
     {
-        key = io_getch();
-        switch(key)
-        {
-            case 'P':
-            case 'p':
-            {
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-
-                text.c.atr = 0x8F;
-                text_writeATR((80-13)/2,12,"-= P A U S E =-");
-                do
-                {
-                    key = io_getch();
-                } while(key != 'P' && key != 'p');
-                text.c.atr=0x1F;
-                text_writeATR((80-13)/2,12,"               ");
-                break;
-            }
-            case '=':
-            case '+':
-            {
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                if(game.timing < 1000)
-                {
-                    game.timing++;
-                }
-                game.showtiming = 1100 - game.timing;
-                break;
-            }
-            case '-':
-            case '_':
-            {
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                if(game.timing > 10)
-                {
-                    game.timing--;
-                }
-                game.showtiming = 1100 - game.timing;
-                break;
-            }
-            case IO_KB_UP:
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                player_setdir(DIRECTION_NORTH);
-                game_delay_update(DIRECTION_NORTH);
-                break;
-            case IO_KB_DN:
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                player_setdir(DIRECTION_SOUTH);
-                game_delay_update(DIRECTION_SOUTH);
-                break;
-            case IO_KB_LF:
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                player_setdir(DIRECTION_WEST);
-                game_delay_update(DIRECTION_WEST);
-                break;
-            case IO_KB_RT:
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                player_setdir(DIRECTION_EAST);
-                game_delay_update(DIRECTION_EAST);
-                break;
-            case IO_KB_ESC:
-            {
-                if(game.state == GSTATE_NO)
-                {
-                    break;
-                }
-                text.c.atr = 0x0F;
-                text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]");
-                do
-                {
-                    key = io_getch();
-                }while(key == IO_KB_NOKEY);
-                if(key=='Y' || key=='y')
-                { /* клавиша 'Y' */
-                    snake_die();
-                    game_stop();
-                }
-                else
-                {
-                    text.c.atr=0x1F;
-                    text_writeATR(30,12,"                ");
-                }
-                break;
-            }
-        }
+        int key = io_getch();
+        data.KEYBOARD.key = key;
+        g_event_send(G_EVENT_KEYBOARD, &data);
     }
-}
-
-void game_tick_1(void)
-{
-    obj_think();
 }
 
 void game_snake_die()
@@ -281,13 +180,9 @@ void game_snake_die()
     menu_show_menu(IMENU_DEATH);
 }
 
-void game_fsm(void)
+static void game_handle_event_tick(const event_t * event)
 {
     game_state_t newstate = game.state;
-
-    bool tick_allow = false;
-
-    game.now = system_getTime_realTime_ms();
 
     switch(game.state)
     {
@@ -298,16 +193,10 @@ void game_fsm(void)
             newstate = GSTATE_RUN;
             break;
         case GSTATE_RUN:
-
-            tick_allow = ((game.now - game.prev) > game.delay);
-            if(tick_allow)
+            obj_think();
+            if(snake_is_dead())
             {
-                game.prev = game.now;
-                game_tick_1();
-                if(snake_is_dead())
-                {
-                    newstate = GSTATE_LOSE;
-                }
+                newstate = GSTATE_LOSE;
             }
             break;
         case GSTATE_WIN:
@@ -326,20 +215,111 @@ void game_fsm(void)
     game.state = newstate;
 }
 
-/////////////////////////////////////////////////
-//игра
-/////////////////////////////////////////////////
-void game_tick(void)
+static void game_handle_event_keyboard(const event_t * event)
 {
-    if(game.showmenu)
+    int key;
+
+    switch(event->data.KEYBOARD.key)
     {
-        menu_handle();
-    }
-    else
-    {
-        game_fsm();
+        case 'P':
+        case 'p':
+        {
+            game.paused = !game.paused;
+            break;
+        }
+        case '=':
+        case '+':
+        {
+            if(game.timing < 1000)
+            {
+                game.timing++;
+            }
+            game.showtiming = 1100 - game.timing;
+            break;
+        }
+        case '-':
+        case '_':
+        {
+            if(game.timing > 10)
+            {
+                game.timing--;
+            }
+            game.showtiming = 1100 - game.timing;
+            break;
+        }
+        case IO_KB_UP:
+        {
+            player_setdir(DIRECTION_NORTH);
+            game_delay_update(DIRECTION_NORTH);
+            break;
+        }
+        case IO_KB_DN:
+        {
+            player_setdir(DIRECTION_SOUTH);
+            game_delay_update(DIRECTION_SOUTH);
+            break;
+        }
+        case IO_KB_LF:
+        {
+            player_setdir(DIRECTION_WEST);
+            game_delay_update(DIRECTION_WEST);
+            break;
+        }
+        case IO_KB_RT:
+        {
+            player_setdir(DIRECTION_EAST);
+            game_delay_update(DIRECTION_EAST);
+            break;
+        }
+        case IO_KB_ESC:
+        {
+            text.c.atr = 0x0F;
+            text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]?");
+            break;
+        }
+        case 'Y':
+        case 'y':
+        {
+            if(game.exit_request)
+            {
+                snake_die();
+                game_stop();
+            }
+            break;
+        }
+        case 'N':
+        case 'n':
+        {
+            if(game.exit_request)
+            {
+                text.c.atr=0x1F;
+                text_writeATR(30,12,"                ");
+            }
+            break;
+        }
     }
 }
+
+void game_handle(const event_t * event)
+{
+    switch(event->type)
+    {
+        case G_EVENT_TICK:
+        {
+            game_handle_event_tick(event);
+            break;
+        }
+        case G_EVENT_KEYBOARD:
+        {
+            game_handle_event_keyboard(event);
+            break;
+        }
+    }
+}
+
+
+
+
 
 static void game_draw_state_run(void)
 {
@@ -369,8 +349,12 @@ static void game_draw_state_run(void)
 
 void game_draw(void)
 {
+    static bool paused_prev = false;
+
+
     if(game.showmenu)
     {
+        menu_draw();
     }
     else
     {
@@ -393,5 +377,41 @@ void game_draw(void)
                 break;
         }
 
+
+        if(game.paused != paused_prev)
+        {
+            if(game.paused)
+            {
+                text.c.atr = 0x8F;
+                text_writeATR((80-13)/2,12,"-= P A U S E =-");
+            }
+            else
+            {
+                text.c.atr = 0x1F;
+                text_writeATR((80-13)/2,12,"               ");
+            }
+        }
+
+
     }
+}
+
+/* game finite-state machine */
+void g_fsm(const event_t * event)
+{
+
+    if(game.showmenu)
+    {
+        menu_handle(event);
+    }
+    else
+    {
+        game_handle(event);
+    }
+
+}
+
+void game_loop(void)
+{
+    g_events_handle();
 }
