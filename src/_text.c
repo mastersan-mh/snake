@@ -2,7 +2,6 @@
  * text
  */
 #include "_text.h"
-#include <curses.h>
 
 struct TTEXT text = {};
 
@@ -95,3 +94,4 @@ void text_writeATR(int x, int y, const char *s)
     if(res != 0)
         fprintf(stderr, "res = %d\n", res);
 }
+

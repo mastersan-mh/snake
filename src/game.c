@@ -84,8 +84,6 @@ void game_init(void)
 
     game.paused = false;
     game.exit_request = false;
-    game.prev = 0;
-    game.now  = 0;
 
     text_init80X25X8();
     text.c.atr=0x00;
@@ -140,37 +138,17 @@ void game_delay_update(direction_t direction)
     switch(direction)
     {
         case DIRECTION_NORTH:
-            game.delay = game.timing * 3 / 2; /* FIXME: 80 / 25 */
+            g_event_ticktime_set(game.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_SOUTH:
-            game.delay = game.timing * 3 / 2; /* FIXME: 80 / 25 */
+            g_event_ticktime_set(game.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_WEST:
-            game.delay = game.timing;
+            g_event_ticktime_set(game.timing);
             break;
         case DIRECTION_EAST:
-            game.delay = game.timing;
+            g_event_ticktime_set(game.timing);
             break;
-    }
-}
-
-
-void game_events_pump(void)
-{
-    event_data_t data;
-    game.now = system_getTime_realTime_ms();
-    bool tick_allow = ((game.now - game.prev) > game.delay);
-    if(tick_allow)
-    {
-        game.prev = game.now;
-        g_event_send(G_EVENT_TICK, NULL);
-    }
-
-    if(io_kbhit())
-    {
-        int key = io_getch();
-        data.KEYBOARD.key = key;
-        g_event_send(G_EVENT_KEYBOARD, &data);
     }
 }
 
@@ -217,8 +195,6 @@ static void game_handle_event_tick(const event_t * event)
 
 static void game_handle_event_keyboard(const event_t * event)
 {
-    int key;
-
     switch(event->data.KEYBOARD.key)
     {
         case 'P':
@@ -394,6 +370,8 @@ void game_draw(void)
 
 
     }
+
+    io_render_end();
 }
 
 /* game finite-state machine */
@@ -413,5 +391,6 @@ void g_fsm(const event_t * event)
 
 void game_loop(void)
 {
+    g_events_pump();
     g_events_handle();
 }

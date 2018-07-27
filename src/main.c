@@ -12,7 +12,6 @@ int main()
     game_init();
     while(!game_is_quit())
     {
-        game_events_pump();
         game_loop();
         game_draw();
     }

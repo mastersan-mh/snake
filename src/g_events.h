@@ -9,6 +9,8 @@
 #define SRC_G_EVENTS_H_
 
 #include <sys/queue.h>
+#include "_time.h"
+#include "snaketypes.h"
 
 typedef enum
 {
@@ -16,8 +18,12 @@ typedef enum
     G_EVENT_KEYBOARD
 } event_type_t;
 
-typedef struct
+typedef union
 {
+    struct
+    {
+        struct timespec time;
+    } TICK;
     struct
     {
         int key;
@@ -34,13 +40,18 @@ typedef struct event_s
 
 typedef CIRCLEQ_HEAD(event_head_s, event_s) event_head_t;
 
-void g_events_init(void);
+int g_events_init(void);
 void g_events_handle(void);
+bool g_events_is_empty(void);
 void g_events_flush(void);
 
 void g_event_send(
     event_type_t type,
     const event_data_t * data
 );
+
+void g_event_ticktime_set(game_time_ms_t ticktime);
+
+void g_events_pump(void);
 
 #endif /* SRC_G_EVENTS_H_ */

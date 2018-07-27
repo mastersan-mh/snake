@@ -33,9 +33,6 @@ typedef struct
     int showtiming;
     int delay;
 
-    game_time_ms_t prev;
-    game_time_ms_t now;
-
     bool paused;
     bool exit_request;
 
@@ -59,7 +56,6 @@ void game_stop(void);
 
 void game_delay_update(direction_t direction);
 
-void game_events_pump(void);
 void game_loop(void);
 void game_draw(void);
 

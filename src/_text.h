@@ -9,6 +9,11 @@
 /* размер экрана Y */
 #define TEXT_SCRsy 25
 
+#include <curses.h>
+
+#define text_print(x, y, format, ...) \
+        mvprintw(y, x, format, ##__VA_ARGS__)
+
 struct TTEXTchar
 {
     unsigned char chr;

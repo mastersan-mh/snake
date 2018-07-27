@@ -3,72 +3,72 @@
  */
 #include "_time.h"
 
-#include <inttypes.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/time.h>
+#ifndef ARRAY_SIZE
+#   define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
+#endif
 
-#define TICRATE 1
+const struct timespec ts_zero  = {};
 
-static game_time_s_t lasttimereply_s = 0;
-static game_time_s_t basetime_s = 0;
-
-static game_time_ms_t lasttimereply_ms = 0;
-static game_time_ms_t basetime_ms = 0;
-
-/**
- * @brief time, seconds
- */
-game_time_s_t system_getTime_realTime_s(void)
+static clockid_t clock_priotity[] =
 {
-    struct timeval tv;
-    game_time_s_t thistimereply;
+        /* Monotonic system-wide clock.  */
+        CLOCK_MONOTONIC,
+        /* Monotonic system-wide clock, not adjusted for frequency scaling.  */
+        CLOCK_MONOTONIC_RAW,
+        /* Identifier for system-wide realtime clock.  */
+        CLOCK_REALTIME,
+        /* High-resolution timer from the CPU.  */
+        CLOCK_PROCESS_CPUTIME_ID,
+        /* Thread-specific CPU-time clock.  */
+        CLOCK_THREAD_CPUTIME_ID,
+        /* Identifier for system-wide realtime clock, updated only on ticks.  */
+        CLOCK_REALTIME_COARSE,
+        /* Monotonic system-wide clock, updated only on ticks.  */
+        CLOCK_MONOTONIC_COARSE,
+        /* Monotonic system-wide clock that includes time spent in suspension.  */
+        CLOCK_BOOTTIME,
+        /* Like CLOCK_REALTIME but also wakes suspended system.  */
+        CLOCK_REALTIME_ALARM,
+        /* Like CLOCK_BOOTTIME but also wakes suspended system.  */
+        CLOCK_BOOTTIME_ALARM,
+        /* Like CLOCK_REALTIME but in International Atomic Time.  */
+        CLOCK_TAI,
+};
 
-    gettimeofday(&tv, NULL);
 
-    thistimereply = (tv.tv_sec * TICRATE + (tv.tv_usec * TICRATE) / 1000000);
-
-    /* Fix for time problem */
-    if (basetime_s == 0)
+int app_time_clock_id_get(
+        clockid_t * clock_id,
+        struct timespec *ts_resolution
+)
+{
+    size_t i;
+    for(i = 0; i < ARRAY_SIZE(clock_priotity); i++)
     {
-        basetime_s = thistimereply;
-        thistimereply = 0;
+        *clock_id = clock_priotity[i];
+        if(clock_getres(*clock_id, ts_resolution) == 0)
+        {
+            return 0;
+        }
     }
-    else
-    {
-        thistimereply -= basetime_s;
-    }
-    if (thistimereply < lasttimereply_s)
-        thistimereply = lasttimereply_s;
-
-    return (lasttimereply_s = thistimereply);
+    return -1;
 }
 
-/**
- * @brief time, ms
- */
-game_time_ms_t system_getTime_realTime_ms(void)
+void app_ts_timeout_compute(
+        const struct timespec * tv_now,
+        const struct timespec * tv_next,
+        struct timespec * tv_timeout
+)
 {
-    struct timeval tv;
-    game_time_ms_t thistimereply;
-
-    gettimeofday(&tv, NULL);
-
-    thistimereply = (tv.tv_sec * TICRATE * 1000 + (tv.tv_usec * TICRATE) / 1000);
-
-    /* Fix for time problem */
-    if (!basetime_ms)
+    ts_timersub(tv_next, tv_now, tv_timeout);
+    if(ts_timercmp(tv_timeout, &TS_ZERO, <))
     {
-        basetime_ms = thistimereply;
-        thistimereply = 0;
+        *tv_timeout = TS_ZERO;
     }
-    else
-    {
-        thistimereply -= basetime_ms;
-    }
-    if (thistimereply < lasttimereply_ms)
-        thistimereply = lasttimereply_ms;
+}
 
-    return (lasttimereply_ms = thistimereply);
+void time_ms_to_timespec(game_time_ms_t time, struct timespec * timespec)
+{
+    timespec->tv_sec = time/1000;
+    timespec->tv_nsec = (time % 1000) * NANOSEC_IN_MILLISEC;
 }
 
