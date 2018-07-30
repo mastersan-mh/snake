@@ -117,7 +117,7 @@ const chartrec_t * chart_row_get(size_t row)
  * 0 - не попали
  * 1 - попали
  */
-int chart_record_in_chart(const chartrec_t *rec)
+bool chart_record_in_chart(const chartrec_t *rec)
 {
     int count = 0;
     while(count < chart.num && rec->scores < chart.r[count].scores)
@@ -126,7 +126,7 @@ int chart_record_in_chart(const chartrec_t *rec)
     }
     if(count >= CHART_RMAX)
     {
-        return 0; /* out of chart */
+        return false; /* out of chart */
     }
-    return 1;
+    return true;
 }
