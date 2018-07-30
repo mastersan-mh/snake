@@ -71,11 +71,16 @@ int g_events_init(void)
 
 void g_events_handle(void)
 {
+    size_t amnt = g_events_amount();
+
+
+    text_print(1,1, "amnt = %ld\n", (long)amnt);
+
     while(!CIRCLEQ_EMPTY(&events))
     {
         event_t * event = CIRCLEQ_FIRST(&events);
         CIRCLEQ_REMOVE(&events, event, queue);
-        g_fsm(event);
+        g_event_handle(event);
         Z_free(event);
     }
 }
@@ -93,6 +98,17 @@ void g_events_flush(void)
         CIRCLEQ_REMOVE(&events, event, queue);
         Z_free(event);
     }
+}
+
+size_t g_events_amount(void)
+{
+    size_t amount = 0;
+    event_t * event;
+    CIRCLEQ_FOREACH(event, &events, queue)
+    {
+        ++amount;
+    }
+    return amount;
 }
 
 void g_event_send(

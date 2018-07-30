@@ -2,39 +2,32 @@
  * Strings and chars processing
  */
 
-#include "str.h"
+#include "snaketypes.h"
 
 #include <stdio.h>
 #include <string.h>
 
-/////////////////////////////////////////////////
-//проверка первого вхождения символа
-//вход:
-//*s            -строка с символами
-//chr           -проверяемый символ
-//выход:
-//=<x>          -символ chr входит в строку s в позиции <x>
-//=-1           -символ chr НЕ входит в строку s
-/////////////////////////////////////////////////
-ssize_t str_char_find1st(const char *s, char chr)
+/**
+ * @brief Check the key is valid letter
+ */
+bool str_key_is_character(int key)
 {
-    char * tmp;
-    tmp = strchr(s, chr);
-    return tmp == NULL? -1 : tmp - s;
+#if 0
+    static const char valid_chars[] =
+            "!#$%&'()+,-.0123456789;=@"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`"
+            "abcdefghijklmnopqrstuvwxyz{}~"
+            "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+            "абвгдежзийклмнопрстуфхцчшщъыьэюяЁё";
+    return (strchr(valid_chars, key) != NULL);
+#else
+    return true;
+#endif
 }
 
-//
-//число в строку
-//
-
-////////////////////////////////////////////////
-//преобразует WORD-число в DEC-строку
-//вход:
-//value         -число
-//выход:
-//*str          -DEC-строка
-//=str
-////////////////////////////////////////////////
+/**
+ * @brief Number to a decimal string
+ */
 char *str_WORD2strDEC(char *str, uint16_t value)
 {
     sprintf(str, "%d", value);

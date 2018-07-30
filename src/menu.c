@@ -31,10 +31,9 @@ char sys_special    [] = "Здесь никогда не будет вашей �
 
 char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
-/*
+/**
  * @brief Main menu
  */
-
 static struct menu_main_ctx
 {
     int sub;
@@ -231,10 +230,12 @@ static void menu_quit_on_enter(void * ctx_)
 /**
  * @brif The "Death" menu
  */
+#define MENU_DEATH_NAME_MAXLEN 15
 static struct menu_death_ctx
 {
-    bool top10;
     chartrec_t rec;
+    bool top10;
+    size_t count;
 } menu_death_ctx = {};
 
 static void menu_death_on_enter(void * ctx_)
@@ -244,15 +245,13 @@ static void menu_death_on_enter(void * ctx_)
     ctx->rec.weight = player_weight();
     ctx->rec.scores = player_scores();
     ctx->rec.name[0] = '\0';
-    ctx->top10 = chart_in_chart(&ctx->rec);
+    ctx->top10 = chart_record_in_chart(&ctx->rec);
+    ctx->count = 0;
 }
 
 static menu_index_t menu_death_on_event(int key, void * ctx_)
 {
     struct menu_death_ctx * ctx = ctx_;
-
-    int c;
-    int count;
 
     chartrec_t * rec = &ctx->rec;
 
@@ -261,31 +260,14 @@ static menu_index_t menu_death_on_event(int key, void * ctx_)
         return IMENU_MAIN;
     }
 
-
-
-    count=0;
-    text.c.atr=0x0F;
-    c = 0;
-    while(c<count && rec->name[c]){
-        text.c.chr = rec->name[c];
-        text_setch(30+c,21);
-        c++;
-    }
-    text.c.chr = 176;
-    while(c<16)
-    {
-        text_setch(30+c,21);
-        c++;
-    }
-
     switch(key)
     {
         case IO_KB_BACKSPACE:
         {
-            if(count>0)
+            if(ctx->count > 0)
             {
-                rec->name[count]=0x00;
-                --count;
+                rec->name[ctx->count]=0x00;
+                --ctx->count;
             }
             break;
         }
@@ -296,17 +278,37 @@ static menu_index_t menu_death_on_event(int key, void * ctx_)
         }
         default:
         {
-            if(count<15 && str_char_find1st(valid_chars, key)!=-1)
+            if(ctx->count < MENU_DEATH_NAME_MAXLEN && str_key_is_character(key))
             {
-                rec->name[count] = key;
-                ++count;
-                rec->name[count] = 0x00;
+                rec->name[ctx->count] = key;
+                ++ctx->count;
+                rec->name[ctx->count] = '\0';
             }
             break;
         }
     }
 
     return IMENU_DEATH;
+}
+
+static void menu_death_print_name(const struct menu_death_ctx * ctx)
+{
+    size_t i = 0;
+    const chartrec_t * rec = &ctx->rec;
+
+    text.c.atr = 0x0F;
+    while(i < ctx->count && rec->name[i] != '\0')
+    {
+        text.c.chr = rec->name[i];
+        text_setch(31 + i, 21);
+        ++i;
+    }
+    text.c.chr = 176;
+    while(i < MENU_DEATH_NAME_MAXLEN)
+    {
+        text_setch(31 + i, 21);
+        ++i;
+    }
 }
 
 static void menu_death_draw_on_enter(void * ctx_)
@@ -319,20 +321,20 @@ static void menu_death_draw_on_enter(void * ctx_)
     text.c.atr=0x2F;
     text_writeATR(30, 5,"  ****************  ");
     text_writeATR(30, 6," *                * ");
-    text_writeATR(30, 7,"*    **      **    *");
-    text_writeATR(30, 8,"*    **      **    *");
-    text_writeATR(30, 9,"*        **        *");
+    text_writeATR(30, 7,"*   \\ /      \\ /   *");
+    text_writeATR(30, 8,"*    X        X    *");
+    text_writeATR(30, 9,"*   / \\  **  / \\   *");
     text_writeATR(30,10,"*        **        *");
     text_writeATR(30,11,"*        **        *");
     text_writeATR(30,12,"*        **        *");
     text_writeATR(30,13,"*                  *");
-    text_writeATR(30,14,"*     ********     *");
-    text_writeATR(30,15,"*   **        **   *");
+    text_writeATR(30,14,"*    ==========    *");
+    text_writeATR(30,15,"*   /          \\   *");
     text_writeATR(30,16,"*                  *");
     text_writeATR(30,17," **              ** ");
     text_writeATR(30,18,"   **************   ");
     text_writeATR(26,20,"СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_writeATR(26+20,20,str_WORD2strDEC(str,player_scores()));
+    text_writeATR(26+20,20,str_WORD2strDEC(str, player_scores()));
 
     if(!ctx->top10)
     {
@@ -340,10 +342,16 @@ static void menu_death_draw_on_enter(void * ctx_)
     }
     else
     {
-        text_writeATR(26, 21, "ИМЯ>");
+        text_writeATR(26, 21, "ИМЯ> ");
     }
+    menu_death_print_name(ctx);
 }
 
+static void menu_death_draw_on_update(void * ctx_)
+{
+    struct menu_death_ctx * ctx = ctx_;
+    menu_death_print_name(ctx);
+}
 
 static const menu_t menus[] =
 {
@@ -355,7 +363,7 @@ static const menu_t menus[] =
         { NULL, NULL, menu_chart_event_on_event, menu_chart_draw_on_enter, NULL, NULL, NULL },/* IMENU_CHART    */
         { NULL, NULL, menu_help_event_on_event , menu_help_draw_on_enter, NULL, NULL, NULL },/* IMENU_HELP     */
         { menu_quit_on_enter    , NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
-        { menu_death_on_enter, NULL, menu_death_on_event, menu_death_draw_on_enter, NULL, NULL, &menu_death_ctx }/* IMENU_DEATH */
+        { menu_death_on_enter, NULL, menu_death_on_event, menu_death_draw_on_enter, NULL, menu_death_draw_on_update, &menu_death_ctx }/* IMENU_DEATH */
 };
 
 static menu_index_t m_imenu_prev = IMENU_NONE;

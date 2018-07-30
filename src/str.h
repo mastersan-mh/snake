@@ -7,7 +7,7 @@
 #include <inttypes.h>
 #include <unistd.h>
 
-ssize_t str_char_find1st(const char *s, char chr);
+bool str_key_is_character(int key);
 
 char *str_WORD2strDEC(char *s, uint16_t value);
 

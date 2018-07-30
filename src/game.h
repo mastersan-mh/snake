@@ -18,10 +18,11 @@ typedef enum
 {
     GSTATE_NO,
     GSTATE_START,
+    GSTATE_STOP_WIN,
+    GSTATE_STOP_LOSE,
+    GSTATE_REQUEST_STOP,
+    GSTATE_REQUEST_STOP_CANCEL,
     GSTATE_RUN,
-    GSTATE_WIN,
-    GSTATE_LOSE,
-    GSTATE_STOP
 } game_state_t;
 
 typedef struct
@@ -52,13 +53,12 @@ void game_done(void);
 bool game_is_quit(void);
 void game_quit(void);
 void game_start(void);
-void game_stop(void);
 
-void game_delay_update(direction_t direction);
+void game_timing_update(direction_t direction);
 
 void game_loop(void);
 void game_draw(void);
 
-void g_fsm(const event_t * event);
+void g_event_handle(const event_t * event);
 
 #endif /* SRC_GAME_H_ */

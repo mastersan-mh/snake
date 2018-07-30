@@ -26,13 +26,6 @@
 
 static game_t game = {};
 
-char valid_chars[] =
-        "!#$%&'()+,-.0123456789;=@"
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`"
-        "abcdefghijklmnopqrstuvwxyz{}~"
-        "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
-        "абвгдежзийклмнопрстуфхцчшщъыьэюяЁё";
-
 //patterns
 int pt0[1 * 3] = {1,2,3};
 int pt1[7 * 23] = {
@@ -83,7 +76,6 @@ void game_init(void)
     game.showmenu = true;
 
     game.paused = false;
-    game.exit_request = false;
 
     text_init80X25X8();
     text.c.atr=0x00;
@@ -105,6 +97,12 @@ void game_done(void)
 
 }
 
+void game_clean()
+{
+    obj_freeall();
+    snake_done();
+}
+
 bool game_is_quit(void)
 {
     return game.quit;
@@ -124,16 +122,9 @@ void game_start(void)
     game.state = GSTATE_START;
     game.showmenu = false;
     game.paused = false;
-    game.exit_request = false;
-
 }
 
-void game_stop(void)
-{
-    game.state = GSTATE_NO;
-}
-
-void game_delay_update(direction_t direction)
+void game_timing_update(direction_t direction)
 {
     switch(direction)
     {
@@ -152,12 +143,6 @@ void game_delay_update(direction_t direction)
     }
 }
 
-void game_snake_die()
-{
-    game.showmenu = true;
-    menu_show_menu(IMENU_DEATH);
-}
-
 static void game_handle_event_tick(const event_t * event)
 {
     game_state_t newstate = game.state;
@@ -170,24 +155,27 @@ static void game_handle_event_tick(const event_t * event)
             obj_put(OBJ_MARIJUANA);
             newstate = GSTATE_RUN;
             break;
+        case GSTATE_STOP_WIN:
+            game_clean();
+            menu_show_menu(IMENU_DEATH);
+            game.showmenu = true;
+            break;
+        case GSTATE_STOP_LOSE:
+            game_clean();
+            menu_show_menu(IMENU_DEATH);
+            game.showmenu = true;
+            break;
+        case GSTATE_REQUEST_STOP:
+            break;
+        case GSTATE_REQUEST_STOP_CANCEL:
+            newstate = GSTATE_RUN;
+            break;
         case GSTATE_RUN:
             obj_think();
             if(snake_is_dead())
             {
-                newstate = GSTATE_LOSE;
+                newstate = GSTATE_STOP_LOSE;
             }
-            break;
-        case GSTATE_WIN:
-            newstate = GSTATE_STOP;
-            break;
-        case GSTATE_LOSE:
-            game_snake_die();
-            newstate = GSTATE_STOP;
-            break;
-        case GSTATE_STOP:
-            obj_freeall();
-            snake_done();
-            game.showmenu = true;
             break;
     }
     game.state = newstate;
@@ -195,81 +183,97 @@ static void game_handle_event_tick(const event_t * event)
 
 static void game_handle_event_keyboard(const event_t * event)
 {
-    switch(event->data.KEYBOARD.key)
+    switch(game.state)
     {
-        case 'P':
-        case 'p':
-        {
-            game.paused = !game.paused;
+        case GSTATE_NO:
             break;
-        }
-        case '=':
-        case '+':
+        case GSTATE_START:
+            break;
+        case GSTATE_STOP_WIN:
+            break;
+        case GSTATE_STOP_LOSE:
+            break;
+        case GSTATE_REQUEST_STOP:
         {
-            if(game.timing < 1000)
+            switch(event->data.KEYBOARD.key)
             {
-                game.timing++;
-            }
-            game.showtiming = 1100 - game.timing;
-            break;
-        }
-        case '-':
-        case '_':
-        {
-            if(game.timing > 10)
-            {
-                game.timing--;
-            }
-            game.showtiming = 1100 - game.timing;
-            break;
-        }
-        case IO_KB_UP:
-        {
-            player_setdir(DIRECTION_NORTH);
-            game_delay_update(DIRECTION_NORTH);
-            break;
-        }
-        case IO_KB_DN:
-        {
-            player_setdir(DIRECTION_SOUTH);
-            game_delay_update(DIRECTION_SOUTH);
-            break;
-        }
-        case IO_KB_LF:
-        {
-            player_setdir(DIRECTION_WEST);
-            game_delay_update(DIRECTION_WEST);
-            break;
-        }
-        case IO_KB_RT:
-        {
-            player_setdir(DIRECTION_EAST);
-            game_delay_update(DIRECTION_EAST);
-            break;
-        }
-        case IO_KB_ESC:
-        {
-            text.c.atr = 0x0F;
-            text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]?");
-            break;
-        }
-        case 'Y':
-        case 'y':
-        {
-            if(game.exit_request)
-            {
-                snake_die();
-                game_stop();
+                case 'Y':
+                case 'y':
+                {
+                    game.state = GSTATE_STOP_WIN;
+                    break;
+                }
+                case IO_KB_ESC:
+                case 'N':
+                case 'n':
+                {
+                    game.state = GSTATE_REQUEST_STOP_CANCEL;
+                    break;
+                }
             }
             break;
         }
-        case 'N':
-        case 'n':
+        case GSTATE_REQUEST_STOP_CANCEL:
+            break;
+        case GSTATE_RUN:
         {
-            if(game.exit_request)
+            switch(event->data.KEYBOARD.key)
             {
-                text.c.atr=0x1F;
-                text_writeATR(30,12,"                ");
+                case 'P':
+                case 'p':
+                {
+                    game.paused = !game.paused;
+                    break;
+                }
+                case '=':
+                case '+':
+                {
+                    if(game.timing < 1000)
+                    {
+                        ++game.timing;
+                    }
+                    game.showtiming = 1100 - game.timing;
+                    break;
+                }
+                case '-':
+                case '_':
+                {
+                    if(game.timing > 10)
+                    {
+                        --game.timing;
+                    }
+                    game.showtiming = 1100 - game.timing;
+                    break;
+                }
+                case IO_KB_UP:
+                {
+                    player_setdir(DIRECTION_NORTH);
+                    game_timing_update(DIRECTION_NORTH);
+                    break;
+                }
+                case IO_KB_DN:
+                {
+                    player_setdir(DIRECTION_SOUTH);
+                    game_timing_update(DIRECTION_SOUTH);
+                    break;
+                }
+                case IO_KB_LF:
+                {
+                    player_setdir(DIRECTION_WEST);
+                    game_timing_update(DIRECTION_WEST);
+                    break;
+                }
+                case IO_KB_RT:
+                {
+                    player_setdir(DIRECTION_EAST);
+                    game_timing_update(DIRECTION_EAST);
+                    break;
+                }
+                case IO_KB_ESC:
+                {
+                    game.state = GSTATE_REQUEST_STOP;
+                    break;
+                }
             }
             break;
         }
@@ -292,10 +296,6 @@ void game_handle(const event_t * event)
         }
     }
 }
-
-
-
-
 
 static void game_draw_state_run(void)
 {
@@ -342,14 +342,24 @@ void game_draw(void)
                 break;
             case GSTATE_START:
                 break;
+            case GSTATE_STOP_WIN:
+                break;
+            case GSTATE_STOP_LOSE:
+                break;
+            case GSTATE_REQUEST_STOP:
+            {
+                text.c.atr = 0x0F;
+                text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]?");
+                break;
+            }
+            case GSTATE_REQUEST_STOP_CANCEL:
+            {
+                text.c.atr = 0x1F;
+                text_writeATR(30, 12, "                ");
+                break;
+            }
             case GSTATE_RUN:
                 game_draw_state_run();
-                break;
-            case GSTATE_WIN:
-                break;
-            case GSTATE_LOSE:
-                break;
-            case GSTATE_STOP:
                 break;
         }
 
@@ -375,7 +385,7 @@ void game_draw(void)
 }
 
 /* game finite-state machine */
-void g_fsm(const event_t * event)
+void g_event_handle(const event_t * event)
 {
 
     if(game.showmenu)

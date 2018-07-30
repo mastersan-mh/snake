@@ -70,12 +70,12 @@ void chart_save(void)
  */
 void chart_insert(const chartrec_t *rec)
 {
-    int count;
+    size_t count;
     int i;
-    count=0;
+    count = 0;
     while(count < chart.num && rec->scores < chart.r[count].scores)
     {
-        count++;
+        ++count;
     }
     if(count >= CHART_RMAX)
     {
@@ -114,7 +114,7 @@ const chartrec_t * chart_row_get(size_t row)
  * 0 - не попали
  * 1 - попали
  */
-int chart_in_chart(const chartrec_t *rec)
+int chart_record_in_chart(const chartrec_t *rec)
 {
     int count = 0;
     while(count < chart.num && rec->scores < chart.r[count].scores)

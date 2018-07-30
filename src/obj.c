@@ -52,7 +52,7 @@ void obj_new(int x, int y, int id)
         case(OBJ_MARIJUANA ):Hobj->timer=-1;break;
         case(OBJ_MARIJUANAP):Hobj->timer=160+80;break;
         case(OBJ_PURGEN    ):Hobj->timer=80;break;
-        case(OBJ_SHIRT     ):Hobj->timer=160;break;
+        case(OBJ_SHIT     ):Hobj->timer=160;break;
     }
 }
 
@@ -162,7 +162,7 @@ void obj_think(void)
             case OBJ_MARIJUANA :break;
             case OBJ_MARIJUANAP:break;
             case OBJ_PURGEN    :break;
-            case OBJ_SHIRT     :
+            case OBJ_SHIT     :
             {
                 obj_new(x-1,y  ,OBJ_MARIJUANAP);
                 obj_new(x  ,y-1,OBJ_MARIJUANAP);
@@ -188,10 +188,10 @@ void obj_draw(void)
 
         switch(P->id)
         {
-            case(OBJ_MARIJUANA ):text.c.chr=0x05;break;
-            case(OBJ_MARIJUANAP):text.c.chr=0x06;break;
-            case(OBJ_PURGEN    ):text.c.chr=0x0B;break;
-            case(OBJ_SHIRT     ):text.c.chr='@';break;
+            case OBJ_MARIJUANA :text.c.chr=0x05;break;
+            case OBJ_MARIJUANAP:text.c.chr=0x06;break;
+            case OBJ_PURGEN    :text.c.chr=0x0B;break;
+            case OBJ_SHIT      :text.c.chr='@';break;
         }
 
         text_setchchr(P->x,P->y+1);
@@ -256,7 +256,7 @@ void snake_init(const snake_pattern_t * pat)
     snake.H = NULL;
     snake.movedir = pat->dir;
 
-    game_delay_update(snake.movedir);
+    game_timing_update(snake.movedir);
 
     snake.level = 0;
     snake.dead = 0;
@@ -374,7 +374,7 @@ void snake_get_slabit(){
     P=snake.H;
     while(P->next)P=P->next;
     while(num && P->prev){
-        obj_new(P->x,P->y,OBJ_SHIRT);//положим дерьмо на карту
+        obj_new(P->x, P->y, OBJ_SHIT);
         P=P->prev;
         free(P->next);
         P->next=NULL;
@@ -384,13 +384,13 @@ void snake_get_slabit(){
 }
 
 /**
- * сожрал дерьмо
+ * @brief Eat the shit
  */
 void snake_get_shit()
 {
     snake.scores -= 2;
-    if(snake.scores<0)
-        snake.scores=0;
+    if(snake.scores < 0)
+        snake.scores = 0;
 }
 
 /**
@@ -404,30 +404,33 @@ static void snake_think(void)
 
     snake.level = snake.scores / SCORES_PER_LEVEL;
 
-    if(snake.level > LEVEL_MAX-1)
+    if(snake.level >= LEVEL_MAX)
     {
-        snake.level = LEVEL_MAX-1;
+        snake.level = LEVEL_MAX - 1;
     }
 
     if(snake_obj_check(&obj))
-    {//поедание объектов
-        switch(obj->id){
-            case(OBJ_MARIJUANA)://конопля 8)
-            snake.scores++;
-            snake_newseg(obj->x,obj->y);
-            obj_put(OBJ_MARIJUANA);
-            if(rand()%3==1) obj_put(OBJ_PURGEN);
-            break;
-            case(OBJ_MARIJUANAP)://выросшая конопля
-            snake.scores++;
-            snake_newseg(obj->x,obj->y);
-            break;
-            case(OBJ_PURGEN         )://пурген
-            snake_get_slabit();
-            break;
-            case(OBJ_SHIRT          )://дерьмо
-            snake_get_shit();
-            break;
+    {
+        /* objects eating */
+        switch(obj->id)
+        {
+            case OBJ_MARIJUANA:
+                ++snake.scores;
+                snake_newseg(obj->x,obj->y);
+                obj_put(OBJ_MARIJUANA);
+                if(rand()%3==1) obj_put(OBJ_PURGEN);
+                break;
+            case OBJ_MARIJUANAP:
+                /* growed up */
+                ++snake.scores;
+                snake_newseg(obj->x,obj->y);
+                break;
+            case OBJ_PURGEN:
+                snake_get_slabit();
+                break;
+            case OBJ_SHIT:
+                snake_get_shit();
+                break;
         }
 
         obj_free(&obj);
@@ -439,7 +442,8 @@ static void snake_think(void)
         snake.lasty=p->y;
     }
     else
-    { /* движение */
+    {
+        /* moving */
         if(!snake.H->next)
         {
             snake.lastx = snake.H->x;

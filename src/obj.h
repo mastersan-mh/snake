@@ -17,7 +17,7 @@
 /* слабительное */
 #define OBJ_PURGEN 2
 /* дерьмо */
-#define OBJ_SHIRT  3
+#define OBJ_SHIT  3
 
 /**
  * @brief объекты на карте
