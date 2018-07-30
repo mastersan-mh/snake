@@ -230,7 +230,7 @@ static void menu_quit_on_enter(void * ctx_)
 /**
  * @brif The "Death" menu
  */
-#define MENU_DEATH_NAME_MAXLEN 15
+#define MENU_DEATH_NAME_MAXLEN (APP_CHARTREC_NAME_SIZE - 1)
 static struct menu_death_ctx
 {
     chartrec_t rec;
@@ -266,7 +266,7 @@ static menu_index_t menu_death_on_event(int key, void * ctx_)
         {
             if(ctx->count > 0)
             {
-                rec->name[ctx->count]=0x00;
+                rec->name[ctx->count] = '\0';
                 --ctx->count;
             }
             break;

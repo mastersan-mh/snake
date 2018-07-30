@@ -11,12 +11,14 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#define APP_CHARTREC_NAME_SIZE 16
+
 /**
  * @brief запись таблицы победителей
  */
 typedef struct
 {
-    char     name[16];
+    char     name[APP_CHARTREC_NAME_SIZE];
     uint32_t weight;
     uint32_t scores;
 } chartrec_t;

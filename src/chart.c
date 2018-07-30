@@ -70,23 +70,26 @@ void chart_save(void)
  */
 void chart_insert(const chartrec_t *rec)
 {
-    size_t count;
-    int i;
-    count = 0;
-    while(count < chart.num && rec->scores < chart.r[count].scores)
+    size_t iplace;
+    size_t i;
+    iplace = 0;
+    while(iplace < chart.num && rec->scores < chart.r[iplace].scores)
     {
-        ++count;
+        ++iplace;
     }
-    if(count >= CHART_RMAX)
+    if(iplace > CHART_RMAX)
     {
         return; /* out of chart */
     }
-    chart.num++;
-    for(i = chart.num - 1; i > count; --i)
+    if(chart.num < CHART_RMAX)
+    {
+        ++chart.num;
+    }
+    for(i = chart.num - 1; i > iplace; --i)
     {
         chart.r[i] = chart.r[i - 1];
     }
-    chart.r[count] = *rec;
+    chart.r[iplace] = *rec;
 }
 
 size_t chart_len(void)
