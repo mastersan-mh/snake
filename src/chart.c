@@ -110,23 +110,20 @@ const chartrec_t * chart_row_get(size_t row)
 }
 
 /**
- * попали в таблицу рекордов или нет
- * вход:
- * rec - данные игрока
- * выход:
- * 0 - не попали
- * 1 - попали
+ * @brief Will we get into the results table?
+ * @param rec       record
+ * @return true | false
  */
-int chart_record_in_chart(const chartrec_t *rec)
+bool chart_record_in_chart(const chartrec_t *rec)
 {
-    int count = 0;
-    while(count < chart.num && rec->scores < chart.r[count].scores)
+    size_t i = 0;
+    while(i < chart.num && rec->scores < chart.r[i].scores)
     {
-        count++;
+        i++;
     }
-    if(count >= CHART_RMAX)
+    if(i >= CHART_RMAX)
     {
-        return 0; /* out of chart */
+        return false; /* out of chart */
     }
-    return 1;
+    return true;
 }

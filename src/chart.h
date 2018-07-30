@@ -8,6 +8,8 @@
 #ifndef SRC_CHART_H_
 #define SRC_CHART_H_
 
+#include "snaketypes.h"
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -27,7 +29,7 @@ void chart_load(void);
 void chart_save(void);
 size_t chart_len(void);
 const chartrec_t * chart_row_get(size_t row);
-int chart_record_in_chart(const chartrec_t *rec);
+bool chart_record_in_chart(const chartrec_t *rec);
 void chart_insert(const chartrec_t *rec);
 
 #endif /* SRC_CHART_H_ */
