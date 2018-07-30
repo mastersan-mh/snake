@@ -31,6 +31,28 @@ char sys_special    [] = "Здесь никогда не будет вашей �
 
 char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
+
+static void P_menu_dec(int menu_amount, int * imenu)
+{
+    if((*imenu) <= 0)
+    {
+        *imenu = menu_amount - 1;
+        return;
+    }
+    (*imenu)--;
+}
+
+static void P_menu_inc(int menu_amount, int * imenu)
+{
+    if((*imenu) >= menu_amount - 1)
+    {
+        *imenu = 0;
+        return;
+    }
+    (*imenu)++;
+}
+
+
 /**
  * @brief Main menu
  */
@@ -48,12 +70,12 @@ static menu_index_t menu_main_on_event(int key, void * ctx_)
     {
         case IO_KB_UP:
         {
-            if(ctx->sub > 0) ctx->sub--; else ctx->sub = 5;
+            P_menu_dec(6, &ctx->sub);
             break;
         }
         case IO_KB_DN:
         {
-            if(ctx->sub < 5) ctx->sub++; else ctx->sub = 0;
+            P_menu_inc(6, &ctx->sub);
             break;
         }
         case IO_KB_ENTER:
@@ -437,12 +459,6 @@ void menu_handle(const event_t * event)
 
 
 }
-
-void menu_draw(void)
-{
-
-}
-
 
 void menu_show_menu(menu_index_t imenu)
 {

@@ -16,7 +16,6 @@
 
 typedef enum
 {
-    GSTATE_NO,
     GSTATE_START,
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,

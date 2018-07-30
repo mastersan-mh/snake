@@ -24,7 +24,6 @@ typedef enum
 } menu_index_t;
 
 void menu_handle(const event_t * event);
-void menu_draw(void);
 
 void menu_show_menu(menu_index_t IMENU_DEATH);
 

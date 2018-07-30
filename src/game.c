@@ -24,6 +24,8 @@
 
 #include <stdlib.h>
 
+#include <string.h>
+
 static game_t game = {};
 
 //patterns
@@ -71,11 +73,17 @@ char *level[LEVEL_MAX] =
 
 
 
+#define VID_SCR_WIDTH (80)
+#define VID_SCR_HEIGHT (25)
+void print_centerscreen(size_t text_width, const char * text)
+{
+    text_writeATR((VID_SCR_WIDTH - text_width) / 2, VID_SCR_HEIGHT / 2, text);
+}
+
+
 void game_init(void)
 {
     game.showmenu = true;
-
-    game.paused = false;
 
     text_init80X25X8();
     text.c.atr=0x00;
@@ -149,8 +157,6 @@ static void game_handle_event_tick(const event_t * event)
 
     switch(game.state)
     {
-        case GSTATE_NO:
-            break;
         case GSTATE_START:
             obj_put(OBJ_MARIJUANA);
             newstate = GSTATE_RUN;
@@ -171,6 +177,10 @@ static void game_handle_event_tick(const event_t * event)
             newstate = GSTATE_RUN;
             break;
         case GSTATE_RUN:
+            if(game.paused)
+            {
+                break;
+            }
             obj_think();
             if(snake_is_dead())
             {
@@ -185,8 +195,6 @@ static void game_handle_event_keyboard(const event_t * event)
 {
     switch(game.state)
     {
-        case GSTATE_NO:
-            break;
         case GSTATE_START:
             break;
         case GSTATE_STOP_WIN:
@@ -230,9 +238,10 @@ static void game_handle_event_keyboard(const event_t * event)
                 {
                     if(game.timing < 1000)
                     {
-                        ++game.timing;
+                        game.timing +=10;
                     }
                     game.showtiming = 1100 - game.timing;
+                    game_timing_update(player_direction());
                     break;
                 }
                 case '-':
@@ -240,9 +249,10 @@ static void game_handle_event_keyboard(const event_t * event)
                 {
                     if(game.timing > 10)
                     {
-                        --game.timing;
+                        game.timing -= 10;
                     }
                     game.showtiming = 1100 - game.timing;
+                    game_timing_update(player_direction());
                     break;
                 }
                 case IO_KB_UP:
@@ -327,19 +337,10 @@ void game_draw(void)
 {
     static bool paused_prev = false;
 
-
-    if(game.showmenu)
-    {
-        menu_draw();
-    }
-    else
+    if(!game.showmenu)
     {
         switch(game.state)
         {
-
-            case GSTATE_NO:
-                game.showmenu = true;
-                break;
             case GSTATE_START:
                 break;
             case GSTATE_STOP_WIN:
@@ -349,34 +350,38 @@ void game_draw(void)
             case GSTATE_REQUEST_STOP:
             {
                 text.c.atr = 0x0F;
-                text_writeATR(30,12,"УЖЕ УХОДИШ[Y/N]?");
+                print_centerscreen(16, "УЖЕ УХОДИШ[Y/N]?");
                 break;
             }
             case GSTATE_REQUEST_STOP_CANCEL:
             {
                 text.c.atr = 0x1F;
-                text_writeATR(30, 12, "                ");
+                print_centerscreen(16, "                ");
                 break;
             }
             case GSTATE_RUN:
-                game_draw_state_run();
+                if(game.paused != paused_prev)
+                {
+                    paused_prev = game.paused;
+                    if(game.paused)
+                    {
+                        text.c.atr = 0x8F;
+                        print_centerscreen(17, "-= P A U S E D =-");
+                    }
+                    else
+                    {
+                        text.c.atr = 0x1F;
+                        print_centerscreen(17, "                 ");
+                    }
+                }
+                if(!game.paused)
+                {
+                    game_draw_state_run();
+                }
                 break;
         }
 
 
-        if(game.paused != paused_prev)
-        {
-            if(game.paused)
-            {
-                text.c.atr = 0x8F;
-                text_writeATR((80-13)/2,12,"-= P A U S E =-");
-            }
-            else
-            {
-                text.c.atr = 0x1F;
-                text_writeATR((80-13)/2,12,"               ");
-            }
-        }
 
 
     }

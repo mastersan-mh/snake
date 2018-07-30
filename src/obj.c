@@ -532,6 +532,11 @@ void player_setdir(direction_t movedir)
     }
 }
 
+direction_t player_direction(void)
+{
+    return snake.movedir;
+}
+
 int player_scores(void)
 {
     return snake.scores;

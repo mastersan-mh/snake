@@ -42,6 +42,7 @@ void snake_die(void);
 bool snake_is_dead(void);
 
 void player_setdir(direction_t movedir);
+direction_t player_direction(void);
 
 int player_scores(void);
 int player_level(void);
