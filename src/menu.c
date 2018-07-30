@@ -135,8 +135,8 @@ static void menu_newgame0_on_enter(void * ctx_)
  */
 static void menu_newgame1_on_enter(void * ctx_)
 {
-    snake_init(&info_snake[1]);
     game_start();
+    snake_init(&info_snake[1]);
 }
 
 /**
@@ -144,8 +144,8 @@ static void menu_newgame1_on_enter(void * ctx_)
  */
 static void menu_newgame2_on_enter(void * ctx_)
 {
-    snake_init(&info_snake[2]);
     game_start();
+    snake_init(&info_snake[2]);
 }
 
 /**

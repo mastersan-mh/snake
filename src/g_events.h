@@ -44,7 +44,6 @@ int g_events_init(void);
 void g_events_handle(void);
 bool g_events_is_empty(void);
 void g_events_flush(void);
-size_t g_events_amount(void);
 
 void g_event_send(
     event_type_t type,
