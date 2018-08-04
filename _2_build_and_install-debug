@@ -1,0 +1,16 @@
+#!/bin/bash
+
+INSTALLPATH=`realpath -m ./_installdir/usr/`
+rm -Rf ${INSTALLPATH}
+mkdir -p ${INSTALLPATH}
+
+./configure --prefix=${INSTALLPATH} 1>log.txt 2>err.txt && \
+make                                1>log.txt 2>err.txt && \
+make install                        1>log.txt 2>err.txt
+
+if [ "$?" = 0 ] ;
+then
+  echo "OK"
+else
+  echo "ERROR while build"
+fi
