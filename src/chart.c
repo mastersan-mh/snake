@@ -5,15 +5,18 @@
  *      Author: mastersan
  */
 
+#include "g_utils.h"
+
 #include "chart.h"
 
 #define CHART_RMAX 10
 
 #include <stdio.h>
+
 /**
  * @brief таблица победителей
  */
-typedef struct
+typedef struct __attribute__((packed))
 {
     chartrec_t r[CHART_RMAX];
     int num;//количество записей
@@ -28,7 +31,9 @@ void chart_load(void)
 {
     FILE *F;
     chart.num = 0;
-    if((F = fopen("snake.frg","rb")) == NULL)
+
+
+    if((F = fopen(game_file_scores_get(), "rb")) == NULL)
     {
         return;
     }
@@ -36,7 +41,7 @@ void chart_load(void)
     do{
         if(fread(&chart.r[chart.num], sizeof(chartrec_t), 1, F) == 1)
         {
-            chart.num++;
+            ++chart.num;
         }
         else
         {
@@ -57,7 +62,7 @@ void chart_save(void)
         return;
     }
 
-    if((F = fopen("snake.frg","wb")) == NULL)
+    if((F = fopen(game_file_scores_get(), "wb")) == NULL)
     {
         return;
     }

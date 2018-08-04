@@ -9,7 +9,7 @@
 #define SRC_GAME_H_
 
 #include "snaketypes.h"
-#include "_time.h"
+#include "sys_time.h"
 #include "obj.h"
 
 #include "g_events.h"
@@ -46,7 +46,7 @@ extern char *level[LEVEL_MAX];
 void snake_init(const snake_pattern_t * pat);
 void snake_done(void);
 
-void game_init(void);
+int game_init(void);
 void game_done(void);
 
 bool game_is_quit(void);

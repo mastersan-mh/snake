@@ -8,13 +8,15 @@ snake_CFLAGS = -std=c11 -Wall -D_DEFAULT_SOURCE
 snake_LDFLAGS = -lncursesw
 
 snake_SOURCES = \
+sys_utils.c \
+sys_time.c \
+_text.c \
+g_utils.c \
 chart.c \
-game.c \
 g_events.c \
+game.c \
 io.c \
-main.c \
-menu.c \
 obj.c \
 str.c \
-_text.c \
-_time.c
+main.c \
+menu.c

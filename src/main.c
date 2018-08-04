@@ -14,11 +14,15 @@ libs:
 
 #include "io.h"
 #include "game.h"
+#include <stdlib.h>
 
 int main()
 {
     io_init();
-    game_init();
+    if(game_init())
+    {
+        return EXIT_FAILURE;
+    }
     while(!game_is_quit())
     {
         game_loop();
@@ -26,5 +30,5 @@ int main()
     }
     game_done();
     io_done();
-    return 0;
+    return EXIT_SUCCESS;
 }

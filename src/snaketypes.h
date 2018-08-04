@@ -11,8 +11,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-#include <stdio.h>
-
 #define LEVEL_MAX 11
 
 #define MAP_SX 80
