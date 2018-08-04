@@ -8,9 +8,10 @@
 #ifndef SRC_G_EVENTS_H_
 #define SRC_G_EVENTS_H_
 
-#include <sys/queue.h>
-#include "_time.h"
+#include "sys_time.h"
 #include "snaketypes.h"
+
+#include <sys/queue.h>
 
 typedef enum
 {

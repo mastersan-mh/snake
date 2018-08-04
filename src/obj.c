@@ -12,7 +12,7 @@
 #include "game.h"
 
 #include "_text.h"
-#include "_time.h"
+#include "sys_time.h"
 #include "str.h"
 
 #include <stdlib.h>

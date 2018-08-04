@@ -1,13 +1,10 @@
 /**
  * system timer
  */
-#include "_time.h"
+#include "sys_utils.h"
+#include "sys_time.h"
 
-#ifndef ARRAY_SIZE
-#   define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-#endif
-
-const struct timespec ts_zero  = {};
+const struct timespec ts_zero = {};
 
 static clockid_t clock_priotity[] =
 {
@@ -66,9 +63,9 @@ void app_ts_timeout_compute(
     }
 }
 
-void time_ms_to_timespec(game_time_ms_t time, struct timespec * timespec)
+void app_time_ms_to_timespec(game_time_ms_t time, struct timespec * timespec)
 {
-    timespec->tv_sec = time/1000;
+    timespec->tv_sec = time / 1000;
     timespec->tv_nsec = (time % 1000) * NANOSEC_IN_MILLISEC;
 }
 

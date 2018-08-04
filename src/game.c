@@ -7,6 +7,7 @@
 
 #include "io.h"
 #include "game.h"
+#include "g_utils.h"
 #include "g_events.h"
 
 #include "snaketypes.h"
@@ -14,7 +15,7 @@
 #include "menu.h"
 
 #include "_text.h"
-#include "_time.h"
+#include "sys_time.h"
 #include "str.h"
 
 #include <stddef.h>
@@ -81,8 +82,16 @@ void print_centerscreen(size_t text_width, const char * text)
 }
 
 
-void game_init(void)
+int game_init(void)
 {
+    char * home_dir = getenv("HOME");
+    if(home_dir == NULL)
+    {
+        ERROR("Environment variable HOME is NULL")
+        return -1;
+    }
+    game_directories_init(home_dir);
+
     game.showmenu = true;
 
     text_init80X25X8();
@@ -92,6 +101,7 @@ void game_init(void)
     srand(time(NULL));
     chart_load();
     g_events_init();
+    return 0;
 }
 
 void game_done(void)
@@ -103,6 +113,7 @@ void game_done(void)
     game.showtiming = 0;
     game.timing = 500; //задержка(мс)
 
+    game_directories_done();
 }
 
 void game_clean()

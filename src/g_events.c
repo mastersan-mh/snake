@@ -13,7 +13,7 @@
 
 #include "game.h"
 
-#include "_time.h"
+#include "sys_time.h"
 #include "_text.h"
 #include "str.h"
 
@@ -141,7 +141,7 @@ void g_events_pump(void)
 
     struct timespec ts_events_ticktime;
 
-    time_ms_to_timespec(events_tick_time, &ts_events_ticktime);
+    app_time_ms_to_timespec(events_tick_time, &ts_events_ticktime);
 
     fd_set rfds = readfds;
     fd_set * rfdsp = &rfds;

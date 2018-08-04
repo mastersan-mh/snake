@@ -1,8 +1,8 @@
 /**
  * system timer
  */
-#ifndef SRC_TIME_H_
-#define SRC_TIME_H_
+#ifndef SRC_SYS_TIME_H_
+#define SRC_SYS_TIME_H_
 
 #include <time.h>
 
@@ -73,6 +73,6 @@ void app_ts_timeout_compute(
 typedef unsigned long game_time_s_t;
 typedef unsigned long game_time_ms_t;
 
-void time_ms_to_timespec(game_time_ms_t time, struct timespec * timeval);
+void app_time_ms_to_timespec(game_time_ms_t time, struct timespec * timeval);
 
-#endif
+#endif /* SRC_SYS_TIME_H_ */
