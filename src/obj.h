@@ -10,14 +10,19 @@
 
 #include "snaketypes.h"
 
-/* конопля */
-#define OBJ_MARIJUANA 0
-/* посаженая конопля */
-#define OBJ_MARIJUANAP 1
-/* слабительное */
-#define OBJ_PURGEN 2
-/* дерьмо */
-#define OBJ_SHIT  3
+typedef enum
+{
+    /* hemp */
+    OBJ_MARIJUANA,
+    /* planted hemp */
+    OBJ_MARIJUANAP,
+    /* Purgen. Oi! Oi! Oi! Punks not dead! */
+    OBJ_PURGEN,
+    /* shit */
+    OBJ_SHIT,
+    /* player */
+    OBJ_PLAYER,
+} obj_type_t;
 
 /**
  * @brief объекты на карте
@@ -26,15 +31,15 @@ typedef struct obj_st
 {
     struct obj_st *next;
     int x,y;
-    int id;
+    obj_type_t type;
     int timer;
 } obj_t;
 
-void obj_new(int x, int y, int id);
+void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);
 obj_t *obj_free(obj_t **obj);
 
-void obj_put(int id);
+void obj_put(obj_type_t id);
 void obj_think(void);
 void obj_draw(void);
 
