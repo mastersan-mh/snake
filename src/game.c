@@ -7,10 +7,10 @@
 
 #include "io.h"
 #include "game.h"
+#include "g_types.h"
 #include "g_utils.h"
 #include "g_events.h"
 
-#include "snaketypes.h"
 #include "chart.h"
 #include "menu.h"
 

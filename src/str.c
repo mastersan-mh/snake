@@ -2,7 +2,7 @@
  * Strings and chars processing
  */
 
-#include "snaketypes.h"
+#include "g_types.h"
 
 #include <stdio.h>
 #include <string.h>

@@ -8,8 +8,8 @@
 #ifndef SRC_GAME_H_
 #define SRC_GAME_H_
 
-#include "snaketypes.h"
 #include "sys_time.h"
+#include "g_types.h"
 #include "obj.h"
 
 #include "g_events.h"

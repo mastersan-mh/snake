@@ -8,7 +8,7 @@
 #include "obj.h"
 
 #include "Z_mem.h"
-#include "snaketypes.h"
+#include "g_types.h"
 #include "game.h"
 
 #include "_text.h"

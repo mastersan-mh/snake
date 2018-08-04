@@ -8,7 +8,14 @@
 #ifndef SRC_OBJ_H_
 #define SRC_OBJ_H_
 
-#include "snaketypes.h"
+#include "g_types.h"
+
+#define LEVEL_MAX 11
+
+#define MAP_SX 80
+#define MAP_SY 24
+
+#define SCORES_PER_LEVEL 100
 
 typedef enum
 {
@@ -34,6 +41,56 @@ typedef struct obj_st
     obj_type_t type;
     int timer;
 } obj_t;
+
+
+
+typedef enum
+{
+    DIRECTION_NORTH,
+    DIRECTION_SOUTH,
+    DIRECTION_WEST,
+    DIRECTION_EAST
+} direction_t;
+
+/**
+ * @brief шаблон змеи
+ */
+typedef struct
+{
+    char dir;
+    int  sx,sy;
+    int  *pat;
+} snake_pattern_t;
+
+/**
+ * @brief сегмент змеи
+ */
+typedef struct snake_seg_st
+{
+    struct snake_seg_st *prev;
+    struct snake_seg_st *next;
+    int x,y;
+} snake_seg_t;
+
+/**
+ * @brief snake
+ */
+typedef struct
+{
+    snake_seg_t *H;
+    /* прошлое положение хвоста(для стирания следа) */
+    int       lastx;
+    int       lasty;
+
+    /* направление движения */
+    direction_t movedir;
+    int       level;   //уровень развитости
+    bool      dead;     //умерла?
+    long      weight;  //вес змеи
+    long      scores;  //очки
+} snake_t;
+
+
 
 void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);

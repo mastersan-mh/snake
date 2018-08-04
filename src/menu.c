@@ -3,7 +3,7 @@
  */
 
 #include "io.h"
-#include "snaketypes.h"
+#include "g_types.h"
 #include "menu.h"
 #include "game.h"
 #include "chart.h"
