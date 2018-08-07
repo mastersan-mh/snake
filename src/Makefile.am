@@ -17,6 +17,5 @@ g_events.c \
 game.c \
 io.c \
 obj.c \
-str.c \
 main.c \
 menu.c

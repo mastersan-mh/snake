@@ -2,6 +2,7 @@
  * menu.c
  */
 
+#include "sys_utils.h"
 #include "io.h"
 #include "g_types.h"
 #include "menu.h"
@@ -9,7 +10,6 @@
 #include "chart.h"
 
 #include "_text.h"
-#include "str.h"
 
 #include <string.h>
 
@@ -104,29 +104,29 @@ static void menu_main_draw_on_enter(void * ctx_)
     text_fill_screen();
 
     text.c.atr=0x09;
-    text_writeATR(29,1,"**** **  ** ***********");
-    text_writeATR(29,2,"   * ** *** *     **  *");
-    text_writeATR(29,3,"**** **** * ***** *****");
-    text_writeATR(29,4,"***  * ** * ***** ** **");
-    text_writeATR(29,5,"  ** *    * *      * **");
-    text_writeATR(29,6,"**** *    * ***** ** **");
-    text_writeATR(29,7,"******    ******* *  **");
+    text_print(29,1,"**** **  ** ***********");
+    text_print(29,2,"   * ** *** *     **  *");
+    text_print(29,3,"**** **** * ***** *****");
+    text_print(29,4,"***  * ** * ***** ** **");
+    text_print(29,5,"  ** *    * *      * **");
+    text_print(29,6,"**** *    * ***** ** **");
+    text_print(29,7,"******    ******* *  **");
 
-    text_writeATR(40-(SYS_SPECIAL_LEN / 2), 9, sys_special);
+    text_print(40-(SYS_SPECIAL_LEN / 2), 9, sys_special);
 
-    text_writeATR(1,24,sys_progversion);
+    text_print(1,24,sys_progversion);
     text.c.atr=0x5F;
-    text_writeATR((80-10)/2,12," НОВАЯ 1  ");
-    text_writeATR((80-10)/2,13," НОВАЯ 2  ");
-    text_writeATR((80-10)/2,14," НОВАЯ 3  ");
-    text_writeATR((80-10)/2,15,"ПОБЕДИТЕЛИ");
-    text_writeATR((80-10)/2,16,"  ПОМОЩЬ  ");
-    text_writeATR((80-10)/2,17,"  ВЫХОД   ");
+    text_print((80-10)/2,12," НОВАЯ 1  ");
+    text_print((80-10)/2,13," НОВАЯ 2  ");
+    text_print((80-10)/2,14," НОВАЯ 3  ");
+    text_print((80-10)/2,15,"ПОБЕДИТЕЛИ");
+    text_print((80-10)/2,16,"  ПОМОЩЬ  ");
+    text_print((80-10)/2,17,"  ВЫХОД   ");
     text.c.atr=0x0F;
-    text_writeATR( 7,22,"Mad House Software");
-    text_writeATR(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
-    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
-    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
+    text_print( 7,22,"Mad House Software");
+    text_print(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
+    text_print((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
 
 }
 
@@ -135,10 +135,10 @@ static void menu_main_draw_on_update(void * ctx_)
     struct menu_main_ctx * ctx = ctx_;
 
     text.c.atr=0x05;
-    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub_prev, "  ");
-    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub_prev, "  ");
-    text_writeATR((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
-    text_writeATR((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
+    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub_prev, "  ");
+    text_print((80 - 10) / 2 + 10, 12 + ctx->sub_prev, "  ");
+    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
+    text_print((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
     ctx->sub_prev = ctx->sub;
 
 }
@@ -180,14 +180,13 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
 
 static void menu_chart_draw_on_enter(void * ctx_)
 {
-    char str[12];
     size_t row;
     int lev;
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
     text.c.atr=0x09;
-    text_writeATR(20+ 1,7+0,"МЕСТО ИМЯ             ФРАГИ ВЕС   СТАТУС");
+    text_print(20, 7,"МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
 
     size_t len = chart_len();
 
@@ -199,17 +198,19 @@ static void menu_chart_draw_on_enter(void * ctx_)
         {
             lev = LEVEL_MAX - 1;
         }
-        text_writeATR(20 +  1, 7 + row, str_WORD2strDEC(str, row));
-        text_writeATR(20 +  7, 7 + row, rec->name);
-        text_writeATR(20 + 23, 7 + row, str_WORD2strDEC(str,rec->scores));
-        text_writeATR(20 + 29, 7 + row, str_WORD2strDEC(str,rec->weight));
-        text_writeATR(20 + 35, 7 + row, level[lev]);
+        text_print(20, 7 + row, "%-5d %-15s %-6d %-6d %-20s"
+                , (int)row
+                , rec->name
+                , (int)rec->scores
+                , (int)rec->weight
+                , (level_str[lev])
+        );
     }
 
     text.c.atr=0x5F;
-    text_writeATR((80-29)/2,22,anti_war);
+    text_print((80-29)/2, 22, anti_war);
     text.c.atr=0x8F;
-    text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
+    text_print((80-16)/2, 23, "PRESS ANY KEY...");
 }
 
 /**
@@ -227,20 +228,20 @@ static void menu_help_draw_on_enter(void * ctx_)
     text_fill_screen();
     text.c.atr=0x09;
 
-    text_writeATR((80-13)/2,5   ,"ТИПА ЭТО ХЕЛП");
-    text_writeATR(20,7+ 0,"Управление:");
-    text_writeATR(20,7+ 1,"Стрелки - Указание направления движения");
-    text_writeATR(20,7+ 2,"+,-     - Управление скоростью игры");
-    text_writeATR(20,7+ 3,"P       - Пауза");
-    text_writeATR(20,7+ 4,"ESC     - Выход в меню");
-    text_writeATR(20,7+ 6,"Предметы:");
-    text_writeATR(20,7+ 7,"\5 - конопля");
-    text_writeATR(20,7+ 8,"\6 - выросшая конопля");
-    text_writeATR(20,7+ 9,"\13 - пурген");
-    text_writeATR(20,7+10,"@ - дерьмо");
+    text_print((80-13)/2,5   ,"ТИПА ЭТО ХЕЛП");
+    text_print(20,7+ 0,"Управление:");
+    text_print(20,7+ 1,"Стрелки - Указание направления движения");
+    text_print(20,7+ 2,"+,-     - Управление скоростью игры");
+    text_print(20,7+ 3,"P       - Пауза");
+    text_print(20,7+ 4,"ESC     - Выход в меню");
+    text_print(20,7+ 6,"Предметы:");
+    text_print(20,7+ 7,"\5 - конопля");
+    text_print(20,7+ 8,"\6 - выросшая конопля");
+    text_print(20,7+ 9,"\13 - пурген");
+    text_print(20,7+10,"@ - дерьмо");
 
     text.c.atr=0x8F;
-    text_writeATR((80-16)/2,23,"PRESS ANY KEY...");
+    text_print((80-16)/2,23,"PRESS ANY KEY...");
 
 }
 
@@ -336,35 +337,34 @@ static void menu_death_print_name(const struct menu_death_ctx * ctx)
 static void menu_death_draw_on_enter(void * ctx_)
 {
     struct menu_death_ctx * ctx = ctx_;
-    char str[12];
 
     text.c.atr=0x0F;
-    text_writeATR(32, 3,"Tы типа сдох :-(");
+    text_print(32,  3, "Tы типа сдох :-(");
     text.c.atr=0x2F;
-    text_writeATR(30, 5,"  ****************  ");
-    text_writeATR(30, 6," *                * ");
-    text_writeATR(30, 7,"*   \\ /      \\ /   *");
-    text_writeATR(30, 8,"*    X        X    *");
-    text_writeATR(30, 9,"*   / \\  **  / \\   *");
-    text_writeATR(30,10,"*        **        *");
-    text_writeATR(30,11,"*        **        *");
-    text_writeATR(30,12,"*        **        *");
-    text_writeATR(30,13,"*                  *");
-    text_writeATR(30,14,"*    ==========    *");
-    text_writeATR(30,15,"*   /          \\   *");
-    text_writeATR(30,16,"*                  *");
-    text_writeATR(30,17," **              ** ");
-    text_writeATR(30,18,"   **************   ");
-    text_writeATR(26,20,"СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_writeATR(26+20,20,str_WORD2strDEC(str, player_scores()));
+    text_print(30,  5, "  ****************  ");
+    text_print(30,  6, " *                * ");
+    text_print(30,  7, "*   \\ /      \\ /   *");
+    text_print(30,  8, "*    X        X    *");
+    text_print(30,  9, "*   / \\  **  / \\   *");
+    text_print(30, 10, "*        **        *");
+    text_print(30, 11, "*        **        *");
+    text_print(30, 12, "*        **        *");
+    text_print(30, 13, "*                  *");
+    text_print(30, 14, "*    ==========    *");
+    text_print(30, 15, "*   /          \\   *");
+    text_print(30, 16, "*                  *");
+    text_print(30, 17, " **              ** ");
+    text_print(30, 18, "   **************   ");
+    text_print(26, 20, "СОЖРАЛ КОНОПЛИ(КГ): ");
+    text_print(26+20, 20, "%d", (int)player_scores());
 
     if(!ctx->top10)
     {
-        text_writeATR(35, 21, "ТЫ ХУДШИЙ!");
+        text_print(35, 21, "ТЫ ХУДШИЙ!");
     }
     else
     {
-        text_writeATR(26, 21, "ИМЯ> ");
+        text_print(26, 21, "ИМЯ> ");
     }
     menu_death_print_name(ctx);
 }

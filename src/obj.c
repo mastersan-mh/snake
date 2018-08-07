@@ -13,7 +13,6 @@
 
 #include "_text.h"
 #include "sys_time.h"
-#include "str.h"
 
 #include <stdlib.h>
 
@@ -89,7 +88,7 @@ obj_t *obj_free(obj_t **obj)
     }
 
     text.c.chr=' ';
-    text_setchchr((*obj)->x,(*obj)->y+1);
+    text_setch((*obj)->x, (*obj)->y+1);
 
     if(Hobj == (*obj))
     {
@@ -210,7 +209,7 @@ void obj_draw(void)
             case OBJ_PLAYER    : text.c.chr = 's'; break;
         }
 
-        text_setchchr(P->x, P->y+1);
+        text_setch(P->x, P->y+1);
         P=P->next;
     }
 

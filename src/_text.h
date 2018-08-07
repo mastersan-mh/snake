@@ -1,8 +1,8 @@
 /**
  * text
  */
-#ifndef __TEXT_H
-#define __TEXT_H
+#ifndef TEXT_H_
+#define TEXT_H_
 
 /* размер экрана X */
 #define TEXT_SCRsx 80
@@ -11,6 +11,12 @@
 
 #include <curses.h>
 
+/**
+ * @brief Print string with it attributes
+ * @param[in] x         coord. x
+ * @param[in] y         coord. y
+ * @param[in] format    string
+ */
 #define text_print(x, y, format, ...) \
         mvprintw(y, x, format, ##__VA_ARGS__)
 
@@ -29,8 +35,6 @@ extern struct TTEXT text;
 void text_init80X25X8(void);
 
 void text_setch(int x, int y);
-void text_setchchr(int x, int y);
 void text_fill_screen(void);
-void text_writeATR(int x, int y, const char *s);
 
 #endif

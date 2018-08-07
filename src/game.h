@@ -41,7 +41,7 @@ typedef struct
 extern char valid_chars[];
 
 extern snake_pattern_t info_snake[];
-extern char *level[LEVEL_MAX];
+extern char *level_str[LEVEL_MAX];
 
 void snake_init(const snake_pattern_t * pat);
 void snake_done(void);
