@@ -1,11 +1,13 @@
 /*
- * obj.c
+ * ent_objects.c
  *
  *  Created on: 25 дек. 2017 г.
  *      Author: mastersan
  */
 
-#include "obj.h"
+#include "ents_objects.h"
+
+#include "io.h"
 
 #include "Z_mem.h"
 #include "g_types.h"
@@ -15,6 +17,52 @@
 #include "sys_time.h"
 
 #include <stdlib.h>
+#include "ents_ctrl.h"
+
+char *level_str[LEVEL_MAX] =
+{
+        "Так себе, микробик:)",
+        "Червячёк            ",
+        "Червяк              ",
+        "Большой Червяк      ",
+        "Глист               ",
+        "Взрослый глист      ",
+        "Хобот слоненка      ",
+        "Хобот слона         ",
+        "Матерый бычий цепень",
+        "Великий Шланг       ",
+        "Бог шлангообразных  "
+};
+
+/* patterns */
+static int pt0[1 * 3] = { 1, 2, 3 };
+static int pt1[7 * 23] =
+{
+         1, 2, 3, 4, 0,30,31, 0, 0,40,41, 0,71,72,73,74,75,76, 77, 78,79,80,81, //**** **  ** ***********
+         0, 0, 0, 5, 0,29,32, 0,38,39,42, 0,70, 0, 0, 0, 0, 0, 96, 95, 0, 0,82, //   * ** *** *     **  *
+         9, 8, 7, 6, 0,28,33,34,37, 0,43, 0,69,68,67,66,65, 0, 97, 94,93,92,83, //**** **** * ***** *****
+        10,11,12, 0, 0,27, 0,35,36, 0,44, 0,60,61,62,63,64, 0, 98, 99, 0,91,84, //***  * ** * ***** ** **
+         0, 0,13,14, 0,26, 0, 0, 0, 0,45, 0,59, 0, 0, 0, 0, 0,  0,100, 0,90,85, //  ** *    * *      * **
+        18,17,16,15, 0,25, 0, 0, 0, 0,46, 0,58,57,56,55,54, 0,102,101, 0,89,86, //**** *    * ***** ** **
+        19,20,21,22,23,24, 0, 0, 0, 0,47,48,49,50,51,52,53, 0,103,  0, 0,88,87  //******    ******* *  **
+};
+
+static int pt2[5 * 20] =
+{
+         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19, 20,
+        40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22, 21,
+        41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59, 60,
+        80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65,64,63,62, 61,
+        81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
+};
+
+snake_pattern_t info_snake[] =
+{
+        {DIRECTION_EAST , 3 , 1, pt0},
+        {DIRECTION_SOUTH, 23, 7, pt1},
+        {DIRECTION_SOUTH, 20, 5, pt2}
+};
+
 
 static obj_t *Hobj = NULL;
 static snake_t snake;
@@ -193,7 +241,7 @@ void obj_think(void)
 /**
  * @brief Draw all objects
  */
-void obj_draw(void)
+static void obj_draw(void)
 {
     obj_t *P;
     P = Hobj;
@@ -215,7 +263,78 @@ void obj_draw(void)
 
     snake_draw();
 
+
 }
+
+static void game_draw_state_run(void)
+{
+    text.c.atr=0x0F;
+    text_print( 0, 0, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+            , g_ctl_player_scores()
+            , g_ctl_player_level()
+            , g_ctl_player_weight()
+    );
+
+    obj_draw();
+
+    if(game_ents.showtiming > 0)
+    {
+        text_print(0, 24, "timing = %d", (int)game_ents.timing);
+        --game_ents.showtiming;
+        if(game_ents.showtiming <= 0)
+            text_print(0, 24, "            ");
+    }
+}
+
+
+void ent_scene_draw(game_ctx_t * ctx)
+{
+    static bool paused_prev = false;
+
+    switch(game_ents.state)
+    {
+        case GSTATE_START:
+            break;
+        case GSTATE_STOP_WIN:
+            break;
+        case GSTATE_STOP_LOSE:
+            break;
+        case GSTATE_REQUEST_STOP:
+        {
+            text.c.atr = 0x0F;
+            print_centerscreen(16, "УЖЕ УХОДИШ[Y/N]?");
+            break;
+        }
+        case GSTATE_REQUEST_STOP_CANCEL:
+        {
+            text.c.atr = 0x1F;
+            print_centerscreen(16, "                ");
+            break;
+        }
+        case GSTATE_RUN:
+            if(game_ents.paused != paused_prev)
+            {
+                paused_prev = game_ents.paused;
+                if(game_ents.paused)
+                {
+                    text.c.atr = 0x8F;
+                    print_centerscreen(17, "-= P A U S E D =-");
+                }
+                else
+                {
+                    text.c.atr = 0x1F;
+                    print_centerscreen(17, "                 ");
+                }
+            }
+            if(!game_ents.paused)
+            {
+                game_draw_state_run();
+            }
+            break;
+    }
+
+}
+
 
 
 /**
@@ -272,7 +391,7 @@ void snake_newseg(int  x, int y)
  * вход:
  * pat  -шаблон
  */
-void snake_init(const snake_pattern_t * pat)
+void snake_init(game_ctx_t * ctx, const snake_pattern_t * pat)
 {
     int x,y;
     size_t count;
@@ -281,7 +400,7 @@ void snake_init(const snake_pattern_t * pat)
     snake.H = NULL;
     snake.movedir = pat->dir;
 
-    game_timing_update(snake.movedir);
+    ents_game_timing_update(ctx, snake.movedir);
 
     snake.level = 0;
     snake.dead = 0;
@@ -340,9 +459,10 @@ void snake_init(const snake_pattern_t * pat)
 void snake_done(void)
 {
     snake_seg_t *P;
-    while(snake.H){
-        P      =snake.H;
-        snake.H=snake.H->next;
+    while(snake.H)
+    {
+        P       = snake.H;
+        snake.H = snake.H->next;
         free(P);
     }
 }
@@ -549,7 +669,7 @@ bool snake_is_dead(void)
  * @param[in] player    змея
  * @param[in] movedir   направление
  */
-void player_setdir(direction_t movedir)
+void player_setdir(ent_direction_t movedir)
 {
     snake_seg_t *neck;//шея змеи :)
     if(snake.H == NULL)
@@ -572,7 +692,7 @@ void player_setdir(direction_t movedir)
     }
 }
 
-direction_t player_direction(void)
+ent_direction_t player_direction(void)
 {
     return snake.movedir;
 }
@@ -581,10 +701,12 @@ int player_scores(void)
 {
     return snake.scores;
 }
-int player_level(void)
+
+const char * player_level(void)
 {
-    return snake.level;
+    return level_str[snake.level];
 }
+
 int player_weight(void)
 {
     return snake.weight;

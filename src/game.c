@@ -10,6 +10,7 @@
 #include "g_types.h"
 #include "g_utils.h"
 #include "g_events.h"
+#include "g_ctl.h"
 
 #include "chart.h"
 #include "menu.h"
@@ -28,59 +29,6 @@
 
 static game_t game = {};
 
-//patterns
-int pt0[1 * 3] = {1,2,3};
-int pt1[7 * 23] = {
-         1, 2, 3, 4, 0,30,31, 0, 0,40,41, 0,71,72,73,74,75,76, 77, 78,79,80,81, //**** **  ** ***********
-         0, 0, 0, 5, 0,29,32, 0,38,39,42, 0,70, 0, 0, 0, 0, 0, 96, 95, 0, 0,82, //   * ** *** *     **  *
-         9, 8, 7, 6, 0,28,33,34,37, 0,43, 0,69,68,67,66,65, 0, 97, 94,93,92,83, //**** **** * ***** *****
-        10,11,12, 0, 0,27, 0,35,36, 0,44, 0,60,61,62,63,64, 0, 98, 99, 0,91,84, //***  * ** * ***** ** **
-         0, 0,13,14, 0,26, 0, 0, 0, 0,45, 0,59, 0, 0, 0, 0, 0,  0,100, 0,90,85, //  ** *    * *      * **
-        18,17,16,15, 0,25, 0, 0, 0, 0,46, 0,58,57,56,55,54, 0,102,101, 0,89,86, //**** *    * ***** ** **
-        19,20,21,22,23,24, 0, 0, 0, 0,47,48,49,50,51,52,53, 0,103,  0, 0,88,87  //******    ******* *  **
-};
-
-int pt2[5 * 20] =
-{
-         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19, 20,
-        40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22, 21,
-        41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59, 60,
-        80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65,64,63,62, 61,
-        81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
-};
-
-snake_pattern_t info_snake[] =
-{
-        {DIRECTION_EAST , 3 , 1, pt0},
-        {DIRECTION_SOUTH, 23, 7, pt1},
-        {DIRECTION_SOUTH, 20, 5, pt2}
-};
-
-char *level_str[LEVEL_MAX] =
-{
-        "Так себе, микробик:)",
-        "Червячёк            ",
-        "Червяк              ",
-        "Большой Червяк      ",
-        "Глист               ",
-        "Взрослый глист      ",
-        "Хобот слоненка      ",
-        "Хобот слона         ",
-        "Матерый бычий цепень",
-        "Великий Шланг       ",
-        "Бог шлангообразных  "
-};
-
-
-
-#define VID_SCR_WIDTH (80)
-#define VID_SCR_HEIGHT (25)
-void print_centerscreen(size_t text_width, const char * text)
-{
-    text_print((VID_SCR_WIDTH - text_width) / 2, VID_SCR_HEIGHT / 2, text);
-}
-
-
 int game_init(void)
 {
     char * home_dir = getenv("HOME");
@@ -92,7 +40,7 @@ int game_init(void)
     game_directories_init(home_dir);
 
     game.showmenu = true;
-
+    game.started = false;
     text_init80X25X8();
     text.c.atr=0x00;
     text.c.chr=0x00;
@@ -100,25 +48,25 @@ int game_init(void)
     srand(time(NULL));
     chart_load();
     g_events_init();
+    g_ctl_init();
     return 0;
 }
 
 void game_done(void)
 {
     chart_save();
+    g_ctl_done();
     text.c.atr=0x0F;
     text.c.chr=0x00;
     text_fill_screen();
-    game.showtiming = 0;
-    game.timing = 500; //задержка(мс)
 
     game_directories_done();
 }
 
-void game_clean()
+void game_stop()
 {
-    obj_freeall();
-    snake_done();
+    g_ctl_game_destroy();
+    game.started = false;
 }
 
 bool game_is_quit(void)
@@ -131,271 +79,72 @@ void game_quit(void)
     game.quit = true;
 }
 
-void game_start(void)
+void game_start(int stage)
 {
     text.c.atr=0x1F;
     text.c.chr=0x00;
     text_fill_screen();
-    game.timing = 500;
-    game.state = GSTATE_START;
     game.showmenu = false;
-    game.paused = false;
-}
-
-void game_timing_update(direction_t direction)
-{
-    switch(direction)
-    {
-        case DIRECTION_NORTH:
-            g_event_ticktime_set(game.timing * 3 / 2); /* FIXME: 80 / 25 */
-            break;
-        case DIRECTION_SOUTH:
-            g_event_ticktime_set(game.timing * 3 / 2); /* FIXME: 80 / 25 */
-            break;
-        case DIRECTION_WEST:
-            g_event_ticktime_set(game.timing);
-            break;
-        case DIRECTION_EAST:
-            g_event_ticktime_set(game.timing);
-            break;
-    }
-}
-
-static void game_handle_event_tick(const event_t * event)
-{
-    game_state_t newstate = game.state;
-
-    switch(game.state)
-    {
-        case GSTATE_START:
-            obj_put(OBJ_MARIJUANA);
-            newstate = GSTATE_RUN;
-            break;
-        case GSTATE_STOP_WIN:
-            game_clean();
-            menu_show_menu(IMENU_DEATH);
-            game.showmenu = true;
-            break;
-        case GSTATE_STOP_LOSE:
-            game_clean();
-            menu_show_menu(IMENU_DEATH);
-            game.showmenu = true;
-            break;
-        case GSTATE_REQUEST_STOP:
-            break;
-        case GSTATE_REQUEST_STOP_CANCEL:
-            newstate = GSTATE_RUN;
-            break;
-        case GSTATE_RUN:
-            if(game.paused)
-            {
-                break;
-            }
-            obj_think();
-            if(snake_is_dead())
-            {
-                newstate = GSTATE_STOP_LOSE;
-            }
-            break;
-    }
-    game.state = newstate;
-}
-
-static void game_handle_event_keyboard(const event_t * event)
-{
-    switch(game.state)
-    {
-        case GSTATE_START:
-            break;
-        case GSTATE_STOP_WIN:
-            break;
-        case GSTATE_STOP_LOSE:
-            break;
-        case GSTATE_REQUEST_STOP:
-        {
-            switch(event->data.KEYBOARD.key)
-            {
-                case 'Y':
-                case 'y':
-                {
-                    game.state = GSTATE_STOP_WIN;
-                    break;
-                }
-                case IO_KB_ESC:
-                case 'N':
-                case 'n':
-                {
-                    game.state = GSTATE_REQUEST_STOP_CANCEL;
-                    break;
-                }
-            }
-            break;
-        }
-        case GSTATE_REQUEST_STOP_CANCEL:
-            break;
-        case GSTATE_RUN:
-        {
-            switch(event->data.KEYBOARD.key)
-            {
-                case 'P':
-                case 'p':
-                {
-                    game.paused = !game.paused;
-                    break;
-                }
-                case '=':
-                case '+':
-                {
-                    if(game.timing < 1000)
-                    {
-                        game.timing +=10;
-                    }
-                    game.showtiming = 1100 - game.timing;
-                    game_timing_update(player_direction());
-                    break;
-                }
-                case '-':
-                case '_':
-                {
-                    if(game.timing > 10)
-                    {
-                        game.timing -= 10;
-                    }
-                    game.showtiming = 1100 - game.timing;
-                    game_timing_update(player_direction());
-                    break;
-                }
-                case IO_KB_UP:
-                {
-                    player_setdir(DIRECTION_NORTH);
-                    game_timing_update(DIRECTION_NORTH);
-                    break;
-                }
-                case IO_KB_DN:
-                {
-                    player_setdir(DIRECTION_SOUTH);
-                    game_timing_update(DIRECTION_SOUTH);
-                    break;
-                }
-                case IO_KB_LF:
-                {
-                    player_setdir(DIRECTION_WEST);
-                    game_timing_update(DIRECTION_WEST);
-                    break;
-                }
-                case IO_KB_RT:
-                {
-                    player_setdir(DIRECTION_EAST);
-                    game_timing_update(DIRECTION_EAST);
-                    break;
-                }
-                case IO_KB_ESC:
-                {
-                    game.state = GSTATE_REQUEST_STOP;
-                    break;
-                }
-            }
-            break;
-        }
-    }
+    game.started = true;
+    g_ctl_game_create(stage);
 }
 
 void game_handle(const event_t * event)
 {
+    if(!game.started)
+    {
+        return;
+    }
+
     switch(event->type)
     {
         case G_EVENT_TICK:
         {
-            game_handle_event_tick(event);
+            g_ctl_game_tick();
             break;
         }
         case G_EVENT_KEYBOARD:
         {
-            game_handle_event_keyboard(event);
+            g_ctl_game_input(event->data.KEYBOARD.key);
             break;
         }
-    }
-}
-
-static void game_draw_state_run(void)
-{
-    text.c.atr=0x0F;
-    text_print( 0, 0, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
-            , (int)player_scores()
-            , (level_str[player_level()])
-            , (int)player_weight()
-    );
-
-
-    obj_draw();
-
-    if(game.showtiming > 0)
-    {
-        text_print(0, 24, "timing = %d", (int)game.timing);
-        game.showtiming--;
-        if(game.showtiming <= 0)
-            text_print(0,24,"            ");
+        case G_EVENT_STOP_GAME_TICKS:
+        {
+            game_stop();
+            break;
+        }
     }
 }
 
 void game_draw(void)
 {
-    static bool paused_prev = false;
 
     if(!game.showmenu)
     {
-        switch(game.state)
-        {
-            case GSTATE_START:
-                break;
-            case GSTATE_STOP_WIN:
-                break;
-            case GSTATE_STOP_LOSE:
-                break;
-            case GSTATE_REQUEST_STOP:
-            {
-                text.c.atr = 0x0F;
-                print_centerscreen(16, "УЖЕ УХОДИШ[Y/N]?");
-                break;
-            }
-            case GSTATE_REQUEST_STOP_CANCEL:
-            {
-                text.c.atr = 0x1F;
-                print_centerscreen(16, "                ");
-                break;
-            }
-            case GSTATE_RUN:
-                if(game.paused != paused_prev)
-                {
-                    paused_prev = game.paused;
-                    if(game.paused)
-                    {
-                        text.c.atr = 0x8F;
-                        print_centerscreen(17, "-= P A U S E D =-");
-                    }
-                    else
-                    {
-                        text.c.atr = 0x1F;
-                        print_centerscreen(17, "                 ");
-                    }
-                }
-                if(!game.paused)
-                {
-                    game_draw_state_run();
-                }
-                break;
-        }
-
-
-
-
+        g_ctl_scene_draw();
     }
 
     io_render_end();
 }
 
+void game_stop_ticks(void)
+{
+    g_event_send(G_EVENT_STOP_GAME_TICKS, NULL);
+}
+
+void game_menu_show(menu_index_t imenu)
+{
+    menu_show_menu(imenu);
+    game.showmenu = true;
+}
+
+void game_ticktime_set(game_time_ms_t ticktime)
+{
+    g_event_ticktime_set(ticktime);
+}
+
 /* game finite-state machine */
-void g_event_handle(const event_t * event)
+void game_event_handle(const event_t * event)
 {
 
     if(game.showmenu)

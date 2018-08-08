@@ -11,6 +11,8 @@
 
 #include "_text.h"
 
+#include "__hack.h"
+
 #include <string.h>
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
@@ -148,8 +150,7 @@ static void menu_main_draw_on_update(void * ctx_)
  */
 static void menu_newgame0_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[0]);
+    game_start(0);
 }
 
 /**
@@ -157,8 +158,7 @@ static void menu_newgame0_on_enter(void * ctx_)
  */
 static void menu_newgame1_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[1]);
+    game_start(1);
 }
 
 /**
@@ -166,8 +166,7 @@ static void menu_newgame1_on_enter(void * ctx_)
  */
 static void menu_newgame2_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[2]);
+    game_start(2);
 }
 
 /**
@@ -265,8 +264,8 @@ static void menu_death_on_enter(void * ctx_)
 {
     struct menu_death_ctx * ctx = ctx_;
     memset(&ctx->rec, 0, sizeof(ctx->rec));
-    ctx->rec.weight = player_weight();
-    ctx->rec.scores = player_scores();
+    ctx->rec.weight = g_ctl_player_weight();
+    ctx->rec.scores = g_ctl_player_scores();
     ctx->rec.name[0] = '\0';
     ctx->top10 = chart_record_in_chart(&ctx->rec);
     ctx->count = 0;
@@ -356,7 +355,7 @@ static void menu_death_draw_on_enter(void * ctx_)
     text_print(30, 17, " **              ** ");
     text_print(30, 18, "   **************   ");
     text_print(26, 20, "СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_print(26+20, 20, "%d", (int)player_scores());
+    text_print(26+20, 20, "%d", (int)g_ctl_player_scores());
 
     if(!ctx->top10)
     {
@@ -440,6 +439,10 @@ void menu_handle(const event_t * event)
                 menu->draw_on_update(ctx);
             }
 
+            break;
+        }
+        case G_EVENT_STOP_GAME_TICKS:
+        {
             break;
         }
     }

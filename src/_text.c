@@ -71,3 +71,12 @@ TODO:
     erase();
 }
 
+
+
+#define VID_SCR_WIDTH (80)
+#define VID_SCR_HEIGHT (25)
+void print_centerscreen(size_t text_width, const char * text)
+{
+    text_print((VID_SCR_WIDTH - text_width) / 2, VID_SCR_HEIGHT / 2, text);
+}
+

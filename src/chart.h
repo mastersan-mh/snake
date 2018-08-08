@@ -8,7 +8,7 @@
 #ifndef SRC_CHART_H_
 #define SRC_CHART_H_
 
-#include "obj.h"
+#include "g_types.h"
 
 #include <stddef.h>
 #include <stdint.h>

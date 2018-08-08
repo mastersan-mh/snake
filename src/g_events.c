@@ -74,7 +74,7 @@ void g_events_handle(void)
     {
         event_t * event = CIRCLEQ_FIRST(&events);
         CIRCLEQ_REMOVE(&events, event, queue);
-        g_event_handle(event);
+        game_event_handle(event);
         Z_free(event);
     }
 }
