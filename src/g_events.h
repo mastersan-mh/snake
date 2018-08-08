@@ -9,7 +9,7 @@
 #define SRC_G_EVENTS_H_
 
 #include "sys_time.h"
-#include "snaketypes.h"
+#include "g_types.h"
 
 #include <sys/queue.h>
 

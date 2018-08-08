@@ -8,7 +8,7 @@
 #ifndef SRC_CHART_H_
 #define SRC_CHART_H_
 
-#include "snaketypes.h"
+#include "obj.h"
 
 #include <stddef.h>
 #include <stdint.h>

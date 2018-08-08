@@ -8,8 +8,8 @@
 #ifndef SRC_GAME_H_
 #define SRC_GAME_H_
 
-#include "snaketypes.h"
 #include "sys_time.h"
+#include "g_types.h"
 #include "obj.h"
 
 #include "g_events.h"
@@ -41,7 +41,7 @@ typedef struct
 extern char valid_chars[];
 
 extern snake_pattern_t info_snake[];
-extern char *level[LEVEL_MAX];
+extern char *level_str[LEVEL_MAX];
 
 void snake_init(const snake_pattern_t * pat);
 void snake_done(void);

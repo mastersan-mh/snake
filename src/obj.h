@@ -8,16 +8,28 @@
 #ifndef SRC_OBJ_H_
 #define SRC_OBJ_H_
 
-#include "snaketypes.h"
+#include "g_types.h"
 
-/* конопля */
-#define OBJ_MARIJUANA 0
-/* посаженая конопля */
-#define OBJ_MARIJUANAP 1
-/* слабительное */
-#define OBJ_PURGEN 2
-/* дерьмо */
-#define OBJ_SHIT  3
+#define LEVEL_MAX 11
+
+#define MAP_SX 80
+#define MAP_SY 24
+
+#define SCORES_PER_LEVEL 100
+
+typedef enum
+{
+    /* hemp */
+    OBJ_MARIJUANA,
+    /* planted hemp */
+    OBJ_MARIJUANAP,
+    /* Purgen. Oi! Oi! Oi! Punks not dead! */
+    OBJ_PURGEN,
+    /* shit */
+    OBJ_SHIT,
+    /* player */
+    OBJ_PLAYER,
+} obj_type_t;
 
 /**
  * @brief объекты на карте
@@ -26,15 +38,65 @@ typedef struct obj_st
 {
     struct obj_st *next;
     int x,y;
-    int id;
+    obj_type_t type;
     int timer;
 } obj_t;
 
-void obj_new(int x, int y, int id);
+
+
+typedef enum
+{
+    DIRECTION_NORTH,
+    DIRECTION_SOUTH,
+    DIRECTION_WEST,
+    DIRECTION_EAST
+} direction_t;
+
+/**
+ * @brief шаблон змеи
+ */
+typedef struct
+{
+    char dir;
+    int  sx,sy;
+    int  *pat;
+} snake_pattern_t;
+
+/**
+ * @brief сегмент змеи
+ */
+typedef struct snake_seg_st
+{
+    struct snake_seg_st *prev;
+    struct snake_seg_st *next;
+    int x,y;
+} snake_seg_t;
+
+/**
+ * @brief snake
+ */
+typedef struct
+{
+    snake_seg_t *H;
+    /* прошлое положение хвоста(для стирания следа) */
+    int       lastx;
+    int       lasty;
+
+    /* направление движения */
+    direction_t movedir;
+    int       level;   //уровень развитости
+    bool      dead;     //умерла?
+    long      weight;  //вес змеи
+    long      scores;  //очки
+} snake_t;
+
+
+
+void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);
 obj_t *obj_free(obj_t **obj);
 
-void obj_put(int id);
+void obj_put(obj_type_t id);
 void obj_think(void);
 void obj_draw(void);
 

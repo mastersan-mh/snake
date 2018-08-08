@@ -46,3 +46,21 @@ void app_directory_check(const char * path)
     }
 }
 
+/**
+ * @brief Check the key is valid letterbool str_key_is_character(int key)
+ *
+ */
+bool str_key_is_character(int key)
+{
+#if 0
+    static const char valid_chars[] =
+            "!#$%&'()+,-.0123456789;=@"
+            "ABCDEFGHIJKLMNOPQRSTUVWXYZ[]^_`"
+            "abcdefghijklmnopqrstuvwxyz{}~"
+            "АБВГДЕЖЗИЙКЛМНОПРСТУФХЦЧШЩЪЫЬЭЮЯ"
+            "абвгдежзийклмнопрстуфхцчшщъыьэюяЁё";
+    return (strchr(valid_chars, key) != NULL);
+#else
+    return true;
+#endif
+}

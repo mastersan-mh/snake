@@ -25,8 +25,8 @@ void text_setch(int x, int y)
     char tmp[2] = {0, 0};
     switch(text.c.chr)
     {
-        case 0x01: res = mvprintw(y, x, "0"); break; /* голова */
-        case '*' : res = mvprintw(y, x, "*"); break; /* хвост */
+        case 0x01: res = mvprintw(y, x, "0"); break; /* head */
+        case '*' : res = mvprintw(y, x, "*"); break; /* tail */
         case 186 : res = mvprintw(y, x, "*"); break;
         case 205 : res = mvprintw(y, x, "*"); break;
         case 201 : res = mvprintw(y, x, "*"); break;
@@ -38,7 +38,7 @@ void text_setch(int x, int y)
         case 0x05: res = mvprintw(y, x, "m"); break; /* OBJ_MARIJUANA */
         case 0x06: res = mvprintw(y, x, "M"); break; /* OBJ_MARIJUANAP */
         case 0x0B: res = mvprintw(y, x, "P"); break; /* OBJ_PURGEN */
-        case '@' : res = mvprintw(y, x, "@"); break; /* OBJ_SHIRT */
+        case '@' : res = mvprintw(y, x, "@"); break; /* OBJ_SHIT */
         case 176 : res = mvprintw(y, x, "#"); break; /*  */
         default:
             tmp[0] = text.c.chr;
@@ -47,17 +47,6 @@ void text_setch(int x, int y)
     }
     if(res != 0)
         fprintf(stderr, "res = %d\n", res);
-}
-
-/**
- * поместить символ на экран(с клиппингом)
- * вход:
- * x             -координата X
- * y             -координата Y
- */
-void text_setchchr(int x, int y)
-{
-    text_setch(x, y);
 }
 
 /**
@@ -80,18 +69,5 @@ TODO:
     */
 
     erase();
-}
-
-/**
- * @brief Print string with it attributes
- * @param[in] x		coord. x
- * @param[in] y         coord. x
- * @param[in] s         string
- */
-void text_writeATR(int x, int y, const char *s)
-{
-    int res = mvprintw(y, x, s);
-    if(res != 0)
-        fprintf(stderr, "res = %d\n", res);
 }
 

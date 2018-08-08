@@ -7,16 +7,15 @@
 
 #include "io.h"
 #include "game.h"
+#include "g_types.h"
 #include "g_utils.h"
 #include "g_events.h"
 
-#include "snaketypes.h"
 #include "chart.h"
 #include "menu.h"
 
 #include "_text.h"
 #include "sys_time.h"
-#include "str.h"
 
 #include <stddef.h>
 #include <stdlib.h>
@@ -57,7 +56,7 @@ snake_pattern_t info_snake[] =
         {DIRECTION_SOUTH, 20, 5, pt2}
 };
 
-char *level[LEVEL_MAX] =
+char *level_str[LEVEL_MAX] =
 {
         "Так себе, микробик:)",
         "Червячёк            ",
@@ -78,7 +77,7 @@ char *level[LEVEL_MAX] =
 #define VID_SCR_HEIGHT (25)
 void print_centerscreen(size_t text_width, const char * text)
 {
-    text_writeATR((VID_SCR_WIDTH - text_width) / 2, VID_SCR_HEIGHT / 2, text);
+    text_print((VID_SCR_WIDTH - text_width) / 2, VID_SCR_HEIGHT / 2, text);
 }
 
 
@@ -320,27 +319,22 @@ void game_handle(const event_t * event)
 
 static void game_draw_state_run(void)
 {
-    char str[20];
-
     text.c.atr=0x0F;
-    text_writeATR( 0,0," СОЖРАЛ КОНОПЛИ: ");
-    text_writeATR(17,0,str_WORD2strDEC(str,player_scores()));
-    text_writeATR(28  ,0,"СТАТУС: ");
-    text_writeATR(28+8,0,level[player_level()]);
-    text_writeATR(64,0," ВАШ ВЕС: ");
-    text_writeATR(74,0,str_WORD2strDEC(str,player_weight()));
-    text_writeATR(79,0," ");
+    text_print( 0, 0, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+            , (int)player_scores()
+            , (level_str[player_level()])
+            , (int)player_weight()
+    );
 
 
     obj_draw();
 
     if(game.showtiming > 0)
     {
-        text_writeATR(0, 24, "timing=");
-        text_writeATR(7, 24, str_WORD2strDEC(str,game.timing));
+        text_print(0, 24, "timing = %d", (int)game.timing);
         game.showtiming--;
         if(game.showtiming <= 0)
-            text_writeATR(0,24,"            ");
+            text_print(0,24,"            ");
     }
 }
 

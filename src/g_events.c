@@ -15,7 +15,6 @@
 
 #include "sys_time.h"
 #include "_text.h"
-#include "str.h"
 
 #include <stdint.h>
 #include <unistd.h>
