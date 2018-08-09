@@ -8,7 +8,7 @@
 #ifndef SRC_ENT_OBJECTS_H_
 #define SRC_ENT_OBJECTS_H_
 
-#include "g_ctl.h"
+#include "g_ctl_lib.h"
 
 #define MAP_SX 80
 #define MAP_SY 24
@@ -79,7 +79,7 @@ typedef struct
     int       lastx;
     int       lasty;
 
-    /* направление движения */
+    /* movement direction */
     ent_direction_t movedir;
     int       level;   //уровень развитости
     bool      dead;     //умерла?

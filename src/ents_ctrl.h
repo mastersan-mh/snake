@@ -8,7 +8,7 @@
 #ifndef SRC_ENTS_CTRL_H_
 #define SRC_ENTS_CTRL_H_
 
-#include "g_ctl.h"
+#include "g_ctl_lib.h"
 
 #include "ents_objects.h"
 

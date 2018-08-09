@@ -64,24 +64,6 @@ void g_ctl_scene_draw(void)
     g_ctl.scene_draw(&g_ctx);
 }
 
-int g_ctl_player_scores(void)
-{
-    FCHECK(g_ctl.player_scores, -1);
-    return g_ctl.player_scores();
-}
-
-const char * g_ctl_player_level(void)
-{
-    FCHECK(g_ctl.player_level, NULL);
-    return g_ctl.player_level();
-}
-
-int g_ctl_player_weight(void)
-{
-    FCHECK(g_ctl.player_weight, -1);
-    return g_ctl.player_weight();
-}
-
 void g_ctl_show_records(void)
 {
     FCHECK(g_ctl.show_records, );

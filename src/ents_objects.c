@@ -270,9 +270,9 @@ static void game_draw_state_run(void)
 {
     text.c.atr=0x0F;
     text_print( 0, 0, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
-            , g_ctl_player_scores()
-            , g_ctl_player_level()
-            , g_ctl_player_weight()
+            , player_scores()
+            , player_level()
+            , player_weight()
     );
 
     obj_draw();

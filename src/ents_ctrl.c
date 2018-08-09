@@ -7,7 +7,7 @@
 
 #include "ents_ctrl.h"
 
-#include "g_ctl.h"
+#include "g_ctl_lib.h"
 
 #include "ents_objects.h"
 #include "ents_chart.h"
@@ -278,8 +278,5 @@ void game_ent_ctl_init(game_ctl_t *ctl)
     ctl->game_tick = ent_ctrl_game_tick;
     ctl->game_input = ent_ctrl_game_input;
     ctl->scene_draw = ent_scene_draw;
-    ctl->player_scores = player_scores;
-    ctl->player_level = player_level;
-    ctl->player_weight = player_weight;
     ctl->show_records = ent_show_records;
 }

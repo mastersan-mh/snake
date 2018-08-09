@@ -6,6 +6,7 @@
  */
 
 #include "ents_chart.h"
+#include "ents_objects.h"
 #include "ents_payer_death.h"
 
 #include "sys_utils.h"
@@ -26,8 +27,8 @@ void menu_death_on_enter(void)
 {
     struct menu_death_ctx * ctx = &menu_death_ctx;
     memset(&ctx->rec, 0, sizeof(ctx->rec));
-    ctx->rec.weight = g_ctl_player_weight();
-    ctx->rec.scores = g_ctl_player_scores();
+    ctx->rec.weight = player_weight();
+    ctx->rec.scores = player_scores();
     ctx->rec.name[0] = '\0';
     ctx->top10 = chart_record_in_chart(&ctx->rec);
     ctx->count = 0;
@@ -121,7 +122,7 @@ void menu_death_draw_on_enter(void)
     text_print(30, 17, " **              ** ");
     text_print(30, 18, "   **************   ");
     text_print(26, 20, "СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_print(26+20, 20, "%d", (int)g_ctl_player_scores());
+    text_print(26+20, 20, "%d", (int)player_scores());
 
     if(!ctx->top10)
     {

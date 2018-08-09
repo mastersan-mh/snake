@@ -8,7 +8,7 @@
 #ifndef SRC_CHART_H_
 #define SRC_CHART_H_
 
-#include "g_ctl.h"
+#include "g_ctl_lib.h"
 
 #include <stddef.h>
 #include <stdint.h>
