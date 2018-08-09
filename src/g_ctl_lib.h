@@ -12,7 +12,7 @@
 #define SRC_G_CTL_LIB_H_
 
 #include "g_types.h"
-#include "io.h"
+#include "io_keys.h"
 #include "menu.h"
 #include "_text.h"
 

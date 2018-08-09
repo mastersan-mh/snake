@@ -4,6 +4,7 @@
 
 #include "sys_utils.h"
 #include "io.h"
+#include "io_keys.h"
 #include "g_types.h"
 #include "menu.h"
 #include "game.h"
