@@ -10,8 +10,6 @@
 
 #include "_text.h"
 
-#include "__hack.h"
-
 #include <string.h>
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)

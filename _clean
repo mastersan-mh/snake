@@ -19,6 +19,7 @@ ${RM} ./missing
 ${RM} ./src/stamp-h1
 ${RM} ./src/config.h
 ${RM} ./src/config.h.in
+${RM} ./src/config.h.in~
 
 ${RM} ./Makefile
 ${RM} ./Makefile.in

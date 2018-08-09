@@ -13,7 +13,8 @@
 #define MAP_SX 80
 #define MAP_SY 24
 
-#include "__hack.h"
+#define SCORES_PER_LEVEL 100
+#define LEVEL_MAX 11
 
 typedef enum
 {
@@ -87,6 +88,8 @@ typedef struct
 } snake_t;
 
 extern snake_pattern_t info_snake[];
+
+
 extern char *level_str[LEVEL_MAX];
 
 void obj_new(int x, int y, obj_type_t id);
