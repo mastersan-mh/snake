@@ -20,7 +20,6 @@ typedef enum
     IMENU_CHART   ,
     IMENU_HELP    ,
     IMENU_QUIT    ,
-    IMENU_DEATH   ,
 } menu_index_t;
 
 void menu_handle(const event_t * event);

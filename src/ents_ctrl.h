@@ -19,6 +19,7 @@ typedef enum
     GSTATE_STOP_LOSE,
     GSTATE_REQUEST_STOP,
     GSTATE_REQUEST_STOP_CANCEL,
+    GSTATE_ENDGAME,
     GSTATE_RUN,
 } game_state_t;
 

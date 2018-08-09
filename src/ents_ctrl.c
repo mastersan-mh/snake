@@ -10,6 +10,8 @@
 #include "g_ctl.h"
 
 #include "ents_objects.h"
+#include "ents_chart.h"
+#include "ents_payer_death.h"
 
 #define ENTS_GAME_DEFAULT_TIMING 300
 
@@ -49,18 +51,25 @@ static void game_handle_event_tick(game_ctx_t * ctx)
             newstate = GSTATE_RUN;
             break;
         case GSTATE_STOP_WIN:
-            ctx->stop_ticks();
-            ctx->show_menu(IMENU_DEATH);
+            newstate = GSTATE_ENDGAME;
+            menu_death_on_enter();
+            menu_death_draw_on_enter();
             break;
         case GSTATE_STOP_LOSE:
-            ctx->stop_ticks();
-            ctx->show_menu(IMENU_DEATH);
+            newstate = GSTATE_ENDGAME;
+            menu_death_on_enter();
+            menu_death_draw_on_enter();
             break;
         case GSTATE_REQUEST_STOP:
             break;
         case GSTATE_REQUEST_STOP_CANCEL:
             newstate = GSTATE_RUN;
             break;
+        case GSTATE_ENDGAME:
+        {
+            /* show your scores an enter your name */
+            break;
+        }
         case GSTATE_RUN:
             if(game_ents.paused)
             {
@@ -108,6 +117,17 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
         }
         case GSTATE_REQUEST_STOP_CANCEL:
             break;
+        case GSTATE_ENDGAME:
+        {
+            bool exit = menu_death_on_event(key);
+            menu_death_draw_on_update();
+            if(exit)
+            {
+                ctx->stop_ticks();
+                ctx->show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
+            }
+            break;
+        }
         case GSTATE_RUN:
         {
             switch(key)
@@ -177,13 +197,14 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
 
 static void ent_ctrl_init(game_ctx_t * ctx)
 {
+    chart_load();
     game_ents.timing = ENTS_GAME_DEFAULT_TIMING;
     ctx->ticktime_set(game_ents.timing);
 }
 
 static void ent_ctrl_done(void)
 {
-
+    chart_save();
 }
 
 static int ent_ctrl_game_create(int stage, game_ctx_t * ctx)
@@ -215,6 +236,39 @@ static void ent_ctrl_game_tick(game_ctx_t * ctx)
     game_handle_event_tick(ctx);
 }
 
+void ent_show_records(game_ctx_t * ctx)
+{
+    static const char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
+
+    size_t row;
+    int lev;
+
+    text.c.atr=0x09;
+    text_print(20, 7,"МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
+
+    size_t len = chart_len();
+
+    for(row = 1; row <= len; ++row)
+    {
+        const chartrec_t *rec = chart_row_get(row - 1);
+        lev = rec->scores/SCORES_PER_LEVEL;
+        if(lev > LEVEL_MAX - 1)
+        {
+            lev = LEVEL_MAX - 1;
+        }
+        text_print(20, 7 + row, "%-5d %-15s %-6d %-6d %-20s"
+                , (int)row
+                , rec->name
+                , (int)rec->scores
+                , (int)rec->weight
+                , (level_str[lev])
+        );
+    }
+
+    text.c.atr=0x5F;
+    text_print((80-29)/2, 22, anti_war);
+}
+
 void game_ent_ctl_init(game_ctl_t *ctl)
 {
     ctl->init = ent_ctrl_init;
@@ -227,5 +281,5 @@ void game_ent_ctl_init(game_ctl_t *ctl)
     ctl->player_scores = player_scores;
     ctl->player_level = player_level;
     ctl->player_weight = player_weight;
+    ctl->show_records = ent_show_records;
 }
-

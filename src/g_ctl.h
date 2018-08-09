@@ -11,6 +11,7 @@
 #include "g_types.h"
 #include "io.h"
 #include "menu.h"
+#include "_text.h"
 
 /* game context */
 typedef struct
@@ -37,6 +38,8 @@ typedef struct
     const char * (*player_level)(void);
     int (*player_weight)(void);
 
+    void (*show_records)(game_ctx_t * ctx);
+
 } game_ctl_t;
 
 void g_ctl_init(void);
@@ -49,5 +52,6 @@ void g_ctl_scene_draw(void);
 int g_ctl_player_scores(void);
 const char * g_ctl_player_level(void);
 int g_ctl_player_weight(void);
+void g_ctl_show_records(void);
 
 #endif /* SRC_G_CTL_H_ */

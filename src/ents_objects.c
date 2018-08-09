@@ -311,6 +311,10 @@ void ent_scene_draw(game_ctx_t * ctx)
             print_centerscreen(16, "                ");
             break;
         }
+        case GSTATE_ENDGAME:
+        {
+            break;
+        }
         case GSTATE_RUN:
             if(game_ents.paused != paused_prev)
             {

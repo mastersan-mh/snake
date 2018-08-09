@@ -81,3 +81,9 @@ int g_ctl_player_weight(void)
     FCHECK(g_ctl.player_weight, -1);
     return g_ctl.player_weight();
 }
+
+void g_ctl_show_records(void)
+{
+    FCHECK(g_ctl.show_records, );
+    g_ctl.show_records(&g_ctx);
+}

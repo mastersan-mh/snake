@@ -12,7 +12,6 @@
 #include "g_events.h"
 #include "g_ctl.h"
 
-#include "chart.h"
 #include "menu.h"
 
 #include "_text.h"
@@ -46,7 +45,6 @@ int game_init(void)
     text.c.chr=0x00;
     text_fill_screen();
     srand(time(NULL));
-    chart_load();
     g_events_init();
     g_ctl_init();
     return 0;
@@ -54,7 +52,6 @@ int game_init(void)
 
 void game_done(void)
 {
-    chart_save();
     g_ctl_done();
     text.c.atr=0x0F;
     text.c.chr=0x00;
