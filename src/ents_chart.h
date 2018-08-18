@@ -8,19 +8,19 @@
 #ifndef SRC_CHART_H_
 #define SRC_CHART_H_
 
-#include "obj.h"
+#include "g_ctl_lib.h"
 
 #include <stddef.h>
 #include <stdint.h>
 
-#define APP_CHARTREC_NAME_SIZE 16
+#define ENTS_CHARTREC_NAME_SIZE 16
 
 /**
  * @brief запись таблицы победителей
  */
 typedef struct
 {
-    char     name[APP_CHARTREC_NAME_SIZE];
+    char     name[ENTS_CHARTREC_NAME_SIZE];
     uint32_t weight;
     uint32_t scores;
 } chartrec_t;

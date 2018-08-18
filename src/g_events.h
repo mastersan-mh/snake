@@ -16,7 +16,8 @@
 typedef enum
 {
     G_EVENT_TICK,
-    G_EVENT_KEYBOARD
+    G_EVENT_KEYBOARD,
+    G_EVENT_STOP_GAME_TICKS
 } event_type_t;
 
 typedef union

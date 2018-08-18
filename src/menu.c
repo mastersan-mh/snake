@@ -4,10 +4,10 @@
 
 #include "sys_utils.h"
 #include "io.h"
+#include "io_keys.h"
 #include "g_types.h"
 #include "menu.h"
 #include "game.h"
-#include "chart.h"
 
 #include "_text.h"
 
@@ -28,8 +28,6 @@ typedef struct
 
 char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
 char sys_special    [] = "Здесь никогда не будет вашей рекламы";
-
-char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
 
 static void P_menu_dec(int menu_amount, int * imenu)
@@ -148,8 +146,7 @@ static void menu_main_draw_on_update(void * ctx_)
  */
 static void menu_newgame0_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[0]);
+    game_start(0);
 }
 
 /**
@@ -157,8 +154,7 @@ static void menu_newgame0_on_enter(void * ctx_)
  */
 static void menu_newgame1_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[1]);
+    game_start(1);
 }
 
 /**
@@ -166,8 +162,7 @@ static void menu_newgame1_on_enter(void * ctx_)
  */
 static void menu_newgame2_on_enter(void * ctx_)
 {
-    game_start();
-    snake_init(&info_snake[2]);
+    game_start(2);
 }
 
 /**
@@ -180,35 +175,10 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
 
 static void menu_chart_draw_on_enter(void * ctx_)
 {
-    size_t row;
-    int lev;
     text.c.atr=0x00;
     text.c.chr=0x00;
     text_fill_screen();
-    text.c.atr=0x09;
-    text_print(20, 7,"МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
-
-    size_t len = chart_len();
-
-    for(row = 1; row <= len; ++row)
-    {
-        const chartrec_t *rec = chart_row_get(row - 1);
-        lev = rec->scores/SCORES_PER_LEVEL;
-        if(lev > LEVEL_MAX - 1)
-        {
-            lev = LEVEL_MAX - 1;
-        }
-        text_print(20, 7 + row, "%-5d %-15s %-6d %-6d %-20s"
-                , (int)row
-                , rec->name
-                , (int)rec->scores
-                , (int)rec->weight
-                , (level_str[lev])
-        );
-    }
-
-    text.c.atr=0x5F;
-    text_print((80-29)/2, 22, anti_war);
+    g_ctl_show_records();
     text.c.atr=0x8F;
     text_print((80-16)/2, 23, "PRESS ANY KEY...");
 }
@@ -250,130 +220,6 @@ static void menu_quit_on_enter(void * ctx_)
     game_quit();
 }
 
-/**
- * @brif The "Death" menu
- */
-#define MENU_DEATH_NAME_MAXLEN (APP_CHARTREC_NAME_SIZE - 1)
-static struct menu_death_ctx
-{
-    chartrec_t rec;
-    bool top10;
-    size_t count;
-} menu_death_ctx = {};
-
-static void menu_death_on_enter(void * ctx_)
-{
-    struct menu_death_ctx * ctx = ctx_;
-    memset(&ctx->rec, 0, sizeof(ctx->rec));
-    ctx->rec.weight = player_weight();
-    ctx->rec.scores = player_scores();
-    ctx->rec.name[0] = '\0';
-    ctx->top10 = chart_record_in_chart(&ctx->rec);
-    ctx->count = 0;
-}
-
-static menu_index_t menu_death_on_event(int key, void * ctx_)
-{
-    struct menu_death_ctx * ctx = ctx_;
-
-    chartrec_t * rec = &ctx->rec;
-
-    if(!ctx->top10)
-    {
-        return IMENU_MAIN;
-    }
-
-    switch(key)
-    {
-        case IO_KB_BACKSPACE:
-        {
-            if(ctx->count > 0)
-            {
-                rec->name[ctx->count] = '\0';
-                --ctx->count;
-            }
-            break;
-        }
-        case IO_KB_ENTER:
-        {
-            chart_insert(rec);
-            return IMENU_MAIN;
-        }
-        default:
-        {
-            if(ctx->count < MENU_DEATH_NAME_MAXLEN && str_key_is_character(key))
-            {
-                rec->name[ctx->count] = key;
-                ++ctx->count;
-                rec->name[ctx->count] = '\0';
-            }
-            break;
-        }
-    }
-
-    return IMENU_DEATH;
-}
-
-static void menu_death_print_name(const struct menu_death_ctx * ctx)
-{
-    size_t i = 0;
-    const chartrec_t * rec = &ctx->rec;
-
-    text.c.atr = 0x0F;
-    while(i < ctx->count && rec->name[i] != '\0')
-    {
-        text.c.chr = rec->name[i];
-        text_setch(31 + i, 21);
-        ++i;
-    }
-    text.c.chr = 176;
-    while(i < MENU_DEATH_NAME_MAXLEN)
-    {
-        text_setch(31 + i, 21);
-        ++i;
-    }
-}
-
-static void menu_death_draw_on_enter(void * ctx_)
-{
-    struct menu_death_ctx * ctx = ctx_;
-
-    text.c.atr=0x0F;
-    text_print(32,  3, "Tы типа сдох :-(");
-    text.c.atr=0x2F;
-    text_print(30,  5, "  ****************  ");
-    text_print(30,  6, " *                * ");
-    text_print(30,  7, "*   \\ /      \\ /   *");
-    text_print(30,  8, "*    X        X    *");
-    text_print(30,  9, "*   / \\  **  / \\   *");
-    text_print(30, 10, "*        **        *");
-    text_print(30, 11, "*        **        *");
-    text_print(30, 12, "*        **        *");
-    text_print(30, 13, "*                  *");
-    text_print(30, 14, "*    ==========    *");
-    text_print(30, 15, "*   /          \\   *");
-    text_print(30, 16, "*                  *");
-    text_print(30, 17, " **              ** ");
-    text_print(30, 18, "   **************   ");
-    text_print(26, 20, "СОЖРАЛ КОНОПЛИ(КГ): ");
-    text_print(26+20, 20, "%d", (int)player_scores());
-
-    if(!ctx->top10)
-    {
-        text_print(35, 21, "ТЫ ХУДШИЙ!");
-    }
-    else
-    {
-        text_print(26, 21, "ИМЯ> ");
-    }
-    menu_death_print_name(ctx);
-}
-
-static void menu_death_draw_on_update(void * ctx_)
-{
-    struct menu_death_ctx * ctx = ctx_;
-    menu_death_print_name(ctx);
-}
 
 static const menu_t menus[] =
 {
@@ -385,7 +231,6 @@ static const menu_t menus[] =
         { NULL, NULL, menu_chart_event_on_event, menu_chart_draw_on_enter, NULL, NULL, NULL },/* IMENU_CHART    */
         { NULL, NULL, menu_help_event_on_event , menu_help_draw_on_enter, NULL, NULL, NULL },/* IMENU_HELP     */
         { menu_quit_on_enter    , NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
-        { menu_death_on_enter, NULL, menu_death_on_event, menu_death_draw_on_enter, NULL, menu_death_draw_on_update, &menu_death_ctx }/* IMENU_DEATH */
 };
 
 static menu_index_t m_imenu_prev = IMENU_NONE;
@@ -440,6 +285,10 @@ void menu_handle(const event_t * event)
                 menu->draw_on_update(ctx);
             }
 
+            break;
+        }
+        case G_EVENT_STOP_GAME_TICKS:
+        {
             break;
         }
     }

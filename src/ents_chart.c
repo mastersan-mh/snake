@@ -7,7 +7,7 @@
 
 #include "g_utils.h"
 
-#include "chart.h"
+#include "ents_chart.h"
 
 #define CHART_RMAX 10
 

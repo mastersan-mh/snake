@@ -10,54 +10,30 @@
 
 #include "sys_time.h"
 #include "g_types.h"
-#include "obj.h"
-
 #include "g_events.h"
-
-typedef enum
-{
-    GSTATE_START,
-    GSTATE_STOP_WIN,
-    GSTATE_STOP_LOSE,
-    GSTATE_REQUEST_STOP,
-    GSTATE_REQUEST_STOP_CANCEL,
-    GSTATE_RUN,
-} game_state_t;
+#include "g_ctl.h"
 
 typedef struct
 {
     bool quit;
-    game_state_t state;
     bool showmenu;
-    int timing;
-    int showtiming;
-    int delay;
-
-    bool paused;
-    bool exit_request;
+    bool started;
 
 } game_t;
-
-extern char valid_chars[];
-
-extern snake_pattern_t info_snake[];
-extern char *level_str[LEVEL_MAX];
-
-void snake_init(const snake_pattern_t * pat);
-void snake_done(void);
 
 int game_init(void);
 void game_done(void);
 
 bool game_is_quit(void);
 void game_quit(void);
-void game_start(void);
-
-void game_timing_update(direction_t direction);
+void game_start(int stage);
 
 void game_loop(void);
 void game_draw(void);
 
-void g_event_handle(const event_t * event);
+void game_stop_ticks(void);
+void game_menu_show(menu_index_t imenu);
+void game_ticktime_set(game_time_ms_t ticktime);
+void game_event_handle(const event_t * event);
 
 #endif /* SRC_GAME_H_ */
