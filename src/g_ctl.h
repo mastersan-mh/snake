@@ -16,7 +16,6 @@ int g_ctl_game_create(int stage);
 void g_ctl_game_destroy(void);
 void g_ctl_game_tick(void);
 void g_ctl_game_input(int key);
-void g_ctl_scene_draw(void);
 void g_ctl_show_records(void);
 
 #endif /* SRC_G_CTL_H_ */

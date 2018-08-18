@@ -37,7 +37,6 @@ typedef struct
     void (*game_destroy)(const game_ctx_t * gctx);
     void (*game_tick)(const game_ctx_t * gctx);
     void (*game_input)(const game_ctx_t * gctx, int key);
-    void (*scene_draw)(const game_ctx_t * gctx);
 
     void (*show_records)(const game_ctx_t * gctx);
 

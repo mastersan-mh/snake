@@ -15,7 +15,7 @@
 static game_ctl_t g_ctl = {};
 static game_ctx_t g_ctx = {};
 
-void game_ent_ctl_init(game_ctl_t *ctl);
+void game_ent_ctl_init(game_ctl_t *gctl);
 
 #include "_text.h"
 static void P_print(int x, int y, int atr, const char * format, ...)
@@ -95,12 +95,6 @@ void g_ctl_game_input(int key)
 {
     FCHECK(g_ctl.game_input, );
     g_ctl.game_input(&g_ctx, key);
-}
-
-void g_ctl_scene_draw(void)
-{
-    FCHECK(g_ctl.scene_draw, );
-    g_ctl.scene_draw(&g_ctx);
 }
 
 void g_ctl_show_records(void)

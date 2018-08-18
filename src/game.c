@@ -113,12 +113,16 @@ void game_handle(const event_t * event)
     }
 }
 
+static void g_scene_draw(void)
+{
+}
+
 void game_draw(void)
 {
 
     if(!game.showmenu)
     {
-        g_ctl_scene_draw();
+        g_scene_draw();
     }
 
     io_render_end();

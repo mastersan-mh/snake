@@ -234,6 +234,7 @@ static void ent_ctrl_game_destroy(const game_ctx_t * gctx)
 static void ent_ctrl_game_tick(const game_ctx_t * gctx)
 {
     game_handle_event_tick(gctx);
+    ent_scene_draw(gctx);
 }
 
 void ent_show_records(const game_ctx_t * gctx)
@@ -271,14 +272,13 @@ void ent_show_records(const game_ctx_t * gctx)
     gctx->print((80 - 29) / 2, 22, TEXT_ATR, anti_war);
 }
 
-void game_ent_ctl_init(game_ctl_t *ctl)
+void game_ent_ctl_init(game_ctl_t *gctl)
 {
-    ctl->init = ent_ctrl_init;
-    ctl->done = ent_ctrl_done;
-    ctl->game_create = ent_ctrl_game_create;
-    ctl->game_destroy = ent_ctrl_game_destroy;
-    ctl->game_tick = ent_ctrl_game_tick;
-    ctl->game_input = ent_ctrl_game_input;
-    ctl->scene_draw = ent_scene_draw;
-    ctl->show_records = ent_show_records;
+    gctl->init = ent_ctrl_init;
+    gctl->done = ent_ctrl_done;
+    gctl->game_create = ent_ctrl_game_create;
+    gctl->game_destroy = ent_ctrl_game_destroy;
+    gctl->game_tick = ent_ctrl_game_tick;
+    gctl->game_input = ent_ctrl_game_input;
+    gctl->show_records = ent_show_records;
 }

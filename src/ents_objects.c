@@ -71,6 +71,13 @@ static snake_t snake;
 static void snake_think(const game_ctx_t * gctx);
 static void snake_draw(const game_ctx_t * gctx);
 
+void gamelib_obj_drawnull(const game_ctx_t * gctx, int x, int y)
+{
+#undef TEXT_ATR
+#define TEXT_ATR DRAW_ATR
+    gctx->putch(x, y + 1, TEXT_ATR, ' ');
+}
+
 /**
  * @brief create object on the map
  */
@@ -132,13 +139,10 @@ obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj)
     obj_t *P;
     if(Hobj == NULL || obj == NULL)
     {
-        (*obj) = NULL;
         return NULL;
     }
 
-#undef TEXT_ATR
-#define TEXT_ATR DRAW_ATR
-    gctx->putch((*obj)->x, (*obj)->y+1 , TEXT_ATR, ' ');
+    gamelib_obj_drawnull(gctx, (*obj)->x, (*obj)->y);
 
     if(Hobj == (*obj))
     {
@@ -493,52 +497,47 @@ static void snake_draw(const game_ctx_t * gctx)
     while(P)
     {
         if(snake.dead) atr = 0x44;
-        else          atr = 0x1F;
-        if(!P->prev) ch = 0x01;//голова
+        else           atr = 0x1F;
+        if(!P->prev) ch = 0x01; /* head */
+        else if(!P->next) ch = '*'; /* tail */
         else{
-            if(!P->next) ch = '*';//хвост
-            else{                       //тело
-                if(P->x==P->next->x && P->x==P->prev->x) ch = 186;
-                else
-                    if(P->y==P->next->y && P->y==P->prev->y) ch = 205;
-                    else
-                        if((P->x+1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y+1==P->next->y)
-                                ||(P->x  ==P->prev->x && P->y+1==P->prev->y && P->x+1==P->next->x && P->y  ==P->next->y)
-                        ) ch = 201;
-                        else
-                            if((P->x-1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y+1==P->next->y)
-                                    ||(P->x  ==P->prev->x && P->y+1==P->prev->y && P->x-1==P->next->x && P->y  ==P->next->y)
-                            ) ch = 187;
-                            else
-                                if((P->x  ==P->prev->x && P->y-1==P->prev->y && P->x+1==P->next->x && P->y  ==P->next->y)
-                                        ||(P->x+1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y-1==P->next->y)
-                                ) ch = 200;
-                                else
-                                    if((P->x  ==P->prev->x && P->y-1==P->prev->y && P->x-1==P->next->x && P->y  ==P->next->y)
-                                            ||(P->x-1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y-1==P->next->y)
-                                    ) ch = 188;
-            }
+            /* body */
+            if(P->x == P->next->x && P->x == P->prev->x) ch = 186;
+            else if(   P->y     == P->next->y && P->y     == P->prev->y) ch = 205;
+            else if((  P->x + 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y + 1 == P->next->y)
+                    ||(P->x     == P->prev->x && P->y + 1 == P->prev->y && P->x + 1 == P->next->x && P->y     == P->next->y)
+            ) ch = 201;
+            else if((  P->x - 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y + 1 == P->next->y)
+                    ||(P->x     == P->prev->x && P->y + 1 == P->prev->y && P->x - 1 == P->next->x && P->y     == P->next->y)
+            ) ch = 187;
+            else if((  P->x     == P->prev->x && P->y - 1 == P->prev->y && P->x + 1 == P->next->x && P->y     == P->next->y)
+                    ||(P->x + 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y - 1 == P->next->y)
+            ) ch = 200;
+            else if((  P->x     == P->prev->x && P->y - 1 == P->prev->y && P->x - 1 == P->next->x && P->y     == P->next->y)
+                    ||(P->x - 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y - 1 == P->next->y)
+            ) ch = 188;
         }
         gctx->putch(P->x, P->y+1, atr, ch);
         P = P->next;
     }
-    ch = '\0';
-    gctx->putch(snake.lastx, snake.lasty+1, atr, ch);
+    gamelib_obj_drawnull(gctx, snake.lastx, snake.lasty);
 }
 
-//////////////////////////////////////////////////
-//взяли слабительное
-//////////////////////////////////////////////////
-void snake_get_slabit(){
+/**
+ * @brief Get the purgen
+ */
+void snake_get_purgen(void)
+{
     int num=2;
     snake_seg_t *P;
     P=snake.H;
     while(P->next)P=P->next;
-    while(num && P->prev){
+    while(num > 0 && P->prev)
+    {
         obj_new(P->x, P->y, OBJ_SHIT);
-        P=P->prev;
+        P = P->prev;
         free(P->next);
-        P->next=NULL;
+        P->next = NULL;
         snake.weight--;
         num--;
     }
@@ -587,7 +586,7 @@ static void snake_think(const game_ctx_t * gctx)
                 snake_newseg(obj->x,obj->y);
                 break;
             case OBJ_PURGEN:
-                snake_get_slabit();
+                snake_get_purgen();
                 break;
             case OBJ_SHIT:
                 snake_get_shit();
