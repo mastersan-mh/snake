@@ -35,7 +35,7 @@ typedef struct
 extern game_ents_t game_ents;
 
 
-void ents_game_timing_update(game_ctx_t * ctx, ent_direction_t direction);
+void ents_game_timing_update(const game_ctx_t * gctx, ent_direction_t direction);
 
 
 #endif /* SRC_ENTS_CTRL_H_ */

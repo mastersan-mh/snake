@@ -94,12 +94,12 @@ extern char *level_str[LEVEL_MAX];
 
 void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);
-obj_t *obj_free(obj_t **obj);
+obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj);
 
 void obj_put(obj_type_t id);
-void obj_think(void);
+void obj_think(const game_ctx_t * gctx);
 
-void ent_scene_draw(game_ctx_t * ctx);
+void ent_scene_draw(const game_ctx_t * gctx);
 
 void snake_die(void);
 bool snake_is_dead(void);

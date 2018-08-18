@@ -17,30 +17,30 @@
 
 game_ents_t game_ents = {};
 
-void snake_init(game_ctx_t * ctx, const snake_pattern_t * pat);
+void snake_init(const game_ctx_t * gctx, const snake_pattern_t * pat);
 void snake_done(void);
 
-void ents_game_timing_update(game_ctx_t * ctx, ent_direction_t direction)
+void ents_game_timing_update(const game_ctx_t * gctx, ent_direction_t direction)
 {
     switch(direction)
     {
         case DIRECTION_NORTH:
-            ctx->ticktime_set(game_ents.timing * 3 / 2); /* FIXME: 80 / 25 */
+            gctx->ticktime_set(game_ents.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_SOUTH:
-            ctx->ticktime_set(game_ents.timing * 3 / 2); /* FIXME: 80 / 25 */
+            gctx->ticktime_set(game_ents.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_WEST:
-            ctx->ticktime_set(game_ents.timing);
+            gctx->ticktime_set(game_ents.timing);
             break;
         case DIRECTION_EAST:
-            ctx->ticktime_set(game_ents.timing);
+            gctx->ticktime_set(game_ents.timing);
             break;
     }
 }
 
 
-static void game_handle_event_tick(game_ctx_t * ctx)
+static void game_handle_event_tick(const game_ctx_t * gctx)
 {
     game_state_t newstate = game_ents.state;
 
@@ -53,12 +53,12 @@ static void game_handle_event_tick(game_ctx_t * ctx)
         case GSTATE_STOP_WIN:
             newstate = GSTATE_ENDGAME;
             menu_death_on_enter();
-            menu_death_draw_on_enter();
+            menu_death_draw_on_enter(gctx);
             break;
         case GSTATE_STOP_LOSE:
             newstate = GSTATE_ENDGAME;
             menu_death_on_enter();
-            menu_death_draw_on_enter();
+            menu_death_draw_on_enter(gctx);
             break;
         case GSTATE_REQUEST_STOP:
             break;
@@ -75,7 +75,7 @@ static void game_handle_event_tick(game_ctx_t * ctx)
             {
                 break;
             }
-            obj_think();
+            obj_think(gctx);
             if(snake_is_dead())
             {
                 newstate = GSTATE_STOP_LOSE;
@@ -85,7 +85,7 @@ static void game_handle_event_tick(game_ctx_t * ctx)
     game_ents.state = newstate;
 }
 
-static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
+static void ent_ctrl_game_input(const game_ctx_t * gctx, int key)
 {
     switch(game_ents.state)
     {
@@ -120,11 +120,11 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
         case GSTATE_ENDGAME:
         {
             bool exit = menu_death_on_event(key);
-            menu_death_draw_on_update();
+            menu_death_draw_on_update(gctx);
             if(exit)
             {
-                ctx->stop_ticks();
-                ctx->show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
+                gctx->stop_ticks();
+                gctx->show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
             }
             break;
         }
@@ -146,7 +146,7 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
                         game_ents.timing +=10;
                     }
                     game_ents.showtiming = 1100 - game_ents.timing;
-                    ents_game_timing_update(ctx, player_direction());
+                    ents_game_timing_update(gctx, player_direction());
                     break;
                 }
                 case '-':
@@ -157,31 +157,31 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
                         game_ents.timing -= 10;
                     }
                     game_ents.showtiming = 1100 - game_ents.timing;
-                    ents_game_timing_update(ctx, player_direction());
+                    ents_game_timing_update(gctx, player_direction());
                     break;
                 }
                 case IO_KB_UP:
                 {
                     player_setdir(DIRECTION_NORTH);
-                    ents_game_timing_update(ctx, DIRECTION_NORTH);
+                    ents_game_timing_update(gctx, DIRECTION_NORTH);
                     break;
                 }
                 case IO_KB_DN:
                 {
                     player_setdir(DIRECTION_SOUTH);
-                    ents_game_timing_update(ctx, DIRECTION_SOUTH);
+                    ents_game_timing_update(gctx, DIRECTION_SOUTH);
                     break;
                 }
                 case IO_KB_LF:
                 {
                     player_setdir(DIRECTION_WEST);
-                    ents_game_timing_update(ctx, DIRECTION_WEST);
+                    ents_game_timing_update(gctx, DIRECTION_WEST);
                     break;
                 }
                 case IO_KB_RT:
                 {
                     player_setdir(DIRECTION_EAST);
-                    ents_game_timing_update(ctx, DIRECTION_EAST);
+                    ents_game_timing_update(gctx, DIRECTION_EAST);
                     break;
                 }
                 case IO_KB_ESC:
@@ -195,11 +195,11 @@ static void ent_ctrl_game_input(game_ctx_t * ctx, int key)
     }
 }
 
-static void ent_ctrl_init(game_ctx_t * ctx)
+static void ent_ctrl_init(const game_ctx_t * gctx)
 {
     chart_load();
     game_ents.timing = ENTS_GAME_DEFAULT_TIMING;
-    ctx->ticktime_set(game_ents.timing);
+    gctx->ticktime_set(game_ents.timing);
 }
 
 static void ent_ctrl_done(void)
@@ -207,13 +207,13 @@ static void ent_ctrl_done(void)
     chart_save();
 }
 
-static int ent_ctrl_game_create(int stage, game_ctx_t * ctx)
+static int ent_ctrl_game_create(int stage, const game_ctx_t * gctx)
 {
     if(stage < 0 || 2 < stage)
     {
         return -1;
     }
-    snake_init(ctx, &info_snake[stage]);
+    snake_init(gctx, &info_snake[stage]);
 
     game_ents.state = GSTATE_START;
     game_ents.paused = false;
@@ -223,7 +223,7 @@ static int ent_ctrl_game_create(int stage, game_ctx_t * ctx)
     return 0;
 }
 
-static void ent_ctrl_game_destroy(game_ctx_t * ctx)
+static void ent_ctrl_game_destroy(const game_ctx_t * gctx)
 {
     obj_freeall();
     snake_done();
@@ -231,20 +231,21 @@ static void ent_ctrl_game_destroy(game_ctx_t * ctx)
     game_ents.showtiming = 0;
 }
 
-static void ent_ctrl_game_tick(game_ctx_t * ctx)
+static void ent_ctrl_game_tick(const game_ctx_t * gctx)
 {
-    game_handle_event_tick(ctx);
+    game_handle_event_tick(gctx);
 }
 
-void ent_show_records(game_ctx_t * ctx)
+void ent_show_records(const game_ctx_t * gctx)
 {
     static const char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
     size_t row;
     int lev;
 
-    text.c.atr=0x09;
-    text_print(20, 7,"МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
+#undef TEXT_ATR
+#define TEXT_ATR (0x09)
+    gctx->print(20, 7, TEXT_ATR, "МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
 
     size_t len = chart_len();
 
@@ -256,7 +257,7 @@ void ent_show_records(game_ctx_t * ctx)
         {
             lev = LEVEL_MAX - 1;
         }
-        text_print(20, 7 + row, "%-5d %-15s %-6d %-6d %-20s"
+        gctx->print(20, 7 + row, TEXT_ATR, "%-5d %-15s %-6d %-6d %-20s"
                 , (int)row
                 , rec->name
                 , (int)rec->scores
@@ -265,8 +266,9 @@ void ent_show_records(game_ctx_t * ctx)
         );
     }
 
-    text.c.atr=0x5F;
-    text_print((80-29)/2, 22, anti_war);
+#undef TEXT_ATR
+#define TEXT_ATR (0x5f)
+    gctx->print((80 - 29) / 2, 22, TEXT_ATR, anti_war);
 }
 
 void game_ent_ctl_init(game_ctl_t *ctl)

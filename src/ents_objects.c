@@ -13,11 +13,12 @@
 #include "g_types.h"
 #include "game.h"
 
-#include "_text.h"
 #include "sys_time.h"
 
 #include <stdlib.h>
 #include "ents_ctrl.h"
+
+#define DRAW_ATR (0x00)
 
 char *level_str[LEVEL_MAX] =
 {
@@ -67,8 +68,8 @@ snake_pattern_t info_snake[] =
 static obj_t *Hobj = NULL;
 static snake_t snake;
 
-static void snake_think(void);
-static void snake_draw();
+static void snake_think(const game_ctx_t * gctx);
+static void snake_draw(const game_ctx_t * gctx);
 
 /**
  * @brief create object on the map
@@ -126,7 +127,7 @@ void obj_freeall(void)
 //выход:
 //obj -указатель на объект
 //////////////////////////////////////////////////
-obj_t *obj_free(obj_t **obj)
+obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj)
 {
     obj_t *P;
     if(Hobj == NULL || obj == NULL)
@@ -135,8 +136,9 @@ obj_t *obj_free(obj_t **obj)
         return NULL;
     }
 
-    text.c.chr=' ';
-    text_setch((*obj)->x, (*obj)->y+1);
+#undef TEXT_ATR
+#define TEXT_ATR DRAW_ATR
+    gctx->putch((*obj)->x, (*obj)->y+1 , TEXT_ATR, ' ');
 
     if(Hobj == (*obj))
     {
@@ -195,7 +197,7 @@ void obj_put(obj_type_t id)
 /**
  * @brief object thinker
  */
-void obj_think(void)
+void obj_think(const game_ctx_t * gctx)
 {
     obj_t *P;
     int x;
@@ -217,7 +219,7 @@ void obj_think(void)
         x = P->x;
         y = P->y;
         id = P->type;
-        obj_free(&P);
+        obj_free(gctx, &P);
         switch(id)
         {
             case OBJ_MARIJUANA :break;
@@ -235,59 +237,63 @@ void obj_think(void)
         }
     }
 
-    snake_think();
+    snake_think(gctx);
 }
 
 /**
  * @brief Draw all objects
  */
-static void obj_draw(void)
+static void obj_draw(const game_ctx_t * gctx)
 {
+#undef TEXT_ATR
+#define TEXT_ATR DRAW_ATR
     obj_t *P;
     P = Hobj;
     while(P != NULL)
     {
-
+        char ch = '\0';
         switch(P->type)
         {
-            case OBJ_MARIJUANA : text.c.chr = 0x05; break;
-            case OBJ_MARIJUANAP: text.c.chr = 0x06; break;
-            case OBJ_PURGEN    : text.c.chr = 0x0B; break;
-            case OBJ_SHIT      : text.c.chr = '@'; break;
-            case OBJ_PLAYER    : text.c.chr = 's'; break;
+            case OBJ_MARIJUANA : ch = 0x05; break;
+            case OBJ_MARIJUANAP: ch = 0x06; break;
+            case OBJ_PURGEN    : ch = 0x0B; break;
+            case OBJ_SHIT      : ch = '@'; break;
+            case OBJ_PLAYER    : ch = 's'; break;
         }
 
-        text_setch(P->x, P->y+1);
+        gctx->putch(P->x, P->y+1, TEXT_ATR, ch);
         P=P->next;
     }
 
-    snake_draw();
+    snake_draw(gctx);
 
 
 }
 
-static void game_draw_state_run(void)
+static void game_draw_state_run(const game_ctx_t * gctx)
 {
-    text.c.atr=0x0F;
-    text_print( 0, 0, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+#undef TEXT_ART
+#define TEXT_ART (0x0F)
+
+    gctx->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
             , player_scores()
             , player_level()
             , player_weight()
     );
 
-    obj_draw();
+    obj_draw(gctx);
 
     if(game_ents.showtiming > 0)
     {
-        text_print(0, 24, "timing = %d", (int)game_ents.timing);
+        gctx->print(0, 24, TEXT_ART, "timing = %d", (int)game_ents.timing);
         --game_ents.showtiming;
         if(game_ents.showtiming <= 0)
-            text_print(0, 24, "            ");
+            gctx->print(0, 24, TEXT_ART, "            ");
     }
 }
 
 
-void ent_scene_draw(game_ctx_t * ctx)
+void ent_scene_draw(const game_ctx_t * gctx)
 {
     static bool paused_prev = false;
 
@@ -301,14 +307,16 @@ void ent_scene_draw(game_ctx_t * ctx)
             break;
         case GSTATE_REQUEST_STOP:
         {
-            text.c.atr = 0x0F;
-            print_centerscreen(16, "УЖЕ УХОДИШ[Y/N]?");
+#undef TEXT_ATR
+#define TEXT_ATR (0x0F)
+            gctx->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
             break;
         }
         case GSTATE_REQUEST_STOP_CANCEL:
         {
-            text.c.atr = 0x1F;
-            print_centerscreen(16, "                ");
+#undef TEXT_ATR
+#define TEXT_ATR (0x1F)
+            gctx->print_centerscreen(16, TEXT_ATR, "                ");
             break;
         }
         case GSTATE_ENDGAME:
@@ -321,18 +329,20 @@ void ent_scene_draw(game_ctx_t * ctx)
                 paused_prev = game_ents.paused;
                 if(game_ents.paused)
                 {
-                    text.c.atr = 0x8F;
-                    print_centerscreen(17, "-= P A U S E D =-");
+#undef TEXT_ATR
+#define TEXT_ATR (0x8F)
+                    gctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
                 }
                 else
                 {
-                    text.c.atr = 0x1F;
-                    print_centerscreen(17, "                 ");
+#undef TEXT_ATR
+#define TEXT_ATR (0x1F)
+                    gctx->print_centerscreen(17, TEXT_ATR, "                 ");
                 }
             }
             if(!game_ents.paused)
             {
-                game_draw_state_run();
+                game_draw_state_run(gctx);
             }
             break;
     }
@@ -395,7 +405,7 @@ void snake_newseg(int  x, int y)
  * вход:
  * pat  -шаблон
  */
-void snake_init(game_ctx_t * ctx, const snake_pattern_t * pat)
+void snake_init(const game_ctx_t * gctx, const snake_pattern_t * pat)
 {
     int x,y;
     size_t count;
@@ -404,7 +414,7 @@ void snake_init(game_ctx_t * ctx, const snake_pattern_t * pat)
     snake.H = NULL;
     snake.movedir = pat->dir;
 
-    ents_game_timing_update(ctx, snake.movedir);
+    ents_game_timing_update(gctx, snake.movedir);
 
     snake.level = 0;
     snake.dead = 0;
@@ -474,44 +484,46 @@ void snake_done(void)
 //////////////////////////////////////////////////
 //отрисовать змею
 //////////////////////////////////////////////////
-static void snake_draw()
+static void snake_draw(const game_ctx_t * gctx)
 {
+    int atr;
+    int ch;
     snake_seg_t *P;
     P=snake.H;
     while(P)
     {
-        if(snake.dead) text.c.atr=0x44;
-        else          text.c.atr=0x1F;
-        if(!P->prev) text.c.chr=0x01;//голова
+        if(snake.dead) atr = 0x44;
+        else          atr = 0x1F;
+        if(!P->prev) ch = 0x01;//голова
         else{
-            if(!P->next) text.c.chr='*';//хвост
+            if(!P->next) ch = '*';//хвост
             else{                       //тело
-                if(P->x==P->next->x && P->x==P->prev->x) text.c.chr=186;
+                if(P->x==P->next->x && P->x==P->prev->x) ch = 186;
                 else
-                    if(P->y==P->next->y && P->y==P->prev->y) text.c.chr=205;
+                    if(P->y==P->next->y && P->y==P->prev->y) ch = 205;
                     else
                         if((P->x+1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y+1==P->next->y)
                                 ||(P->x  ==P->prev->x && P->y+1==P->prev->y && P->x+1==P->next->x && P->y  ==P->next->y)
-                        )text.c.chr=201;
+                        ) ch = 201;
                         else
                             if((P->x-1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y+1==P->next->y)
                                     ||(P->x  ==P->prev->x && P->y+1==P->prev->y && P->x-1==P->next->x && P->y  ==P->next->y)
-                            )text.c.chr=187;
+                            ) ch = 187;
                             else
                                 if((P->x  ==P->prev->x && P->y-1==P->prev->y && P->x+1==P->next->x && P->y  ==P->next->y)
                                         ||(P->x+1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y-1==P->next->y)
-                                )text.c.chr=200;
+                                ) ch = 200;
                                 else
                                     if((P->x  ==P->prev->x && P->y-1==P->prev->y && P->x-1==P->next->x && P->y  ==P->next->y)
                                             ||(P->x-1==P->prev->x && P->y  ==P->prev->y && P->x  ==P->next->x && P->y-1==P->next->y)
-                                    )text.c.chr=188;
+                                    ) ch = 188;
             }
         }
-        text_setch(P->x,P->y+1);
-        P=P->next;
+        gctx->putch(P->x, P->y+1, atr, ch);
+        P = P->next;
     }
-    text.c.chr=0x00;
-    text_setch(snake.lastx,snake.lasty+1);
+    ch = '\0';
+    gctx->putch(snake.lastx, snake.lasty+1, atr, ch);
 }
 
 //////////////////////////////////////////////////
@@ -545,7 +557,7 @@ void snake_get_shit()
 /**
  * управление змеей
  */
-static void snake_think(void)
+static void snake_think(const game_ctx_t * gctx)
 {
     snake_seg_t *p;
     snake_seg_t *pt;
@@ -584,8 +596,8 @@ static void snake_think(void)
                 break;
         }
 
-        obj_free(&obj);
-        obj_draw();
+        obj_free(gctx, &obj);
+        obj_draw(gctx);
 
         p = snake.H;
         while(p->next)

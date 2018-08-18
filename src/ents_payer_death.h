@@ -9,10 +9,10 @@
 #define SRC_ENTS_PAYER_DEATH_H_
 
 void menu_death_on_enter(void);
-void menu_death_draw_on_enter(void);
+void menu_death_draw_on_enter(const game_ctx_t * gctx);
 
 bool menu_death_on_event(int key);
-void menu_death_draw_on_update(void);
+void menu_death_draw_on_update(const game_ctx_t * gctx);
 
 
 #endif /* SRC_ENTS_PAYER_DEATH_H_ */
