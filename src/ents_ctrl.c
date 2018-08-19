@@ -235,6 +235,10 @@ static int ent_ctrl_game_create(int stage, const game_ctx_t * gctx)
     {
         return -1;
     }
+
+    game_ents.timing = ENTS_GAME_DEFAULT_TIMING;
+    gctx->ticktime_set(game_ents.timing);
+
     snake_init(gctx, &info_snake[stage]);
 
     game_ents.state = GSTATE_START;
