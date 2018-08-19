@@ -20,6 +20,52 @@
 
 #define DRAW_ATR (0x00)
 
+typedef enum
+{
+    MDL_MARIJUANA ,
+    MDL_MARIJUANAP,
+    MDL_PURGEN    ,
+    MDL_SHIT      ,
+    MDL_PLAYER    ,
+    MDL_SNAKE_HEAD,
+    MDL_SNAKE_TAIL,
+    MDL_SNAKE_BODY_VERTICAL  ,
+    MDL_SNAKE_BODY_HORIZONTAL,
+    MDL_SNAKE_BODY_CORNER_LEFT_UP,
+    MDL_SNAKE_BODY_CORNER_RIGHT_UP,
+    MDL_SNAKE_BODY_CORNER_LEFT_DOWN,
+    MDL_SNAKE_BODY_CORNER_RIGHT_DOWN,
+} model_index_t;
+
+
+static void mdl_draw(const game_ctx_t * gctx, int x, int y, model_index_t imodel, int iskin)
+{
+#undef TEXT_ATR
+#define TEXT_ATR DRAW_ATR
+
+    int atr = (iskin == 0 ? 0x1F : 0x44);
+
+    char ch = '\0';
+    switch(imodel)
+    {
+        case MDL_MARIJUANA : ch = 'm'; /* 0x05; */ break;
+        case MDL_MARIJUANAP: ch = 'M'; /* 0x06; */ break;
+        case MDL_PURGEN    : ch = 'P'; /* 0x0B; */ break;
+        case MDL_SHIT      : ch = '@'; break;
+        case MDL_PLAYER    : ch = 's'; break;
+        case MDL_SNAKE_HEAD: ch = '0'; /* 0x01; */ break;
+        case MDL_SNAKE_TAIL: ch = '*'; break;
+        case MDL_SNAKE_BODY_VERTICAL  : ch = '|'; /* 186; */ break;
+        case MDL_SNAKE_BODY_HORIZONTAL: ch = '-'; /* 205; */ break;
+        case MDL_SNAKE_BODY_CORNER_LEFT_UP   : ch = '/'; /* 201; */ break;
+        case MDL_SNAKE_BODY_CORNER_RIGHT_UP  : ch = '\\'; /* 187; */ break;
+        case MDL_SNAKE_BODY_CORNER_LEFT_DOWN : ch = 'L'; /* 200; */ break;
+        case MDL_SNAKE_BODY_CORNER_RIGHT_DOWN: ch = 'J'; /* 188; */ break;
+    }
+    gctx->putch(x, y + 1, atr, ch);
+}
+
+
 char *level_str[LEVEL_MAX] =
 {
         "Так себе, микробик:)",
@@ -70,15 +116,6 @@ static snake_t snake;
 
 static void snake_think(const game_ctx_t * gctx);
 static void snake_draw(const game_ctx_t * gctx);
-
-void gamelib_obj_drawnull(const game_ctx_t * gctx, int x, int y)
-{
-    /*
-#undef TEXT_ATR
-#define TEXT_ATR DRAW_ATR
-    gctx->putch(x, y + 1, TEXT_ATR, ' ');
-*/
-}
 
 /**
  * @brief create object on the map
@@ -143,8 +180,6 @@ obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj)
     {
         return NULL;
     }
-
-    gamelib_obj_drawnull(gctx, (*obj)->x, (*obj)->y);
 
     if(Hobj == (*obj))
     {
@@ -249,26 +284,24 @@ void obj_think(const game_ctx_t * gctx)
 /**
  * @brief Draw all objects
  */
-void gamelib_obj_draw(const game_ctx_t * gctx)
+void gamelib_objects_draw(const game_ctx_t * gctx)
 {
-#undef TEXT_ATR
-#define TEXT_ATR DRAW_ATR
     obj_t *P;
     P = Hobj;
     while(P != NULL)
     {
-        char ch = '\0';
+        model_index_t imodel;
         switch(P->type)
         {
-            case OBJ_MARIJUANA : ch = 0x05; break;
-            case OBJ_MARIJUANAP: ch = 0x06; break;
-            case OBJ_PURGEN    : ch = 0x0B; break;
-            case OBJ_SHIT      : ch = '@'; break;
-            case OBJ_PLAYER    : ch = 's'; break;
+            case OBJ_MARIJUANA : imodel = MDL_MARIJUANA ; break;
+            case OBJ_MARIJUANAP: imodel = MDL_MARIJUANAP; break;
+            case OBJ_PURGEN    : imodel = MDL_PURGEN    ; break;
+            case OBJ_SHIT      : imodel = MDL_SHIT      ; break;
+            case OBJ_PLAYER    : imodel = MDL_PLAYER    ; break;
         }
 
-        gctx->putch(P->x, P->y+1, TEXT_ATR, ch);
-        P=P->next;
+        mdl_draw(gctx, P->x, P->y, imodel, 0);
+        P = P->next;
     }
 
     snake_draw(gctx);
@@ -382,33 +415,35 @@ void snake_init(const game_ctx_t * gctx, const snake_pattern_t * pat)
 
     count=1;
     flag=0;
-    //строим змею
-    snake.lastx = (MAP_SX - pat->sx) / 2 + x;
-    snake.lasty = (MAP_SY - pat->sy) / 2 + y;
-    snake_newseg(snake.lastx,snake.lasty);
-    while(count<MAP_SX*MAP_SY && !flag){
+    /* build the snake */
+    snake_newseg((MAP_SX - pat->sx) / 2 + x, (MAP_SY - pat->sy) / 2 + y);
+    while(count < (MAP_SX * MAP_SY) && !flag)
+    {
         if(y-1 >= 0       && pat->pat[(y-1)*pat->sx+x] == count + 1)
         {
-            count++;
-            y--;
+            ++count;
+            --y;
             snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
         }
         else
             if(y+1<pat->sy && pat->pat[(y+1)*pat->sx+x]==count+1){
-                count++;y++;
+                ++count;
+                ++y;
                 snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
             }
             else
                 if(x-1>=0       && pat->pat[y*pat->sx+(x-1)]  ==count+1){
-                    count++;x--;
+                    ++count;
+                    --x;
                     snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
                 }
                 else
                     if(x+1<pat->sx && pat->pat[y*pat->sx+(x+1)]  ==count+1){
-                        count++;x++;
+                        ++count;
+                        ++x;
                         snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
                     }
-                    else flag=1;
+                    else flag = 1;
     }
 }
 
@@ -431,37 +466,35 @@ void snake_done(void)
 //////////////////////////////////////////////////
 static void snake_draw(const game_ctx_t * gctx)
 {
-    int atr;
-    int ch;
+    model_index_t imodel;
+    int iskin;
     snake_seg_t *P;
     P=snake.H;
     while(P)
     {
-        if(snake.dead) atr = 0x44;
-        else           atr = 0x1F;
-        if(!P->prev) ch = 0x01; /* head */
-        else if(!P->next) ch = '*'; /* tail */
+        iskin = (snake.dead ? 1 : 0);
+        if(!P->prev) imodel = MDL_SNAKE_HEAD; /* head */
+        else if(!P->next) imodel = MDL_SNAKE_TAIL; /* tail */
         else{
             /* body */
-            if(P->x == P->next->x && P->x == P->prev->x) ch = 186;
-            else if(   P->y     == P->next->y && P->y     == P->prev->y) ch = 205;
+            if     (P->x == P->next->x && P->x == P->prev->x) imodel = MDL_SNAKE_BODY_VERTICAL;
+            else if(P->y == P->next->y && P->y == P->prev->y) imodel = MDL_SNAKE_BODY_HORIZONTAL;
             else if((  P->x + 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y + 1 == P->next->y)
                     ||(P->x     == P->prev->x && P->y + 1 == P->prev->y && P->x + 1 == P->next->x && P->y     == P->next->y)
-            ) ch = 201;
+            ) imodel = MDL_SNAKE_BODY_CORNER_LEFT_UP;
             else if((  P->x - 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y + 1 == P->next->y)
                     ||(P->x     == P->prev->x && P->y + 1 == P->prev->y && P->x - 1 == P->next->x && P->y     == P->next->y)
-            ) ch = 187;
+            ) imodel = MDL_SNAKE_BODY_CORNER_RIGHT_UP;
             else if((  P->x     == P->prev->x && P->y - 1 == P->prev->y && P->x + 1 == P->next->x && P->y     == P->next->y)
                     ||(P->x + 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y - 1 == P->next->y)
-            ) ch = 200;
+            ) imodel = MDL_SNAKE_BODY_CORNER_LEFT_DOWN;
             else if((  P->x     == P->prev->x && P->y - 1 == P->prev->y && P->x - 1 == P->next->x && P->y     == P->next->y)
                     ||(P->x - 1 == P->prev->x && P->y     == P->prev->y && P->x     == P->next->x && P->y - 1 == P->next->y)
-            ) ch = 188;
+            ) imodel = MDL_SNAKE_BODY_CORNER_RIGHT_DOWN;
         }
-        gctx->putch(P->x, P->y+1, atr, ch);
+        mdl_draw(gctx, P->x, P->y, imodel, iskin);
         P = P->next;
     }
-    gamelib_obj_drawnull(gctx, snake.lastx, snake.lasty);
 }
 
 /**
@@ -537,23 +570,19 @@ static void snake_think(const game_ctx_t * gctx)
         }
 
         obj_free(gctx, &obj);
-        gamelib_obj_draw(gctx);
+        gamelib_objects_draw(gctx);
 
         p = snake.H;
         while(p->next)
         {
             p = p->next;
         }
-        snake.lastx = p->x;
-        snake.lasty = p->y;
     }
     else
     {
         /* moving */
         if(snake.H->next == NULL)
         {
-            snake.lastx = snake.H->x;
-            snake.lasty = snake.H->y;
             switch(snake.movedir)
             {
                 case DIRECTION_NORTH: snake.H->y--;break;
@@ -570,8 +599,6 @@ static void snake_think(const game_ctx_t * gctx)
             {
                 p = p->next;
             }
-            snake.lastx=p->x;
-            snake.lasty=p->y;
             /* cut the ass... */
             p->prev->next=NULL;
             p->prev      =NULL;

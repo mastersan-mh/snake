@@ -25,20 +25,7 @@ void text_setch(int x, int y)
     char tmp[2] = {0, 0};
     switch(text.c.chr)
     {
-        case 0x01: res = mvprintw(y, x, "0"); break; /* head */
-        case '*' : res = mvprintw(y, x, "*"); break; /* tail */
-        case 186 : res = mvprintw(y, x, "*"); break;
-        case 205 : res = mvprintw(y, x, "*"); break;
-        case 201 : res = mvprintw(y, x, "*"); break;
-        case 187 : res = mvprintw(y, x, "*"); break;
-        case 200 : res = mvprintw(y, x, "*"); break;
-        case 188 : res = mvprintw(y, x, "*"); break;
         case 0   : res = mvprintw(y, x, " "); break;
-        case ' ' : res = mvprintw(y, x, " "); break;
-        case 0x05: res = mvprintw(y, x, "m"); break; /* OBJ_MARIJUANA */
-        case 0x06: res = mvprintw(y, x, "M"); break; /* OBJ_MARIJUANAP */
-        case 0x0B: res = mvprintw(y, x, "P"); break; /* OBJ_PURGEN */
-        case '@' : res = mvprintw(y, x, "@"); break; /* OBJ_SHIT */
         case 176 : res = mvprintw(y, x, "#"); break; /*  */
         default:
             tmp[0] = text.c.chr;

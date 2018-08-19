@@ -75,9 +75,6 @@ typedef struct snake_seg_st
 typedef struct
 {
     snake_seg_t *H;
-    /* прошлое положение хвоста(для стирания следа) */
-    int       lastx;
-    int       lasty;
 
     /* movement direction */
     ent_direction_t movedir;
@@ -105,7 +102,7 @@ bool snake_is_dead(void);
 void player_setdir(ent_direction_t movedir);
 ent_direction_t player_direction(void);
 
-void gamelib_obj_draw(const game_ctx_t * gctx);
+void gamelib_objects_draw(const game_ctx_t * gctx);
 
 void gamelib_HUD_draw(const game_ctx_t * gctx);
 

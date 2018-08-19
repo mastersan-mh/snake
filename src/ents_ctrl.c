@@ -85,7 +85,7 @@ static void game_handle_event_tick(const game_ctx_t * gctx)
 
             if(!game_ents.paused)
             {
-                gamelib_obj_draw(gctx);
+                gamelib_objects_draw(gctx);
 
             }
 
