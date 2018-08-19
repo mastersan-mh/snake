@@ -99,13 +99,15 @@ obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj);
 void obj_put(obj_type_t id);
 void obj_think(const game_ctx_t * gctx);
 
-void ent_scene_draw(const game_ctx_t * gctx);
-
 void snake_die(void);
 bool snake_is_dead(void);
 
 void player_setdir(ent_direction_t movedir);
 ent_direction_t player_direction(void);
+
+void gamelib_obj_draw(const game_ctx_t * gctx);
+
+void gamelib_HUD_draw(const game_ctx_t * gctx);
 
 int player_scores(void);
 const char * player_level(void);

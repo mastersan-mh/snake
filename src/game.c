@@ -86,33 +86,6 @@ void game_start(int stage)
     g_ctl_game_create(stage);
 }
 
-void game_handle(const event_t * event)
-{
-    if(!game.started)
-    {
-        return;
-    }
-
-    switch(event->type)
-    {
-        case G_EVENT_TICK:
-        {
-            g_ctl_game_tick();
-            break;
-        }
-        case G_EVENT_KEYBOARD:
-        {
-            g_ctl_game_input(event->data.KEYBOARD.key);
-            break;
-        }
-        case G_EVENT_STOP_GAME_TICKS:
-        {
-            game_stop();
-            break;
-        }
-    }
-}
-
 static void g_scene_draw(void)
 {
 }
@@ -148,15 +121,56 @@ void game_ticktime_set(game_time_ms_t ticktime)
 void game_event_handle(const event_t * event)
 {
 
-    if(game.showmenu)
+    switch(event->type)
     {
-        menu_handle(event);
-    }
-    else
-    {
-        game_handle(event);
-    }
+        case G_EVENT_TICK:
+        {
+            io_render_begin();
 
+            if(game.showmenu)
+            {
+                menu_handle(event);
+            }
+            else
+            {
+                if(game.started)
+                {
+                    g_ctl_game_tick();
+                }
+            }
+            break;
+        }
+        case G_EVENT_KEYBOARD:
+        {
+            if(game.showmenu)
+            {
+                menu_handle(event);
+            }
+            else
+            {
+                if(game.started)
+                {
+                    g_ctl_game_input(event->data.KEYBOARD.key);
+                }
+            }
+            break;
+        }
+        case G_EVENT_STOP_GAME_TICKS:
+        {
+            if(game.showmenu)
+            {
+                menu_handle(event);
+            }
+            else
+            {
+                if(game.started)
+                {
+                    game_stop();
+                }
+            }
+            break;
+        }
+    }
 }
 
 void game_loop(void)

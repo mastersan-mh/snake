@@ -53,17 +53,17 @@ static void game_handle_event_tick(const game_ctx_t * gctx)
         case GSTATE_STOP_WIN:
             newstate = GSTATE_ENDGAME;
             menu_death_on_enter();
-            menu_death_draw_on_enter(gctx);
+            game_ents.intermission = true;
             break;
         case GSTATE_STOP_LOSE:
             newstate = GSTATE_ENDGAME;
             menu_death_on_enter();
-            menu_death_draw_on_enter(gctx);
+            game_ents.intermission = true;
             break;
         case GSTATE_REQUEST_STOP:
-            break;
-        case GSTATE_REQUEST_STOP_CANCEL:
-            newstate = GSTATE_RUN;
+#undef TEXT_ATR
+#define TEXT_ATR (0x0F)
+            gctx->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
             break;
         case GSTATE_ENDGAME:
         {
@@ -80,8 +80,32 @@ static void game_handle_event_tick(const game_ctx_t * gctx)
             {
                 newstate = GSTATE_STOP_LOSE;
             }
+
+
+
+            if(!game_ents.paused)
+            {
+                gamelib_obj_draw(gctx);
+
+            }
+
             break;
     }
+
+    gamelib_HUD_draw(gctx);
+
+    if(game_ents.paused)
+    {
+#undef TEXT_ATR
+#define TEXT_ATR (0x8F)
+        gctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
+    }
+
+    if(game_ents.intermission)
+    {
+        gamelib_intermision_draw(gctx);
+    }
+
     game_ents.state = newstate;
 }
 
@@ -109,14 +133,12 @@ static void ent_ctrl_game_input(const game_ctx_t * gctx, int key)
                 case 'N':
                 case 'n':
                 {
-                    game_ents.state = GSTATE_REQUEST_STOP_CANCEL;
+                    game_ents.state = GSTATE_RUN;
                     break;
                 }
             }
             break;
         }
-        case GSTATE_REQUEST_STOP_CANCEL:
-            break;
         case GSTATE_ENDGAME:
         {
             bool exit = menu_death_on_event(key);
@@ -217,6 +239,7 @@ static int ent_ctrl_game_create(int stage, const game_ctx_t * gctx)
 
     game_ents.state = GSTATE_START;
     game_ents.paused = false;
+    game_ents.intermission = false;
     game_ents.timing = 300;
     game_ents.showtiming = 0;
 
@@ -234,7 +257,6 @@ static void ent_ctrl_game_destroy(const game_ctx_t * gctx)
 static void ent_ctrl_game_tick(const game_ctx_t * gctx)
 {
     game_handle_event_tick(gctx);
-    ent_scene_draw(gctx);
 }
 
 void ent_show_records(const game_ctx_t * gctx)

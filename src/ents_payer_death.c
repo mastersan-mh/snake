@@ -99,7 +99,7 @@ static void menu_death_print_name(const game_ctx_t * gctx, const struct menu_dea
     }
 }
 
-void menu_death_draw_on_enter(const game_ctx_t * gctx)
+void gamelib_intermision_draw(const game_ctx_t * gctx)
 {
     struct menu_death_ctx * ctx = &menu_death_ctx;
 

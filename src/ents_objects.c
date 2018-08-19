@@ -73,9 +73,11 @@ static void snake_draw(const game_ctx_t * gctx);
 
 void gamelib_obj_drawnull(const game_ctx_t * gctx, int x, int y)
 {
+    /*
 #undef TEXT_ATR
 #define TEXT_ATR DRAW_ATR
     gctx->putch(x, y + 1, TEXT_ATR, ' ');
+*/
 }
 
 /**
@@ -247,7 +249,7 @@ void obj_think(const game_ctx_t * gctx)
 /**
  * @brief Draw all objects
  */
-static void obj_draw(const game_ctx_t * gctx)
+void gamelib_obj_draw(const game_ctx_t * gctx)
 {
 #undef TEXT_ATR
 #define TEXT_ATR DRAW_ATR
@@ -274,7 +276,7 @@ static void obj_draw(const game_ctx_t * gctx)
 
 }
 
-static void game_draw_state_run(const game_ctx_t * gctx)
+void gamelib_HUD_draw(const game_ctx_t * gctx)
 {
 #undef TEXT_ART
 #define TEXT_ART (0x0F)
@@ -285,8 +287,6 @@ static void game_draw_state_run(const game_ctx_t * gctx)
             , player_weight()
     );
 
-    obj_draw(gctx);
-
     if(game_ents.showtiming > 0)
     {
         gctx->print(0, 24, TEXT_ART, "timing = %d", (int)game_ents.timing);
@@ -295,65 +295,6 @@ static void game_draw_state_run(const game_ctx_t * gctx)
             gctx->print(0, 24, TEXT_ART, "            ");
     }
 }
-
-
-void ent_scene_draw(const game_ctx_t * gctx)
-{
-    static bool paused_prev = false;
-
-    switch(game_ents.state)
-    {
-        case GSTATE_START:
-            break;
-        case GSTATE_STOP_WIN:
-            break;
-        case GSTATE_STOP_LOSE:
-            break;
-        case GSTATE_REQUEST_STOP:
-        {
-#undef TEXT_ATR
-#define TEXT_ATR (0x0F)
-            gctx->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
-            break;
-        }
-        case GSTATE_REQUEST_STOP_CANCEL:
-        {
-#undef TEXT_ATR
-#define TEXT_ATR (0x1F)
-            gctx->print_centerscreen(16, TEXT_ATR, "                ");
-            break;
-        }
-        case GSTATE_ENDGAME:
-        {
-            break;
-        }
-        case GSTATE_RUN:
-            if(game_ents.paused != paused_prev)
-            {
-                paused_prev = game_ents.paused;
-                if(game_ents.paused)
-                {
-#undef TEXT_ATR
-#define TEXT_ATR (0x8F)
-                    gctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
-                }
-                else
-                {
-#undef TEXT_ATR
-#define TEXT_ATR (0x1F)
-                    gctx->print_centerscreen(17, TEXT_ATR, "                 ");
-                }
-            }
-            if(!game_ents.paused)
-            {
-                game_draw_state_run(gctx);
-            }
-            break;
-    }
-
-}
-
-
 
 /**
  * проверка на касание объекта
@@ -596,7 +537,7 @@ static void snake_think(const game_ctx_t * gctx)
         }
 
         obj_free(gctx, &obj);
-        obj_draw(gctx);
+        gamelib_obj_draw(gctx);
 
         p = snake.H;
         while(p->next)

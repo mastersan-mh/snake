@@ -10,6 +10,7 @@
 
 int io_init(void);
 void io_done(void);
+int io_render_begin(void);
 int io_render_end(void);
 
 int io_kbhit(void);

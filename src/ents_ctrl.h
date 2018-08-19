@@ -18,7 +18,6 @@ typedef enum
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,
     GSTATE_REQUEST_STOP,
-    GSTATE_REQUEST_STOP_CANCEL,
     GSTATE_ENDGAME,
     GSTATE_RUN,
 } game_state_t;
@@ -27,6 +26,7 @@ typedef struct
 {
     game_state_t state;
     bool paused;
+    bool intermission;
     long showtiming;
     /* ms */
     game_time_ms_t timing;
