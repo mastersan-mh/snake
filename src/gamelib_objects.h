@@ -1,12 +1,12 @@
 /*
- * ent_objects.h
+ * gamelib_objects.h
  *
  *  Created on: 25 дек. 2017 г.
  *      Author: mastersan
  */
 
-#ifndef SRC_ENT_OBJECTS_H_
-#define SRC_ENT_OBJECTS_H_
+#ifndef SRC_GAMELIB_OBJECTS_H_
+#define SRC_GAMELIB_OBJECTS_H_
 
 #include "g_ctl_lib.h"
 
@@ -114,4 +114,4 @@ int player_scores(void);
 const char * player_level(void);
 int player_weight(void);
 
-#endif /* SRC_ENT_OBJECTS_H_ */
+#endif /* SRC_GAMELIB_OBJECTS_H_ */

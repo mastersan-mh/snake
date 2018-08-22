@@ -20,9 +20,9 @@ models.c \
 hud.c \
 render.c \
 world_main.c \
-ents_chart.c \
-ents_ctrl.c \
-ents_objects.c \
-ents_payer_death.c \
 menu.c \
+gamelib_chart.c \
+gamelib_ctrl.c \
+gamelib_objects.c \
+gamelib_payer_death.c \
 main.c

@@ -1,11 +1,12 @@
 /*
- * ent_objects.c
+ * gamelib_objects.c
  *
  *  Created on: 25 дек. 2017 г.
  *      Author: mastersan
  */
 
-#include "ents_objects.h"
+#include "gamelib_objects.h"
+#include "gamelib_ctrl.h"
 
 #include "io.h"
 
@@ -16,7 +17,6 @@
 #include "sys_time.h"
 
 #include <stdlib.h>
-#include "ents_ctrl.h"
 
 char *level_str[LEVEL_MAX] =
 {

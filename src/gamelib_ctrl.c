@@ -1,17 +1,16 @@
 /*
- * ents_ctrl.c
+ * gamelib_ctrl.c
  *
  *  Created on: 7 авг. 2018 г.
  *      Author: mastersan
  */
 
-#include "ents_ctrl.h"
-
 #include "g_ctl_lib.h"
 
-#include "ents_objects.h"
-#include "ents_chart.h"
-#include "ents_payer_death.h"
+#include "gamelib_ctrl.h"
+#include "gamelib_objects.h"
+#include "gamelib_chart.h"
+#include "gamelib_payer_death.h"
 
 #define ENTS_GAME_DEFAULT_TIMING 300
 

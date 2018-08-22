@@ -1,5 +1,5 @@
 /*
- * chart.c
+ * gamelib_chart.c
  *
  *  Created on: 25 дек. 2017 г.
  *      Author: mastersan
@@ -7,7 +7,7 @@
 
 #include "g_utils.h"
 
-#include "ents_chart.h"
+#include "gamelib_chart.h"
 
 #define CHART_RMAX 10
 

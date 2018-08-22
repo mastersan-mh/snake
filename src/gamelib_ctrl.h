@@ -1,16 +1,16 @@
 /*
- * ents_common.h
+ * gamelib_ctrl.h
  *
  *  Created on: 8 авг. 2018 г.
  *      Author: mastersan
  */
 
-#ifndef SRC_ENTS_CTRL_H_
-#define SRC_ENTS_CTRL_H_
+#ifndef SRC_GAMELIB_CTRL_H_
+#define SRC_GAMELIB_CTRL_H_
 
 #include "g_ctl_lib.h"
 
-#include "ents_objects.h"
+#include "gamelib_objects.h"
 
 typedef enum
 {
@@ -59,4 +59,4 @@ extern gamelib_t gamelib;
 void ents_game_timing_update(ent_direction_t direction);
 
 
-#endif /* SRC_ENTS_CTRL_H_ */
+#endif /* SRC_GAMELIB_CTRL_H_ */

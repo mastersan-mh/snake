@@ -1,14 +1,14 @@
 /*
- * ents_payer_death.c
+ * gamelib_payer_death.c
  *
  *  Created on: 9 авг. 2018 г.
  *      Author: mastersan
  */
 
-#include "ents_chart.h"
-#include "ents_objects.h"
-#include "ents_payer_death.h"
-#include "ents_ctrl.h"
+#include "gamelib_chart.h"
+#include "gamelib_objects.h"
+#include "gamelib_payer_death.h"
+#include "gamelib_ctrl.h"
 
 #include "sys_utils.h"
 #include <string.h>
