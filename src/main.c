@@ -18,17 +18,17 @@ libs:
 
 int main()
 {
-    io_init();
     if(game_init())
     {
         return EXIT_FAILURE;
     }
+    io_init();
     while(!game_is_quit())
     {
         game_loop();
-        game_draw();
+        game_render();
     }
-    game_done();
     io_done();
+    game_done();
     return EXIT_SUCCESS;
 }

@@ -40,9 +40,12 @@ int io_init(void)
     WINDOW * w = initscr();
 
     raw();
+    //cbreak();
     noecho();
+    curs_set(FALSE);
     keypad(w, true);
 
+    //getmaxyx(stdscr, max_y, max_x);
 
     return 0;
 }
@@ -50,6 +53,12 @@ int io_init(void)
 void io_done(void)
 {
     endwin();
+}
+
+int io_render_begin(void)
+{
+    clear();
+    return 0;
 }
 
 int io_render_end(void)

@@ -20,8 +20,6 @@ typedef struct
     void (*event_on_enter)(void * ctx);
     void (*event_on_exit)(void * ctx);
     menu_index_t (*event_on_event)(int key, void * ctx);
-    void (*draw_on_enter)(void * ctx);
-    void (*draw_on_exit)(void * ctx);
     void (*draw_on_update)(void * ctx);
     void * ctx;
 } menu_t;
@@ -57,7 +55,6 @@ static void P_menu_inc(int menu_amount, int * imenu)
 static struct menu_main_ctx
 {
     int sub;
-    int sub_prev;
 } menu_main_ctx = {};
 
 static menu_index_t menu_main_on_event(int key, void * ctx_)
@@ -94,7 +91,7 @@ static menu_index_t menu_main_on_event(int key, void * ctx_)
     return IMENU_MAIN;
 }
 
-static void menu_main_draw_on_enter(void * ctx_)
+static void menu_main_draw(void * ctx_)
 {
     struct menu_main_ctx * ctx = ctx_;
     text.c.atr=0x00;
@@ -120,24 +117,12 @@ static void menu_main_draw_on_enter(void * ctx_)
     text_print((80-10)/2,15,"ПОБЕДИТЕЛИ");
     text_print((80-10)/2,16,"  ПОМОЩЬ  ");
     text_print((80-10)/2,17,"  ВЫХОД   ");
-    text.c.atr=0x0F;
+    text.c.atr = 0x0F;
     text_print( 7,22,"Mad House Software");
     text_print(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+    text.c.atr = 0x05;
     text_print((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
     text_print((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
-
-}
-
-static void menu_main_draw_on_update(void * ctx_)
-{
-    struct menu_main_ctx * ctx = ctx_;
-
-    text.c.atr=0x05;
-    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub_prev, "  ");
-    text_print((80 - 10) / 2 + 10, 12 + ctx->sub_prev, "  ");
-    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
-    text_print((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
-    ctx->sub_prev = ctx->sub;
 
 }
 
@@ -173,7 +158,7 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
     return IMENU_MAIN;
 }
 
-static void menu_chart_draw_on_enter(void * ctx_)
+static void menu_chart_draw(void * ctx_)
 {
     text.c.atr=0x00;
     text.c.chr=0x00;
@@ -191,7 +176,7 @@ static menu_index_t menu_help_event_on_event(int key, void * ctx_)
     return IMENU_MAIN;
 }
 
-static void menu_help_draw_on_enter(void * ctx_)
+static void menu_help_draw(void * ctx_)
 {
     text.c.atr=0x00;
     text.c.chr=0x00;
@@ -224,13 +209,13 @@ static void menu_quit_on_enter(void * ctx_)
 static const menu_t menus[] =
 {
         { NULL, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NONE     */
-        { NULL, NULL, menu_main_on_event, menu_main_draw_on_enter , NULL, menu_main_draw_on_update, &menu_main_ctx },/* IMENU_MAIN     */
-        { menu_newgame0_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
-        { menu_newgame1_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
-        { menu_newgame2_on_enter, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME2 */
-        { NULL, NULL, menu_chart_event_on_event, menu_chart_draw_on_enter, NULL, NULL, NULL },/* IMENU_CHART    */
-        { NULL, NULL, menu_help_event_on_event , menu_help_draw_on_enter, NULL, NULL, NULL },/* IMENU_HELP     */
-        { menu_quit_on_enter    , NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
+        { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx },/* IMENU_MAIN     */
+        { menu_newgame0_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
+        { menu_newgame1_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
+        { menu_newgame2_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME2 */
+        { NULL, NULL, menu_chart_event_on_event, menu_chart_draw, NULL },/* IMENU_CHART    */
+        { NULL, NULL, menu_help_event_on_event , menu_help_draw, NULL },/* IMENU_HELP     */
+        { menu_quit_on_enter    , NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
 };
 
 static menu_index_t m_imenu_prev = IMENU_NONE;
@@ -252,10 +237,6 @@ void menu_handle(const event_t * event)
         if(menu->event_on_enter)
         {
             menu->event_on_enter(ctx);
-        }
-        if(menu->draw_on_enter)
-        {
-            menu->draw_on_enter(ctx);
         }
         m_imenu_prev = m_imenu;
     }
@@ -279,12 +260,6 @@ void menu_handle(const event_t * event)
             {
                 m_imenu = IMENU_MAIN;
             }
-
-            if(menu->draw_on_update)
-            {
-                menu->draw_on_update(ctx);
-            }
-
             break;
         }
         case G_EVENT_STOP_GAME_TICKS:
@@ -300,10 +275,11 @@ void menu_handle(const event_t * event)
         {
             menu->event_on_exit(ctx);
         }
-        if(menu->draw_on_exit)
-        {
-            menu->draw_on_exit(ctx);
-        }
+    }
+
+    if(menu->draw_on_update)
+    {
+        menu->draw_on_update(ctx);
     }
 
 

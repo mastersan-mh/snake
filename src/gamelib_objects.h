@@ -1,12 +1,12 @@
 /*
- * ent_objects.h
+ * gamelib_objects.h
  *
  *  Created on: 25 дек. 2017 г.
  *      Author: mastersan
  */
 
-#ifndef SRC_ENT_OBJECTS_H_
-#define SRC_ENT_OBJECTS_H_
+#ifndef SRC_GAMELIB_OBJECTS_H_
+#define SRC_GAMELIB_OBJECTS_H_
 
 #include "g_ctl_lib.h"
 
@@ -44,7 +44,10 @@ typedef enum
 typedef struct obj_st
 {
     struct obj_st *next;
-    int x,y;
+
+    world_ientity_t ient;
+    origin_t origin;
+
     obj_type_t type;
     int timer;
 } obj_t;
@@ -66,7 +69,9 @@ typedef struct snake_seg_st
 {
     struct snake_seg_st *prev;
     struct snake_seg_st *next;
-    int x,y;
+
+    world_ientity_t ient;
+    origin_t origin;
 } snake_seg_t;
 
 /**
@@ -74,10 +79,7 @@ typedef struct snake_seg_st
  */
 typedef struct
 {
-    snake_seg_t *H;
-    /* прошлое положение хвоста(для стирания следа) */
-    int       lastx;
-    int       lasty;
+    snake_seg_t *head;
 
     /* movement direction */
     ent_direction_t movedir;
@@ -94,12 +96,11 @@ extern char *level_str[LEVEL_MAX];
 
 void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);
-obj_t *obj_free(const game_ctx_t * gctx, obj_t **obj);
+obj_t *obj_free(obj_t **obj);
 
 void obj_put(obj_type_t id);
-void obj_think(const game_ctx_t * gctx);
-
-void ent_scene_draw(const game_ctx_t * gctx);
+void obj_think(void);
+void snake_think(void);
 
 void snake_die(void);
 bool snake_is_dead(void);
@@ -107,8 +108,10 @@ bool snake_is_dead(void);
 void player_setdir(ent_direction_t movedir);
 ent_direction_t player_direction(void);
 
+void gamelib_HUD_draw(void);
+
 int player_scores(void);
 const char * player_level(void);
 int player_weight(void);
 
-#endif /* SRC_ENT_OBJECTS_H_ */
+#endif /* SRC_GAMELIB_OBJECTS_H_ */
