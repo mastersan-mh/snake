@@ -12,7 +12,5 @@ void menu_death_on_enter(void);
 void gamelib_intermision_draw(void);
 
 bool menu_death_on_event(int key);
-void menu_death_draw_on_update(void);
-
 
 #endif /* SRC_ENTS_PAYER_DEATH_H_ */

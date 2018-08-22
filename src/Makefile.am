@@ -17,6 +17,7 @@ g_events.c \
 g_ctl.c \
 game.c \
 models.c \
+hud.c \
 render.c \
 world_main.c \
 ents_chart.c \

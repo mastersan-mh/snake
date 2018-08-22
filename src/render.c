@@ -27,3 +27,10 @@ void render_add_model(
     text_print(origin->x, origin->y + 1, "%s", model->s);
 
 }
+
+void render_add_text(int x, int y, int atr, const char * text)
+{
+    WINDOW * win = stdscr;
+
+    mvwprintw(win, y, x, text);
+}

@@ -118,11 +118,7 @@ static void g_scene_draw(void)
 
 void game_draw(void)
 {
-
-    if(!game.showmenu)
-    {
-        g_scene_draw();
-    }
+    g_scene_draw();
 
     io_render_end();
 }

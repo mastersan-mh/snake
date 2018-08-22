@@ -134,12 +134,6 @@ void gamelib_intermision_draw(void)
     else
     {
         gamelib.ctx->print(26, 21, TEXT_ATR, "ИМЯ> ");
+        menu_death_print_name(ctx);
     }
-    menu_death_print_name(ctx);
-}
-
-void menu_death_draw_on_update(void)
-{
-    struct menu_death_ctx * ctx = &menu_death_ctx;
-    menu_death_print_name(ctx);
 }

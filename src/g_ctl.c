@@ -9,6 +9,7 @@
 #include "game.h"
 #include "world_main.h"
 #include "models.h"
+#include "hud.h"
 
 #include <stdlib.h>
 
@@ -18,42 +19,6 @@ static game_ctl_t gctl = {};
 static game_ctx_t gctx = {};
 
 void game_ent_ctl_init(game_ctl_t *gctl);
-
-#include "_text.h"
-static void P_print(int x, int y, int atr, const char * format, ...)
-{
-    va_list args;
-    WINDOW * win = stdscr;
-
-    mvwprintw(win, y, x, "");
-    va_start(args, format);
-    vwprintw(win, format, args);
-    va_end(args);
-}
-
-
-#define VID_SCR_WIDTH (80)
-#define VID_SCR_HEIGHT (25)
-static void P_print_centerscreen(size_t text_width, int atr, const char * format, ...)
-{
-    va_list args;
-    WINDOW * win = stdscr;
-
-    mvwprintw(win, (VID_SCR_HEIGHT / 2), (VID_SCR_WIDTH - text_width) / 2, "");
-    va_start(args, format);
-    vwprintw(win, format, args);
-    va_end(args);
-
-
-}
-
-static void P_putch(int x, int y, int atr, char ch)
-{
-    text.c.atr = atr;
-    text.c.chr = ch;
-    text_setch(x, y);
-
-}
 
 int g_ctl_init(void)
 {
@@ -69,9 +34,9 @@ int g_ctl_init(void)
     gctx.stop_ticks = game_stop_ticks;
     gctx.show_menu = game_menu_show;
     gctx.ticktime_set = game_ticktime_set;
-    gctx.print = P_print;
-    gctx.print_centerscreen = P_print_centerscreen;
-    gctx.putch = P_putch;
+    gctx.print = hud_print;
+    gctx.print_centerscreen = hud_print_centerscreen;
+    gctx.putch = hud_putch;
 
     gctl.max_entities = 0;
     game_ent_ctl_init(&gctl);

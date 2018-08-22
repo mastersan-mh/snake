@@ -34,7 +34,6 @@ extern struct TTEXT text;
 
 void text_init80X25X8(void);
 
-void text_setch(int x, int y);
 void text_fill_screen(void);
 
 #endif

@@ -135,7 +135,6 @@ static void ent_ctrl_game_input(int key)
         case GSTATE_ENDGAME:
         {
             bool exit = menu_death_on_event(key);
-            menu_death_draw_on_update();
             if(exit)
             {
                 gamelib.ctx->stop_ticks();
