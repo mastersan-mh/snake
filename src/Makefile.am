@@ -11,11 +11,17 @@ snake_SOURCES = \
 sys_utils.c \
 sys_time.c \
 _text.c \
-g_utils.c \
-chart.c \
-g_events.c \
-game.c \
 io.c \
-obj.c \
-main.c \
-menu.c
+g_utils.c \
+g_events.c \
+g_ctl.c \
+game.c \
+models.c \
+render.c \
+world_main.c \
+ents_chart.c \
+ents_ctrl.c \
+ents_objects.c \
+ents_payer_death.c \
+menu.c \
+main.c

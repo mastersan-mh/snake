@@ -7,13 +7,15 @@
 
 #include "g_ctl.h"
 #include "game.h"
+#include "world_main.h"
+#include "models.h"
 
 #include <stdlib.h>
 
 #define FCHECK(xfunc, xres) if((xfunc) == NULL) { return xres; }
 
-static game_ctl_t g_ctl = {};
-static game_ctx_t g_ctx = {};
+static game_ctl_t gctl = {};
+static game_ctx_t gctx = {};
 
 void game_ent_ctl_init(game_ctl_t *gctl);
 
@@ -53,52 +55,69 @@ static void P_putch(int x, int y, int atr, char ch)
 
 }
 
-void g_ctl_init(void)
+int g_ctl_init(void)
 {
-    g_ctx.stop_ticks = game_stop_ticks;
-    g_ctx.show_menu = game_menu_show;
-    g_ctx.ticktime_set = game_ticktime_set;
-    g_ctx.print = P_print;
-    g_ctx.print_centerscreen = P_print_centerscreen;
-    g_ctx.putch = P_putch;
+    gctx.world_find_first_free = world_find_first_free;
+    gctx.world_ent_unlink = world_ent_unlink;
+    gctx.world_ent_link = world_ent_link;
+    gctx.world_ent_update_orig = world_ent_update_orig;
+    gctx.world_ent_update_model = world_ent_update_model;
+    gctx.world_ent_update_skin = world_ent_update_skin;
 
-    game_ent_ctl_init(&g_ctl);
-    FCHECK(g_ctl.init, );
-    g_ctl.init(&g_ctx);
+    gctx.model_precache = model_precache;
+
+    gctx.stop_ticks = game_stop_ticks;
+    gctx.show_menu = game_menu_show;
+    gctx.ticktime_set = game_ticktime_set;
+    gctx.print = P_print;
+    gctx.print_centerscreen = P_print_centerscreen;
+    gctx.putch = P_putch;
+
+    gctl.max_entities = 0;
+    game_ent_ctl_init(&gctl);
+    gctx.max_entities = gctl.max_entities;
+
+    FCHECK(gctl.init, 0);
+    return gctl.init(&gctx);
 }
 
 void g_ctl_done(void)
 {
-    FCHECK(g_ctl.done, );
-    g_ctl.done();
+    FCHECK(gctl.done, );
+    gctl.done();
+}
+
+size_t g_ctl_max_entities_get(void)
+{
+    return gctl.max_entities;
 }
 
 int g_ctl_game_create(int stage)
 {
-    FCHECK(g_ctl.game_create, 0);
-    return g_ctl.game_create(stage, &g_ctx);
+    FCHECK(gctl.game_create, 0);
+    return gctl.game_create(stage);
 }
 
 void g_ctl_game_destroy(void)
 {
-    FCHECK(g_ctl.game_destroy, );
-    g_ctl.game_destroy(&g_ctx);
+    FCHECK(gctl.game_destroy, );
+    gctl.game_destroy();
 }
 
 void g_ctl_game_tick(void)
 {
-    FCHECK(g_ctl.game_tick, );
-    g_ctl.game_tick(&g_ctx);
+    FCHECK(gctl.game_tick, );
+    gctl.game_tick();
 }
 
 void g_ctl_game_input(int key)
 {
-    FCHECK(g_ctl.game_input, );
-    g_ctl.game_input(&g_ctx, key);
+    FCHECK(gctl.game_input, );
+    gctl.game_input(key);
 }
 
 void g_ctl_show_records(void)
 {
-    FCHECK(g_ctl.show_records, );
-    g_ctl.show_records(&g_ctx);
+    FCHECK(gctl.show_records, );
+    gctl.show_records();
 }

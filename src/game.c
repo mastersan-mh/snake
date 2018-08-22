@@ -11,6 +11,8 @@
 #include "g_utils.h"
 #include "g_events.h"
 #include "g_ctl.h"
+#include "world_main.h"
+#include "models.h"
 
 #include "menu.h"
 
@@ -30,6 +32,8 @@ static game_t game = {};
 
 int game_init(void)
 {
+    int res;
+
     char * home_dir = getenv("HOME");
     if(home_dir == NULL)
     {
@@ -45,14 +49,34 @@ int game_init(void)
     text.c.chr=0x00;
     text_fill_screen();
     srand(time(NULL));
+
+
+    res = models_init();
+    if(res)
+    {
+        return res;
+    }
+
     g_events_init();
-    g_ctl_init();
+    res = g_ctl_init();
+    if(res) return res;
+    size_t max_entities = g_ctl_max_entities_get();
+    res = world_init(max_entities);
+    if(res)
+    {
+        g_ctl_done();
+        models_done();
+        return res;
+    }
     return 0;
 }
 
 void game_done(void)
 {
+    world_done();
     g_ctl_done();
+    models_done();
+
     text.c.atr=0x0F;
     text.c.chr=0x00;
     text_fill_screen();
@@ -63,6 +87,7 @@ void game_done(void)
 void game_stop()
 {
     g_ctl_game_destroy();
+    world_destroy();
     game.started = false;
 }
 
@@ -88,6 +113,7 @@ void game_start(int stage)
 
 static void g_scene_draw(void)
 {
+    world_add_to_render();
 }
 
 void game_draw(void)
@@ -157,16 +183,9 @@ void game_event_handle(const event_t * event)
         }
         case G_EVENT_STOP_GAME_TICKS:
         {
-            if(game.showmenu)
+            if(game.started)
             {
-                menu_handle(event);
-            }
-            else
-            {
-                if(game.started)
-                {
-                    game_stop();
-                }
+                game_stop();
             }
             break;
         }
