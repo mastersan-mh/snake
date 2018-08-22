@@ -34,8 +34,6 @@ typedef enum
     OBJ_PURGEN,
     /* shit */
     OBJ_SHIT,
-    /* player */
-    OBJ_PLAYER,
 } obj_type_t;
 
 /**

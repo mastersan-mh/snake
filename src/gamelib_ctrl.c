@@ -220,7 +220,6 @@ static int ent_ctrl_init(const game_ctx_t * gctx)
     gctx->model_precache("M" /* 0x06 */, &gamelib.mdlidx[MDL_MARIJUANAP]);
     gctx->model_precache("P" /* 0x0B */, &gamelib.mdlidx[MDL_PURGEN]);
     gctx->model_precache("@" , &gamelib.mdlidx[MDL_SHIT]);
-    gctx->model_precache("s" , &gamelib.mdlidx[MDL_PLAYER]);
     gctx->model_precache("0" /* 0x01 */, &gamelib.mdlidx[MDL_SNAKE_HEAD]);
     gctx->model_precache("*" , &gamelib.mdlidx[MDL_SNAKE_TAIL]);
     gctx->model_precache("|" /* 186 */, &gamelib.mdlidx[MDL_SNAKE_BODY_VERTICAL]);

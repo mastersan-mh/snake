@@ -106,14 +106,13 @@ void obj_new(int x, int y, obj_type_t objtype)
     obj->next = Hobj;
     Hobj = obj;
 
-    model_index_t model_index;
+    model_index_t model_index = -1;
     switch(objtype)
     {
         case OBJ_MARIJUANA : model_index = MDL_MARIJUANA ; break;
         case OBJ_MARIJUANAP: model_index = MDL_MARIJUANAP; break;
         case OBJ_PURGEN    : model_index = MDL_PURGEN    ; break;
         case OBJ_SHIT      : model_index = MDL_SHIT      ; break;
-        case OBJ_PLAYER    : model_index = MDL_PLAYER    ; break;
     }
 
     obj->ient = ient;
@@ -132,7 +131,6 @@ void obj_new(int x, int y, obj_type_t objtype)
         case OBJ_MARIJUANAP: obj->timer = 160+80; break;
         case OBJ_PURGEN    : obj->timer = 80; break;
         case OBJ_SHIT      : obj->timer = 160; break;
-        case OBJ_PLAYER    : obj->timer = -1; break;
     }
 }
 
@@ -555,8 +553,6 @@ void snake_think(void)
                 break;
             case OBJ_SHIT:
                 snake_get_shit();
-                break;
-            case OBJ_PLAYER:
                 break;
         }
 

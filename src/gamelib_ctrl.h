@@ -19,7 +19,6 @@ typedef enum
     MDL_MARIJUANAP,
     MDL_PURGEN    ,
     MDL_SHIT      ,
-    MDL_PLAYER    ,
     MDL_SNAKE_HEAD,
     MDL_SNAKE_TAIL,
     MDL_SNAKE_BODY_VERTICAL  ,
