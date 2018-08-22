@@ -22,4 +22,6 @@ void render_add_model(
 
 void render_add_text(int x, int y, int atr, const char * text);
 
+void render(void);
+
 #endif /* SRC_RENDER_H_ */

@@ -13,6 +13,7 @@
 #include "g_ctl.h"
 #include "world_main.h"
 #include "models.h"
+#include "render.h"
 
 #include "menu.h"
 
@@ -111,15 +112,9 @@ void game_start(int stage)
     g_ctl_game_create(stage);
 }
 
-static void g_scene_draw(void)
+void game_render(void)
 {
-    world_add_to_render();
-}
-
-void game_draw(void)
-{
-    g_scene_draw();
-
+    render();
     io_render_end();
 }
 
@@ -158,6 +153,7 @@ void game_event_handle(const event_t * event)
                 if(game.started)
                 {
                     g_ctl_game_tick();
+                    world_add_to_render();
                 }
             }
             break;

@@ -42,7 +42,7 @@ void hud_print_centerscreen(size_t text_width, int atr, const char * format, ...
 
     text[BUFSIZE - 1] = '\0';
 
-    render_add_text((VID_SCR_HEIGHT / 2), (VID_SCR_WIDTH - text_width) / 2, atr, text);
+    render_add_text((VID_SCR_WIDTH - text_width) / 2, (VID_SCR_HEIGHT / 2), atr, text);
 }
 
 void hud_putch(int x, int y, int atr, char ch)

@@ -26,7 +26,7 @@ int main()
     while(!game_is_quit())
     {
         game_loop();
-        game_draw();
+        game_render();
     }
     io_done();
     game_done();

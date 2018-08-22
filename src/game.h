@@ -29,7 +29,7 @@ void game_quit(void);
 void game_start(int stage);
 
 void game_loop(void);
-void game_draw(void);
+void game_render(void);
 
 void game_stop_ticks(void);
 void game_menu_show(menu_index_t imenu);

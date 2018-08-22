@@ -159,7 +159,7 @@ static void ent_ctrl_game_input(int key)
                     {
                         gamelib.timing +=10;
                     }
-                    gamelib.showtiming = 1100 - gamelib.timing;
+                    gamelib.showtiming = (1100 - gamelib.timing) / 10;
                     ents_game_timing_update(player_direction());
                     break;
                 }
