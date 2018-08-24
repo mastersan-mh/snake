@@ -106,14 +106,13 @@ void obj_new(int x, int y, obj_type_t objtype)
     obj->next = Hobj;
     Hobj = obj;
 
-    model_index_t model_index;
+    model_index_t model_index = -1;
     switch(objtype)
     {
         case OBJ_MARIJUANA : model_index = MDL_MARIJUANA ; break;
         case OBJ_MARIJUANAP: model_index = MDL_MARIJUANAP; break;
         case OBJ_PURGEN    : model_index = MDL_PURGEN    ; break;
         case OBJ_SHIT      : model_index = MDL_SHIT      ; break;
-        case OBJ_PLAYER    : model_index = MDL_PLAYER    ; break;
     }
 
     obj->ient = ient;
@@ -132,7 +131,6 @@ void obj_new(int x, int y, obj_type_t objtype)
         case OBJ_MARIJUANAP: obj->timer = 160+80; break;
         case OBJ_PURGEN    : obj->timer = 80; break;
         case OBJ_SHIT      : obj->timer = 160; break;
-        case OBJ_PLAYER    : obj->timer = -1; break;
     }
 }
 
@@ -155,12 +153,16 @@ void obj_freeall(void)
  * @brief Erase object
  * param[in/out] obj    object
  */
-obj_t *obj_free(obj_t **obj)
+/**
+ * @brief Erase object
+ * param[in/out] obj    object
+ */
+void obj_free(obj_t **obj)
 {
     obj_t *P;
     if(Hobj == NULL || obj == NULL)
     {
-        return NULL;
+        return;
     }
 
     if(Hobj == (*obj))
@@ -182,7 +184,6 @@ obj_t *obj_free(obj_t **obj)
         Z_free((*obj));
         (*obj) = P;
     }
-    return (*obj);
 }
 
 /**
@@ -254,7 +255,7 @@ void obj_think(void)
             case OBJ_MARIJUANA :break;
             case OBJ_MARIJUANAP:break;
             case OBJ_PURGEN    :break;
-            case OBJ_SHIT     :
+            case OBJ_SHIT      :
             {
                 obj_new(x-1, y  , OBJ_MARIJUANAP);
                 obj_new(x  , y-1, OBJ_MARIJUANAP);
@@ -282,8 +283,6 @@ void gamelib_HUD_draw(void)
     {
         gamelib.ctx->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
         --gamelib.showtiming;
-        if(gamelib.showtiming <= 0)
-            gamelib.ctx->print(0, 24, TEXT_ART, "            ");
     }
 }
 
@@ -548,15 +547,13 @@ void snake_think(void)
             case OBJ_MARIJUANAP:
                 /* growed up */
                 ++snake.scores;
-                P_snake_newseg(obj->origin.x,obj->origin.y);
+                P_snake_newseg(obj->origin.x, obj->origin.y);
                 break;
             case OBJ_PURGEN:
                 snake_get_purgen();
                 break;
             case OBJ_SHIT:
                 snake_get_shit();
-                break;
-            case OBJ_PLAYER:
                 break;
         }
 
@@ -621,10 +618,13 @@ void snake_think(void)
     while(pt && !snake.dead)
     {
         sseg=pt->next;
-        while(sseg && !snake.dead)
+        while(sseg != NULL)
         {
             if(origins_eq(&pt->origin, &sseg->origin))
-                snake.dead = true;
+            {
+                snake_die();
+                break;
+            }
             sseg = sseg->next;
         }
         pt = pt->next;
@@ -633,13 +633,21 @@ void snake_think(void)
     if(snake.head->origin.x < 0 || MAP_SX <= snake.head->origin.x
             || snake.head->origin.y < 0 || MAP_SY <= snake.head->origin.y)
     {
-        snake.dead = true;
+        snake_die();
     }
 }
 
 void snake_die(void)
 {
     snake.dead = true;
+
+    snake_seg_t * sseg;
+    for(sseg = snake.head; sseg; sseg = sseg->next)
+    {
+        snake_seg_model_update(sseg);
+    }
+
+
 }
 
 bool snake_is_dead(void)

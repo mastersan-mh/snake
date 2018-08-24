@@ -4,16 +4,39 @@
  *  Created on: 21 авг. 2018 г.
  *      Author: mastersan
  */
-#include "render.h"
-
-#include "_text.h"
 
 #include "Z_mem.h"
 
+#include "render.h"
+
+#include "io.h"
+
+#include <curses.h>
+
 #include <stdlib.h>
+
+/* screen size by x */
+#define TEXT_SCRsx 80
+/* screen size by y */
+#define TEXT_SCRsy 25
+
+#define BGCOLORS_NUM 8
+#define FGCOLORS_NUM 8
 
 #define RENDER_MODEL_LIST_SIZE (80 * 25 + 10)
 #define RENDER_TEXT_LIST_SIZE 128
+
+#include <stdio.h>
+
+#define ERROR(format, ...) \
+        fprintf(stderr, format, ##__VA_ARGS__)
+
+typedef struct
+{
+    bool fill;
+    int atr;
+    uint64_t ch;
+} render_t;
 
 typedef struct
 {
@@ -31,11 +54,200 @@ typedef struct
     char * text;
 } render_text_t;
 
+static render_t ren = {};
+
 static render_model_t render_model_list[RENDER_MODEL_LIST_SIZE];
 static size_t render_model_list_num = 0;
 
 static render_text_t render_text_list[RENDER_TEXT_LIST_SIZE];
 static size_t render_text_list_num = 0;
+
+/**
+ * @brief Init the render
+ */
+void render_init(void)
+{
+    /* ifdef color */
+    start_color();
+
+    //getmaxyx(stdscr, max_y, max_x);
+
+    /* like VGA colors */
+    static const int bgcolors[BGCOLORS_NUM] =
+    {
+            COLOR_BLACK,
+            COLOR_BLUE,
+            COLOR_GREEN,
+            COLOR_CYAN,
+            COLOR_RED,
+            COLOR_MAGENTA,
+            COLOR_YELLOW,
+            COLOR_WHITE,
+    };
+
+    static const int fgcolors[FGCOLORS_NUM] =
+    {
+            COLOR_BLACK,
+            COLOR_BLUE,
+            COLOR_GREEN,
+            COLOR_CYAN,
+            COLOR_RED,
+            COLOR_MAGENTA,
+            COLOR_YELLOW,
+            COLOR_WHITE,
+    };
+
+    /* int cpairs = COLOR_PAIRS; */
+
+    /* i = 1 .. COLOR_PAIRS-1 */
+    int i = 1;
+    int ibgcolor;
+    int ifgcolor;
+    for(ibgcolor = 0; ibgcolor < BGCOLORS_NUM; ++ibgcolor)
+    {
+        for(ifgcolor = 0; ifgcolor < FGCOLORS_NUM; ++ifgcolor)
+        {
+            init_pair(i, fgcolors[ifgcolor], bgcolors[ibgcolor]);
+            ++i;
+        }
+    }
+}
+
+/**
+ * @brief Done the render
+ */
+void render_done(void)
+{
+}
+
+
+void render_begin(void)
+{
+#define RENDER_FAST
+#ifdef RENDER_FAST
+    erase();
+#else
+    clear();
+#endif
+}
+
+void render_end(void)
+{
+    refresh();
+}
+
+/*
+ * @note
+ * atr:
+ *   0xBA
+ *   B - blink + bgcolor
+ *   A - fgcolors
+ */
+
+int P_calculate_atr(uint8_t atr)
+{
+    int additional_atr = 0;
+
+    uint8_t blink = ((atr & 0x80) >> 4);
+    if(blink)
+    {
+        additional_atr = additional_atr | A_BLINK;
+    }
+    uint8_t bg    = ((atr & 0x70) >> 4);
+    uint8_t fg    = (atr & 0x0F);
+
+    if(fg >= FGCOLORS_NUM)
+    {
+        fg = fg & 0x07;
+        additional_atr = additional_atr | A_BOLD;
+    }
+
+    int cpair = bg * FGCOLORS_NUM + fg + 1;
+
+    return COLOR_PAIR(cpair) | additional_atr;
+};
+
+
+static void P_atr_set(uint8_t atr)
+{
+    attron(P_calculate_atr(atr));
+};
+
+/**
+ * @brief Clear a render buffers
+ */
+void render_clearbuf(void)
+{
+    size_t i;
+
+    ren.fill = false;
+
+    /* clear models */
+    render_model_list_num = 0;
+
+    /* clear text */
+    for(i = 0; i < render_text_list_num; ++i)
+    {
+        render_text_t * rt = &render_text_list[i];
+        Z_free(rt->text);
+    }
+
+    render_text_list_num = 0;
+}
+
+/**
+ * @brief Render
+ */
+void render(void)
+{
+#define r_print(x, y, format, ...) \
+        mvprintw(y, x, format, ##__VA_ARGS__)
+
+    size_t i;
+
+    if(ren.fill)
+    {
+        wbkgdset(stdscr, ren.ch | P_calculate_atr(ren.atr));
+    }
+
+    /* render models */
+    for(i = 0; i < render_model_list_num; ++i)
+    {
+        render_model_t * rm = &render_model_list[i];
+        /* simple, print the string :) */
+        P_atr_set(rm->atr);
+        r_print(rm->x, rm->y + 1, "%s", rm->model->s);
+    }
+
+    /* render text */
+    for(i = 0; i < render_text_list_num; ++i)
+    {
+        render_text_t * rt = &render_text_list[i];
+        P_atr_set(rt->atr);
+        r_print(rt->x, rt->y, "%s", rt->text);
+    }
+
+    /*
+    {
+        int i;
+        for(i = 0; i <= 8*8; ++i)
+        {
+            attron(COLOR_PAIR(i));
+//            attron(A_NORMAL);
+            r_print((i / 8) * 4, i % 8, "%2dt", i);
+        }
+    }
+     */
+}
+
+
+void render_background(int atr, uint64_t ch)
+{
+    ren.fill = true;
+    ren.atr = atr;
+    ren.ch = ch;
+}
+
 
 /**
  * @brief Add a model to a render list
@@ -53,6 +265,7 @@ void render_add_model(
 
     if(render_model_list_num >= RENDER_MODEL_LIST_SIZE)
     {
+        ERROR("Render buffers owerflow!");
         return;
     }
 
@@ -77,6 +290,8 @@ void render_add_text(int x, int y, int atr, const char * text)
 {
     if(render_text_list_num >= RENDER_TEXT_LIST_SIZE)
     {
+        /* render buffers overflow */
+        ERROR("Render buffers owerflow!");
         return;
     }
 
@@ -90,33 +305,22 @@ void render_add_text(int x, int y, int atr, const char * text)
     ++render_text_list_num;
 }
 
-void render(void)
+/**
+ * @brief Add a formatted text to a render
+ */
+void render_add_textf(int x, int y, int atr, const char * format, ...)
 {
-    size_t i;
+#undef BUFSIZE
+#define BUFSIZE (160)
+    char text[BUFSIZE];
 
-    /* render models */
-    for(i = 0; i < render_model_list_num; ++i)
-    {
-        render_model_t * rm = &render_model_list[i];
-        /* simple, print the string :) */
-        text.c.atr = rm->atr;
-        text_print(rm->x, rm->y + 1, "%s", rm->model->s);
-    }
-    render_model_list_num = 0;
+    va_list args;
+    va_start(args, format);
+    vsnprintf(text, BUFSIZE, format, args);
+    va_end(args);
 
-    /* render text */
-    for(i = 0; i < render_text_list_num; ++i)
-    {
-        render_text_t * rt = &render_text_list[i];
-        text.c.atr = rt->atr;
-        text_print(rt->x, rt->y, rt->text);
-        //        mvwprintw(win, rt->y, rt->x, rt->atr, rt->text);
-        Z_free(rt->text);
-    }
+    text[BUFSIZE - 1] = '\0';
 
-    render_text_list_num = 0;
-
+    render_add_text(x, y, atr, text);
 }
-
-
 

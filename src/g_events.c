@@ -14,7 +14,6 @@
 #include "game.h"
 
 #include "sys_time.h"
-#include "_text.h"
 
 #include <stdint.h>
 #include <unistd.h>
@@ -36,7 +35,7 @@ static clockid_t clock_id;
 #   define DEBUG_PRINT_XY(x, y, format, ...)
 #else
 #   define DEBUG_PRINT(format, ...) __func__;
-#   define DEBUG_PRINT_XY(x, y, format, ...) text_print(x, y, format, ##__VA_ARGS__)
+#   define DEBUG_PRINT_XY(x, y, format, ...) debug_print(x, y, format, ##__VA_ARGS__)
 #endif
 
 int g_events_init(void)
