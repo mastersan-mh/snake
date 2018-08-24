@@ -17,7 +17,7 @@
 #define VID_SCR_WIDTH (80)
 #define VID_SCR_HEIGHT (25)
 
-void render_init(void);
+int render_init(void);
 void render_done(void);
 
 void render_begin(void);

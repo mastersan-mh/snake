@@ -15,6 +15,10 @@
 
 #include <stdlib.h>
 
+#define RENDER_FAST
+/* #define RENDER_USE_STDSCR */
+
+
 /* screen size by x */
 #define TEXT_SCRsx 80
 /* screen size by y */
@@ -31,18 +35,15 @@
 #define ERROR(format, ...) \
         fprintf(stderr, format, ##__VA_ARGS__)
 
-typedef struct
-{
-    bool fill;
-    int atr;
-    uint64_t ch;
-} render_t;
+#define R_PRINT(x, y, format, ...) \
+        mvwprintw(ren.mainwindow, y, x, format, ##__VA_ARGS__)
+
 
 typedef struct
 {
     int x;
     int y;
-    int atr;
+    int bg_atr;
     const model_t * model;
 } render_model_t;
 
@@ -50,27 +51,56 @@ typedef struct
 {
     int x;
     int y;
-    int atr;
+    int bg_atr;
     char * text;
 } render_text_t;
 
+typedef struct
+{
+    WINDOW * mainwindow;
+
+    bool bg_fill;
+    int bg_atr;
+    uint64_t bg_ch;
+
+    size_t model_list_num;
+    render_model_t model_list[RENDER_MODEL_LIST_SIZE];
+
+    size_t text_list_num;
+    render_text_t text_list[RENDER_TEXT_LIST_SIZE];
+
+} render_t;
+
 static render_t ren = {};
 
-static render_model_t render_model_list[RENDER_MODEL_LIST_SIZE];
-static size_t render_model_list_num = 0;
-
-static render_text_t render_text_list[RENDER_TEXT_LIST_SIZE];
-static size_t render_text_list_num = 0;
 
 /**
  * @brief Init the render
  */
-void render_init(void)
+int render_init(void)
 {
-    /* ifdef color */
+    /* TODO: ifdef color */
     start_color();
 
-    //getmaxyx(stdscr, max_y, max_x);
+    int nlines = TEXT_SCRsy;
+    int ncols = TEXT_SCRsx;
+    int begin_y = 0;
+    int begin_x = 0;
+
+
+#ifdef RENDER_USE_STDSCR
+    ren.mainwindow = stdscr;
+#else
+    ren.mainwindow = newwin(nlines, ncols, begin_y, begin_x);
+#endif
+
+    if(ren.mainwindow == NULL)
+    {
+        ERROR("render_init() failed");
+        return -1;
+    }
+
+    //getmaxyx(ren.mainwindow, max_y, max_x);
 
     /* like VGA colors */
     static const int bgcolors[BGCOLORS_NUM] =
@@ -111,6 +141,8 @@ void render_init(void)
             ++i;
         }
     }
+
+    return 0;
 }
 
 /**
@@ -118,22 +150,24 @@ void render_init(void)
  */
 void render_done(void)
 {
+#ifdef RENDER_USE_STDSCR
+#else
+    delwin(ren.mainwindow);
+#endif
 }
-
 
 void render_begin(void)
 {
-#define RENDER_FAST
 #ifdef RENDER_FAST
-    erase();
+        werase(ren.mainwindow);
 #else
-    clear();
+        wclear(ren.mainwindow);
 #endif
 }
 
 void render_end(void)
 {
-    refresh();
+    wrefresh(ren.mainwindow);
 }
 
 /*
@@ -153,8 +187,8 @@ int P_calculate_atr(uint8_t atr)
     {
         additional_atr = additional_atr | A_BLINK;
     }
-    uint8_t bg    = ((atr & 0x70) >> 4);
-    uint8_t fg    = (atr & 0x0F);
+    uint8_t bg = ((atr & 0x70) >> 4);
+    uint8_t fg = (atr & 0x0F);
 
     if(fg >= FGCOLORS_NUM)
     {
@@ -170,7 +204,7 @@ int P_calculate_atr(uint8_t atr)
 
 static void P_atr_set(uint8_t atr)
 {
-    attron(P_calculate_atr(atr));
+    wattron(ren.mainwindow, P_calculate_atr(atr));
 };
 
 /**
@@ -180,19 +214,19 @@ void render_clearbuf(void)
 {
     size_t i;
 
-    ren.fill = false;
+    ren.bg_fill = false;
 
     /* clear models */
-    render_model_list_num = 0;
+    ren.model_list_num = 0;
 
     /* clear text */
-    for(i = 0; i < render_text_list_num; ++i)
+    for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &render_text_list[i];
+        render_text_t * rt = &ren.text_list[i];
         Z_free(rt->text);
     }
 
-    render_text_list_num = 0;
+    ren.text_list_num = 0;
 }
 
 /**
@@ -200,31 +234,33 @@ void render_clearbuf(void)
  */
 void render(void)
 {
-#define r_print(x, y, format, ...) \
-        mvprintw(y, x, format, ##__VA_ARGS__)
-
     size_t i;
 
-    if(ren.fill)
+    if(ren.bg_fill)
     {
-        wbkgdset(stdscr, ren.ch | P_calculate_atr(ren.atr));
+        wbkgdset(ren.mainwindow, ren.bg_ch | P_calculate_atr(ren.bg_atr));
+#ifdef RENDER_FAST
+        werase(ren.mainwindow);
+#else
+        wclear(ren.mainwindow);
+#endif
     }
 
     /* render models */
-    for(i = 0; i < render_model_list_num; ++i)
+    for(i = 0; i < ren.model_list_num; ++i)
     {
-        render_model_t * rm = &render_model_list[i];
+        render_model_t * rm = &ren.model_list[i];
         /* simple, print the string :) */
-        P_atr_set(rm->atr);
-        r_print(rm->x, rm->y + 1, "%s", rm->model->s);
+        P_atr_set(rm->bg_atr);
+        R_PRINT(rm->x, rm->y + 1, "%s", rm->model->s);
     }
 
     /* render text */
-    for(i = 0; i < render_text_list_num; ++i)
+    for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &render_text_list[i];
-        P_atr_set(rt->atr);
-        r_print(rt->x, rt->y, "%s", rt->text);
+        render_text_t * rt = &ren.text_list[i];
+        P_atr_set(rt->bg_atr);
+        R_PRINT(rt->x, rt->y, "%s", rt->text);
     }
 
     /*
@@ -243,9 +279,9 @@ void render(void)
 
 void render_background(int atr, uint64_t ch)
 {
-    ren.fill = true;
-    ren.atr = atr;
-    ren.ch = ch;
+    ren.bg_fill = true;
+    ren.bg_atr = atr;
+    ren.bg_ch = ch;
 }
 
 
@@ -263,22 +299,22 @@ void render_add_model(
         return;
     }
 
-    if(render_model_list_num >= RENDER_MODEL_LIST_SIZE)
+    if(ren.model_list_num >= RENDER_MODEL_LIST_SIZE)
     {
         ERROR("Render buffers owerflow!");
         return;
     }
 
-    render_model_t * rm = &render_model_list[render_model_list_num];
+    render_model_t * rm = &ren.model_list[ren.model_list_num];
 
     int atr = (iskin == 0 ? 0x1F : 0x44);
 
     rm->x = origin->x;
     rm->y = origin->y;
-    rm->atr = atr;
+    rm->bg_atr = atr;
     rm->model = model;
 
-    ++render_model_list_num;
+    ++ren.model_list_num;
 
 
 }
@@ -288,21 +324,21 @@ void render_add_model(
  */
 void render_add_text(int x, int y, int atr, const char * text)
 {
-    if(render_text_list_num >= RENDER_TEXT_LIST_SIZE)
+    if(ren.text_list_num >= RENDER_TEXT_LIST_SIZE)
     {
         /* render buffers overflow */
         ERROR("Render buffers owerflow!");
         return;
     }
 
-    render_text_t * rt = &render_text_list[render_text_list_num];
+    render_text_t * rt = &ren.text_list[ren.text_list_num];
 
     rt->x = x;
     rt->y = y;
-    rt->atr = atr;
+    rt->bg_atr = atr;
     rt->text = Z_strdup(text);
 
-    ++render_text_list_num;
+    ++ren.text_list_num;
 }
 
 /**
