@@ -153,28 +153,37 @@ void obj_freeall(void)
  * @brief Erase object
  * param[in/out] obj    object
  */
-void obj_free(obj_t *obj)
+/**
+ * @brief Erase object
+ * param[in/out] obj    object
+ */
+void obj_free(obj_t **obj)
 {
+    obj_t *P;
     if(Hobj == NULL || obj == NULL)
     {
         return;
     }
 
-    if(Hobj == obj)
+    if(Hobj == (*obj))
     {
         Hobj = Hobj->next;
+        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        Z_free((*obj));
+        (*obj) = Hobj;
     }
     else
     {
-        obj_t *obj_tmp = Hobj;
-        while(obj_tmp->next != obj)
+        P = Hobj;
+        while(P->next != (*obj))
         {
-            obj_tmp = obj_tmp->next;
+            P = P->next;
         }
-        obj_tmp->next = obj->next;
+        P->next = (*obj)->next;
+        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        Z_free((*obj));
+        (*obj) = P;
     }
-    gamelib.ctx->world_ent_unlink(obj->ient);
-    Z_free(obj);
 }
 
 /**
@@ -240,7 +249,7 @@ void obj_think(void)
         x = obj->origin.x;
         y = obj->origin.y;
         id = obj->type;
-        obj_free(obj);
+        obj_free(&obj);
         switch(id)
         {
             case OBJ_MARIJUANA :break;
@@ -548,7 +557,7 @@ void snake_think(void)
                 break;
         }
 
-        obj_free(obj);
+        obj_free(&obj);
 
         sseg = snake.head;
         while(sseg->next)

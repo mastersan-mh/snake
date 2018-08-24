@@ -94,7 +94,7 @@ extern char *level_str[LEVEL_MAX];
 
 void obj_new(int x, int y, obj_type_t id);
 void obj_freeall(void);
-void obj_free(obj_t *obj);
+void obj_free(obj_t **obj);
 
 void obj_put(obj_type_t id);
 void obj_think(void);

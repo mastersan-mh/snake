@@ -14,6 +14,7 @@ libs:
 
 #include "io.h"
 #include "game.h"
+#include "render.h"
 #include <stdlib.h>
 
 int main()
@@ -24,8 +25,12 @@ int main()
     }
     while(!game_is_quit())
     {
+        render_begin();
+
         game_loop();
         game_render();
+
+        render_end();
     }
     game_done();
     return EXIT_SUCCESS;

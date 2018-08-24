@@ -17,7 +17,6 @@
 
 #include "menu.h"
 
-#include "_text.h"
 #include "sys_time.h"
 
 #include <stddef.h>
@@ -109,7 +108,6 @@ void game_start(int stage)
 void game_render(void)
 {
     render();
-    render_end();
 }
 
 void game_stop_ticks(void)
@@ -136,16 +134,17 @@ void game_event_handle(const event_t * event)
     {
         case G_EVENT_TICK:
         {
-            render_begin();
-
+            render_clearbuf();
             if(game.showmenu)
             {
+                render_background(0x00, ' ');
                 menu_handle(event);
             }
             else
             {
                 if(game.started)
                 {
+                    render_background(0x1F, ' ');
                     g_ctl_game_tick();
                     world_add_to_render();
                 }
@@ -156,6 +155,7 @@ void game_event_handle(const event_t * event)
         {
             if(game.showmenu)
             {
+                render_clearbuf();
                 menu_handle(event);
             }
             else
@@ -163,6 +163,7 @@ void game_event_handle(const event_t * event)
                 if(game.started)
                 {
                     g_ctl_game_input(event->data.KEYBOARD.key);
+                    world_add_to_render();
                 }
             }
             break;

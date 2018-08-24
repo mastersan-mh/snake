@@ -11,8 +11,6 @@
 #include "render.h"
 #include "game.h"
 
-#include "_text.h"
-
 #include <string.h>
 
 /**
@@ -106,7 +104,6 @@ static menu_index_t menu_main_on_event(int key, void * ctx_)
 static void menu_main_draw(void * ctx_)
 {
     struct menu_main_ctx * ctx = ctx_;
-    text_fill_screen(0x00, 0x00);
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
@@ -177,7 +174,6 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
 
 static void menu_chart_draw(void * ctx_)
 {
-    text_fill_screen(0x00, 0x00);
     g_ctl_show_records();
 
 #undef TEXT_ATR
@@ -195,7 +191,6 @@ static menu_index_t menu_help_event_on_event(int key, void * ctx_)
 
 static void menu_help_draw(void * ctx_)
 {
-    text_fill_screen(0x00, 0x00);
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)

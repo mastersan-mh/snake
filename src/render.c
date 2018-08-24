@@ -26,6 +26,18 @@
 #define RENDER_MODEL_LIST_SIZE (80 * 25 + 10)
 #define RENDER_TEXT_LIST_SIZE 128
 
+#include <stdio.h>
+
+#define ERROR(format, ...) \
+        fprintf(stderr, format, ##__VA_ARGS__)
+
+typedef struct
+{
+    bool fill;
+    int atr;
+    uint64_t ch;
+} render_t;
+
 typedef struct
 {
     int x;
@@ -42,6 +54,8 @@ typedef struct
     char * text;
 } render_text_t;
 
+static render_t ren = {};
+
 static render_model_t render_model_list[RENDER_MODEL_LIST_SIZE];
 static size_t render_model_list_num = 0;
 
@@ -55,7 +69,6 @@ void render_init(void)
 {
     /* ifdef color */
     start_color();
-
 
     //getmaxyx(stdscr, max_y, max_x);
 
@@ -130,7 +143,8 @@ void render_end(void)
  *   B - blink + bgcolor
  *   A - fgcolors
  */
-void P_atr_set(uint8_t atr)
+
+int P_calculate_atr(uint8_t atr)
 {
     int additional_atr = 0;
 
@@ -150,8 +164,90 @@ void P_atr_set(uint8_t atr)
 
     int cpair = bg * FGCOLORS_NUM + fg + 1;
 
-    attron(COLOR_PAIR(cpair) | additional_atr);
+    return COLOR_PAIR(cpair) | additional_atr;
 };
+
+
+static void P_atr_set(uint8_t atr)
+{
+    attron(P_calculate_atr(atr));
+};
+
+/**
+ * @brief Clear a render buffers
+ */
+void render_clearbuf(void)
+{
+    size_t i;
+
+    ren.fill = false;
+
+    /* clear models */
+    render_model_list_num = 0;
+
+    /* clear text */
+    for(i = 0; i < render_text_list_num; ++i)
+    {
+        render_text_t * rt = &render_text_list[i];
+        Z_free(rt->text);
+    }
+
+    render_text_list_num = 0;
+}
+
+/**
+ * @brief Render
+ */
+void render(void)
+{
+#define r_print(x, y, format, ...) \
+        mvprintw(y, x, format, ##__VA_ARGS__)
+
+    size_t i;
+
+    if(ren.fill)
+    {
+        wbkgdset(stdscr, ren.ch | P_calculate_atr(ren.atr));
+    }
+
+    /* render models */
+    for(i = 0; i < render_model_list_num; ++i)
+    {
+        render_model_t * rm = &render_model_list[i];
+        /* simple, print the string :) */
+        P_atr_set(rm->atr);
+        r_print(rm->x, rm->y + 1, "%s", rm->model->s);
+    }
+
+    /* render text */
+    for(i = 0; i < render_text_list_num; ++i)
+    {
+        render_text_t * rt = &render_text_list[i];
+        P_atr_set(rt->atr);
+        r_print(rt->x, rt->y, "%s", rt->text);
+    }
+
+    /*
+    {
+        int i;
+        for(i = 0; i <= 8*8; ++i)
+        {
+            attron(COLOR_PAIR(i));
+//            attron(A_NORMAL);
+            r_print((i / 8) * 4, i % 8, "%2dt", i);
+        }
+    }
+     */
+}
+
+
+void render_background(int atr, uint64_t ch)
+{
+    ren.fill = true;
+    ren.atr = atr;
+    ren.ch = ch;
+}
+
 
 /**
  * @brief Add a model to a render list
@@ -169,6 +265,7 @@ void render_add_model(
 
     if(render_model_list_num >= RENDER_MODEL_LIST_SIZE)
     {
+        ERROR("Render buffers owerflow!");
         return;
     }
 
@@ -193,6 +290,8 @@ void render_add_text(int x, int y, int atr, const char * text)
 {
     if(render_text_list_num >= RENDER_TEXT_LIST_SIZE)
     {
+        /* render buffers overflow */
+        ERROR("Render buffers owerflow!");
         return;
     }
 
@@ -224,49 +323,4 @@ void render_add_textf(int x, int y, int atr, const char * format, ...)
 
     render_add_text(x, y, atr, text);
 }
-
-void render(void)
-{
-#define r_print(x, y, format, ...) \
-        mvprintw(y, x, format, ##__VA_ARGS__)
-
-    size_t i;
-
-    /* render models */
-    for(i = 0; i < render_model_list_num; ++i)
-    {
-        render_model_t * rm = &render_model_list[i];
-        /* simple, print the string :) */
-        P_atr_set(rm->atr);
-        r_print(rm->x, rm->y + 1, "%s", rm->model->s);
-    }
-    render_model_list_num = 0;
-
-    /* render text */
-    for(i = 0; i < render_text_list_num; ++i)
-    {
-        render_text_t * rt = &render_text_list[i];
-        P_atr_set(rt->atr);
-
-        r_print(rt->x, rt->y, "%s", rt->text);
-        Z_free(rt->text);
-    }
-
-    render_text_list_num = 0;
-
-    /*
-    {
-        int i;
-        for(i = 0; i <= 8*8; ++i)
-        {
-            attron(COLOR_PAIR(i));
-//            attron(A_NORMAL);
-            r_print((i / 8) * 4, i % 8, "%2dt", i);
-        }
-    }
-     */
-
-}
-
-
 

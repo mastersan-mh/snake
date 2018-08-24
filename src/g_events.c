@@ -14,7 +14,6 @@
 #include "game.h"
 
 #include "sys_time.h"
-#include "_text.h"
 
 #include <stdint.h>
 #include <unistd.h>
