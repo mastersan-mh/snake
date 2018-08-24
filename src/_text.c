@@ -3,21 +3,11 @@
  */
 #include "_text.h"
 
-struct TTEXT text = {};
-
-/**
- * инициализация текстового режима
- */
-void text_init80X25X8(void)
-{
-    text.c.chr=0x00;
-    text.c.atr=0x00;
-}
-
+#include <curses.h>
 /**
  * заполнить экран текущими символами и атрибутами
  */
-void text_fill_screen(void)
+void text_fill_screen(int atr, int ch)
 {
 /*
 TODO:

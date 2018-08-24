@@ -6,6 +6,7 @@
  */
 
 #include "io.h"
+#include "sys_utils.h"
 
 #include <termios.h>
 #include <unistd.h>
@@ -45,26 +46,12 @@ int io_init(void)
     curs_set(FALSE);
     keypad(w, true);
 
-    //getmaxyx(stdscr, max_y, max_x);
-
     return 0;
 }
 
 void io_done(void)
 {
     endwin();
-}
-
-int io_render_begin(void)
-{
-    clear();
-    return 0;
-}
-
-int io_render_end(void)
-{
-    refresh();
-    return 0;
 }
 
 int io_getch(void)

@@ -45,12 +45,8 @@ int game_init(void)
 
     game.showmenu = true;
     game.started = false;
-    text_init80X25X8();
-    text.c.atr=0x00;
-    text.c.chr=0x00;
-    text_fill_screen();
-    srand(time(NULL));
 
+    srand(time(NULL));
 
     res = models_init();
     if(res)
@@ -69,19 +65,20 @@ int game_init(void)
         models_done();
         return res;
     }
+
+    io_init();
+    render_init();
+
     return 0;
 }
 
 void game_done(void)
 {
+    render_done();
+    io_done();
     world_done();
     g_ctl_done();
     models_done();
-
-    text.c.atr=0x0F;
-    text.c.chr=0x00;
-    text_fill_screen();
-
     game_directories_done();
 }
 
@@ -104,9 +101,6 @@ void game_quit(void)
 
 void game_start(int stage)
 {
-    text.c.atr=0x1F;
-    text.c.chr=0x00;
-    text_fill_screen();
     game.showmenu = false;
     game.started = true;
     g_ctl_game_create(stage);
@@ -115,7 +109,7 @@ void game_start(int stage)
 void game_render(void)
 {
     render();
-    io_render_end();
+    render_end();
 }
 
 void game_stop_ticks(void)
@@ -142,7 +136,7 @@ void game_event_handle(const event_t * event)
     {
         case G_EVENT_TICK:
         {
-            io_render_begin();
+            render_begin();
 
             if(game.showmenu)
             {

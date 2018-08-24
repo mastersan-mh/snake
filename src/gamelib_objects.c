@@ -153,34 +153,28 @@ void obj_freeall(void)
  * @brief Erase object
  * param[in/out] obj    object
  */
-obj_t *obj_free(obj_t **obj)
+void obj_free(obj_t *obj)
 {
-    obj_t *P;
     if(Hobj == NULL || obj == NULL)
     {
-        return NULL;
+        return;
     }
 
-    if(Hobj == (*obj))
+    if(Hobj == obj)
     {
         Hobj = Hobj->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
-        Z_free((*obj));
-        (*obj) = Hobj;
     }
     else
     {
-        P = Hobj;
-        while(P->next != (*obj))
+        obj_t *obj_tmp = Hobj;
+        while(obj_tmp->next != obj)
         {
-            P = P->next;
+            obj_tmp = obj_tmp->next;
         }
-        P->next = (*obj)->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
-        Z_free((*obj));
-        (*obj) = P;
+        obj_tmp->next = obj->next;
     }
-    return (*obj);
+    gamelib.ctx->world_ent_unlink(obj->ient);
+    Z_free(obj);
 }
 
 /**
@@ -246,13 +240,13 @@ void obj_think(void)
         x = obj->origin.x;
         y = obj->origin.y;
         id = obj->type;
-        obj_free(&obj);
+        obj_free(obj);
         switch(id)
         {
             case OBJ_MARIJUANA :break;
             case OBJ_MARIJUANAP:break;
             case OBJ_PURGEN    :break;
-            case OBJ_SHIT     :
+            case OBJ_SHIT      :
             {
                 obj_new(x-1, y  , OBJ_MARIJUANAP);
                 obj_new(x  , y-1, OBJ_MARIJUANAP);
@@ -280,8 +274,6 @@ void gamelib_HUD_draw(void)
     {
         gamelib.ctx->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
         --gamelib.showtiming;
-        if(gamelib.showtiming <= 0)
-            gamelib.ctx->print(0, 24, TEXT_ART, "            ");
     }
 }
 
@@ -546,7 +538,7 @@ void snake_think(void)
             case OBJ_MARIJUANAP:
                 /* growed up */
                 ++snake.scores;
-                P_snake_newseg(obj->origin.x,obj->origin.y);
+                P_snake_newseg(obj->origin.x, obj->origin.y);
                 break;
             case OBJ_PURGEN:
                 snake_get_purgen();
@@ -556,7 +548,7 @@ void snake_think(void)
                 break;
         }
 
-        obj_free(&obj);
+        obj_free(obj);
 
         sseg = snake.head;
         while(sseg->next)
@@ -617,10 +609,13 @@ void snake_think(void)
     while(pt && !snake.dead)
     {
         sseg=pt->next;
-        while(sseg && !snake.dead)
+        while(sseg != NULL)
         {
             if(origins_eq(&pt->origin, &sseg->origin))
-                snake.dead = true;
+            {
+                snake_die();
+                break;
+            }
             sseg = sseg->next;
         }
         pt = pt->next;
@@ -629,13 +624,21 @@ void snake_think(void)
     if(snake.head->origin.x < 0 || MAP_SX <= snake.head->origin.x
             || snake.head->origin.y < 0 || MAP_SY <= snake.head->origin.y)
     {
-        snake.dead = true;
+        snake_die();
     }
 }
 
 void snake_die(void)
 {
     snake.dead = true;
+
+    snake_seg_t * sseg;
+    for(sseg = snake.head; sseg; sseg = sseg->next)
+    {
+        snake_seg_model_update(sseg);
+    }
+
+
 }
 
 bool snake_is_dead(void)

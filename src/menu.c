@@ -2,16 +2,28 @@
  * menu.c
  */
 
+#include "menu.h"
+
 #include "sys_utils.h"
+#include "g_types.h"
 #include "io.h"
 #include "io_keys.h"
-#include "g_types.h"
-#include "menu.h"
+#include "render.h"
 #include "game.h"
 
 #include "_text.h"
 
 #include <string.h>
+
+/**
+ * @brief Print menu string with it attributes
+ * @param[in] x         coord. x
+ * @param[in] y         coord. y
+ * @param[in] atr       attributes
+ * @param[in] format    string
+ */
+#define menu_print(x, y, atr, format, ...) \
+        render_add_textf((x), (y), (atr), (format), ##__VA_ARGS__)
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
 
@@ -35,7 +47,7 @@ static void P_menu_dec(int menu_amount, int * imenu)
         *imenu = menu_amount - 1;
         return;
     }
-    (*imenu)--;
+    --(*imenu);
 }
 
 static void P_menu_inc(int menu_amount, int * imenu)
@@ -45,7 +57,7 @@ static void P_menu_inc(int menu_amount, int * imenu)
         *imenu = 0;
         return;
     }
-    (*imenu)++;
+    ++(*imenu);
 }
 
 
@@ -94,35 +106,40 @@ static menu_index_t menu_main_on_event(int key, void * ctx_)
 static void menu_main_draw(void * ctx_)
 {
     struct menu_main_ctx * ctx = ctx_;
-    text.c.atr=0x00;
-    text.c.chr=0x00;
-    text_fill_screen();
+    text_fill_screen(0x00, 0x00);
 
-    text.c.atr=0x09;
-    text_print(29,1,"**** **  ** ***********");
-    text_print(29,2,"   * ** *** *     **  *");
-    text_print(29,3,"**** **** * ***** *****");
-    text_print(29,4,"***  * ** * ***** ** **");
-    text_print(29,5,"  ** *    * *      * **");
-    text_print(29,6,"**** *    * ***** ** **");
-    text_print(29,7,"******    ******* *  **");
+#undef TEXT_ATR
+#define TEXT_ATR (0x09)
+    menu_print(29, 1, TEXT_ATR, "**** **  ** ***********");
+    menu_print(29, 2, TEXT_ATR, "   * ** *** *     **  *");
+    menu_print(29, 3, TEXT_ATR, "**** **** * ***** *****");
+    menu_print(29, 4, TEXT_ATR, "***  * ** * ***** ** **");
+    menu_print(29, 5, TEXT_ATR, "  ** *    * *      * **");
+    menu_print(29, 6, TEXT_ATR, "**** *    * ***** ** **");
+    menu_print(29, 7, TEXT_ATR, "******    ******* *  **");
 
-    text_print(40-(SYS_SPECIAL_LEN / 2), 9, sys_special);
+    menu_print(40-(SYS_SPECIAL_LEN / 2), 9, TEXT_ATR, sys_special);
 
-    text_print(1,24,sys_progversion);
-    text.c.atr=0x5F;
-    text_print((80-10)/2,12," НОВАЯ 1  ");
-    text_print((80-10)/2,13," НОВАЯ 2  ");
-    text_print((80-10)/2,14," НОВАЯ 3  ");
-    text_print((80-10)/2,15,"ПОБЕДИТЕЛИ");
-    text_print((80-10)/2,16,"  ПОМОЩЬ  ");
-    text_print((80-10)/2,17,"  ВЫХОД   ");
-    text.c.atr = 0x0F;
-    text_print( 7,22,"Mad House Software");
-    text_print(10,23,"Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
-    text.c.atr = 0x05;
-    text_print((80 - 10) / 2 - 2 , 12 + ctx->sub, "->");
-    text_print((80 - 10) / 2 + 10, 12 + ctx->sub, "<-");
+    menu_print(1, 24,  TEXT_ATR, sys_progversion);
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x5F)
+    menu_print((80-10)/2, 12, TEXT_ATR, " НОВАЯ 1  ");
+    menu_print((80-10)/2, 13, TEXT_ATR, " НОВАЯ 2  ");
+    menu_print((80-10)/2, 14, TEXT_ATR, " НОВАЯ 3  ");
+    menu_print((80-10)/2, 15, TEXT_ATR, "ПОБЕДИТЕЛИ");
+    menu_print((80-10)/2, 16, TEXT_ATR, "  ПОМОЩЬ  ");
+    menu_print((80-10)/2, 17, TEXT_ATR, "  ВЫХОД   ");
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x0F)
+    menu_print( 7, 22, TEXT_ATR, "Mad House Software");
+    menu_print(10, 23, TEXT_ATR, "Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x05)
+    menu_print((80 - 10) / 2 - 2 , 12 + ctx->sub, TEXT_ATR, "->");
+    menu_print((80 - 10) / 2 + 10, 12 + ctx->sub, TEXT_ATR, "<-");
 
 }
 
@@ -160,12 +177,12 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
 
 static void menu_chart_draw(void * ctx_)
 {
-    text.c.atr=0x00;
-    text.c.chr=0x00;
-    text_fill_screen();
+    text_fill_screen(0x00, 0x00);
     g_ctl_show_records();
-    text.c.atr=0x8F;
-    text_print((80-16)/2, 23, "PRESS ANY KEY...");
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x8F)
+    menu_print((80-16)/2, 23, TEXT_ATR, "PRESS ANY KEY...");
 }
 
 /**
@@ -178,25 +195,25 @@ static menu_index_t menu_help_event_on_event(int key, void * ctx_)
 
 static void menu_help_draw(void * ctx_)
 {
-    text.c.atr=0x00;
-    text.c.chr=0x00;
-    text_fill_screen();
-    text.c.atr=0x09;
+    text_fill_screen(0x00, 0x00);
 
-    text_print((80-13)/2,5   ,"ТИПА ЭТО ХЕЛП");
-    text_print(20,7+ 0,"Управление:");
-    text_print(20,7+ 1,"Стрелки - Указание направления движения");
-    text_print(20,7+ 2,"+,-     - Управление скоростью игры");
-    text_print(20,7+ 3,"P       - Пауза");
-    text_print(20,7+ 4,"ESC     - Выход в меню");
-    text_print(20,7+ 6,"Предметы:");
-    text_print(20,7+ 7,"\5 - конопля");
-    text_print(20,7+ 8,"\6 - выросшая конопля");
-    text_print(20,7+ 9,"\13 - пурген");
-    text_print(20,7+10,"@ - дерьмо");
+#undef TEXT_ATR
+#define TEXT_ATR (0x09)
+    menu_print((80-13)/2 , 5, TEXT_ATR, "ТИПА ЭТО ХЕЛП");
+    menu_print(20, 7+ 0, TEXT_ATR, "Управление:");
+    menu_print(20, 7+ 1, TEXT_ATR, "Стрелки - Указание направления движения");
+    menu_print(20, 7+ 2, TEXT_ATR, "+,-     - Управление скоростью игры");
+    menu_print(20, 7+ 3, TEXT_ATR, "P       - Пауза");
+    menu_print(20, 7+ 4, TEXT_ATR, "ESC     - Выход в меню");
+    menu_print(20, 7+ 6, TEXT_ATR, "Предметы:");
+    menu_print(20, 7+ 7, TEXT_ATR, "\5 - конопля");
+    menu_print(20, 7+ 8, TEXT_ATR, "\6 - выросшая конопля");
+    menu_print(20, 7+ 9, TEXT_ATR, "\13 - пурген");
+    menu_print(20, 7+10, TEXT_ATR, "@ - дерьмо");
 
-    text.c.atr=0x8F;
-    text_print((80-16)/2,23,"PRESS ANY KEY...");
+#undef TEXT_ATR
+#define TEXT_ATR (0x8F)
+    menu_print((80-16)/2, 23,  TEXT_ATR, "PRESS ANY KEY...");
 
 }
 
