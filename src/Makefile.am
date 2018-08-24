@@ -10,7 +10,6 @@ snake_LDFLAGS = -lncursesw
 snake_SOURCES = \
 sys_utils.c \
 sys_time.c \
-_text.c \
 io.c \
 g_utils.c \
 g_events.c \
