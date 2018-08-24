@@ -56,6 +56,7 @@ int game_init(void)
     g_events_init();
     res = g_ctl_init();
     if(res) return res;
+
     size_t max_entities = g_ctl_max_entities_get();
     res = world_init(max_entities);
     if(res)
@@ -66,7 +67,14 @@ int game_init(void)
     }
 
     io_init();
-    render_init();
+    res = render_init();
+    if(res)
+    {
+        io_done();
+        g_ctl_done();
+        models_done();
+        return -1;
+    }
 
     return 0;
 }
