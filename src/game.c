@@ -85,6 +85,7 @@ void game_done(void)
     io_done();
     world_done();
     g_ctl_done();
+    g_events_done();
     models_done();
     game_directories_done();
 }
@@ -140,23 +141,9 @@ void game_event_handle(const event_t * event)
 
     switch(event->type)
     {
-        case G_EVENT_TICK:
+        case G_EVENT_VID_WINCH:
         {
-            render_clearbuf();
-            if(game.showmenu)
-            {
-                render_background(0x00, ' ');
-                menu_handle(event);
-            }
-            else
-            {
-                if(game.started)
-                {
-                    render_background(0x1F, ' ');
-                    g_ctl_game_tick();
-                    world_add_to_render();
-                }
-            }
+            render_winch();
             break;
         }
         case G_EVENT_KEYBOARD:
@@ -171,6 +158,25 @@ void game_event_handle(const event_t * event)
                 if(game.started)
                 {
                     g_ctl_game_input(event->data.KEYBOARD.key);
+                    world_add_to_render();
+                }
+            }
+            break;
+        }
+        case G_EVENT_TICK:
+        {
+            render_clearbuf();
+            if(game.showmenu)
+            {
+                render_background(0x00, ' ');
+                menu_handle(event);
+            }
+            else
+            {
+                if(game.started)
+                {
+                    render_background(0x1F, ' ');
+                    g_ctl_game_tick();
                     world_add_to_render();
                 }
             }

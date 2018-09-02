@@ -23,6 +23,8 @@ void render_done(void);
 void render_begin(void);
 void render_end(void);
 
+void render_winch(void);
+
 void render_clearbuf(void);
 void render(void);
 

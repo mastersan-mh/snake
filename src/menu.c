@@ -256,9 +256,8 @@ void menu_handle(const event_t * event)
 
     switch(event->type)
     {
-        case G_EVENT_TICK:
+        case G_EVENT_VID_WINCH:
         {
-            menu_handle_event_tick(event);
             break;
         }
         case G_EVENT_KEYBOARD:
@@ -272,6 +271,11 @@ void menu_handle(const event_t * event)
             {
                 m_imenu = IMENU_MAIN;
             }
+            break;
+        }
+        case G_EVENT_TICK:
+        {
+            menu_handle_event_tick(event);
             break;
         }
         case G_EVENT_STOP_GAME_TICKS:

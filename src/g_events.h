@@ -15,8 +15,13 @@
 
 typedef enum
 {
-    G_EVENT_TICK,
+    /* changing window size */
+    G_EVENT_VID_WINCH,
+    /* keyboard */
     G_EVENT_KEYBOARD,
+    /* game tick */
+    G_EVENT_TICK,
+    /* stop game ticks */
     G_EVENT_STOP_GAME_TICKS
 } event_type_t;
 
@@ -24,12 +29,18 @@ typedef union
 {
     struct
     {
-        struct timespec time;
-    } TICK;
+        /* empty */
+    } WINCH;
+
     struct
     {
         int key;
     } KEYBOARD;
+
+    struct
+    {
+        struct timespec time;
+    } TICK;
 } event_data_t;
 
 
@@ -43,6 +54,7 @@ typedef struct event_s
 typedef CIRCLEQ_HEAD(event_head_s, event_s) event_head_t;
 
 int g_events_init(void);
+void g_events_done(void);
 void g_events_handle(void);
 bool g_events_is_empty(void);
 void g_events_flush(void);
