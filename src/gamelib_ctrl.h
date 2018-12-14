@@ -32,6 +32,7 @@ typedef enum
 
 typedef enum
 {
+    GSTATE_NONE,
     GSTATE_START,
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,
@@ -44,7 +45,10 @@ typedef struct
 {
     const game_ctx_t * ctx;
     size_t mdlidx[MDL__NUM];
+    bool started;
+    int stage;
     game_state_t state;
+    bool showmenu;
     bool paused;
     bool intermission;
     long showtiming;
@@ -56,6 +60,7 @@ extern gamelib_t gamelib;
 
 
 void ents_game_timing_update(ent_direction_t direction);
+void gamelib_show_records(void);
 
 
 #endif /* SRC_GAMELIB_CTRL_H_ */

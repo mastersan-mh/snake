@@ -10,6 +10,7 @@
 #include "world_main.h"
 #include "models.h"
 #include "hud.h"
+#include "render.h"
 
 #include <stdlib.h>
 
@@ -22,6 +23,12 @@ void game_ent_ctl_init(game_ctl_t *gctl);
 
 int g_ctl_init(void)
 {
+    gctx.game_quit = game_quit;
+    gctx.game_create = game_create;
+    gctx.game_destroy = game_destroy;
+
+    gctx.render_background = render_background;
+
     gctx.world_find_first_free = world_find_first_free;
     gctx.world_ent_unlink = world_ent_unlink;
     gctx.world_ent_link = world_ent_link;
@@ -32,7 +39,6 @@ int g_ctl_init(void)
     gctx.model_precache = model_precache;
 
     gctx.stop_ticks = game_stop_ticks;
-    gctx.show_menu = game_menu_show;
     gctx.ticktime_set = game_ticktime_set;
     gctx.print = hud_print;
     gctx.print_centerscreen = hud_print_centerscreen;
@@ -57,10 +63,10 @@ size_t g_ctl_max_entities_get(void)
     return gctl.max_entities;
 }
 
-int g_ctl_game_create(int stage)
+int g_ctl_game_create(void)
 {
     FCHECK(gctl.game_create, 0);
-    return gctl.game_create(stage);
+    return gctl.game_create();
 }
 
 void g_ctl_game_destroy(void)
@@ -79,10 +85,4 @@ void g_ctl_game_input(int key)
 {
     FCHECK(gctl.game_input, );
     gctl.game_input(key);
-}
-
-void g_ctl_show_records(void)
-{
-    FCHECK(gctl.show_records, );
-    gctl.show_records();
 }

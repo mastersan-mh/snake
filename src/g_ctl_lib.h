@@ -15,12 +15,21 @@
 
 #include "g_types.h"
 #include "io_keys.h"
-#include "menu.h"
 #include "world_gamelib.h"
+#include "sys_utils.h"
+#include "sys_time.h"
 
 /* game context */
 typedef struct
 {
+    /* game */
+    void (*game_quit)(void);
+    int (*game_create)(void);
+    void (*game_destroy)(void);
+
+    /* render */
+    void (*render_background)(int atr, uint64_t ch);
+
     /* world */
     /* allocated maximum entities */
     size_t max_entities;
@@ -36,7 +45,6 @@ typedef struct
 
     /* stop the game cycle */
     void (*stop_ticks)(void);
-    void (*show_menu)(menu_index_t imenu);
     void (*ticktime_set)(game_time_ms_t ticktime);
     void (*print)(int x, int y, int atr, const char * format, ...);
     void (*print_centerscreen)(size_t text_width, int atr, const char * format, ...);
@@ -52,12 +60,10 @@ typedef struct
     size_t max_entities;
     int (*init)(const game_ctx_t * gctx);
     void (*done)(void);
-    int (*game_create)(int stage);
+    int (*game_create)(void);
     void (*game_destroy)(void);
     void (*game_tick)(void);
     void (*game_input)(int key);
-
-    void (*show_records)(void);
 
 } game_ctl_t;
 

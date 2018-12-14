@@ -8,6 +8,7 @@
 #include "g_ctl_lib.h"
 
 #include "gamelib_ctrl.h"
+#include "gamelib_menu.h"
 #include "gamelib_objects.h"
 #include "gamelib_chart.h"
 #include "gamelib_payer_death.h"
@@ -15,6 +16,13 @@
 #define ENTS_GAME_DEFAULT_TIMING 300
 
 gamelib_t gamelib = {};
+
+void gamelib_menu_show(menu_index_t imenu)
+{
+    menu_show_menu(imenu);
+    gamelib.showmenu = true;
+}
+
 
 void snake_init(const snake_pattern_t * pat);
 void snake_done(void);
@@ -45,6 +53,8 @@ static void game_handle_event_tick(void)
 
     switch(gamelib.state)
     {
+        case GSTATE_NONE:
+            break;
         case GSTATE_START:
             obj_put(OBJ_MARIJUANA);
             newstate = GSTATE_RUN;
@@ -84,27 +94,45 @@ static void game_handle_event_tick(void)
             break;
     }
 
-    gamelib_HUD_draw();
-
-    if(gamelib.paused)
+    if(gamelib.showmenu)
     {
+        menu_handle();
+    }
+    else
+    {
+
+        gamelib_HUD_draw();
+
+        if(gamelib.paused)
+        {
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
-        gamelib.ctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
-    }
+            gamelib.ctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
+        }
 
-    if(gamelib.intermission)
-    {
-        gamelib_intermision_draw();
+        if(gamelib.intermission)
+        {
+            gamelib_intermision_draw();
+        }
     }
 
     gamelib.state = newstate;
+
+
 }
 
-static void ent_ctrl_game_input(int key)
+static void gamelib_game_input(int key)
 {
+    if(gamelib.showmenu)
+    {
+        menu_handle_input(key);
+    }
+
+
     switch(gamelib.state)
     {
+        case GSTATE_NONE:
+            break;
         case GSTATE_START:
             break;
         case GSTATE_STOP_WIN:
@@ -136,8 +164,10 @@ static void ent_ctrl_game_input(int key)
             bool exit = menu_death_on_event(key);
             if(exit)
             {
+                gamelib.ctx->game_destroy();
                 gamelib.ctx->stop_ticks();
-                gamelib.ctx->show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
+                menu_show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
+                gamelib.state = GSTATE_NONE;
             }
             break;
         }
@@ -208,9 +238,13 @@ static void ent_ctrl_game_input(int key)
     }
 }
 
-static int ent_ctrl_init(const game_ctx_t * gctx)
+static int gamelib_init(const game_ctx_t * gctx)
 {
     gamelib.ctx = gctx;
+    gamelib.state = GSTATE_NONE;
+
+    gamelib_menu_show(IMENU_MAIN);
+
     chart_load();
     gamelib.timing = ENTS_GAME_DEFAULT_TIMING;
     gctx->ticktime_set(gamelib.timing);
@@ -232,13 +266,14 @@ static int ent_ctrl_init(const game_ctx_t * gctx)
     return 0;
 }
 
-static void ent_ctrl_done(void)
+static void gamelib_done(void)
 {
     chart_save();
 }
 
-static int ent_ctrl_game_create(int stage)
+static int gamelib_game_create(void)
 {
+    int stage = gamelib.stage;
     if(stage < 0 || 2 < stage)
     {
         return -1;
@@ -250,6 +285,9 @@ static int ent_ctrl_game_create(int stage)
     snake_init(&info_snake[stage]);
 
     gamelib.state = GSTATE_START;
+
+    gamelib.showmenu = false;
+
     gamelib.paused = false;
     gamelib.intermission = false;
     gamelib.timing = 300;
@@ -258,7 +296,7 @@ static int ent_ctrl_game_create(int stage)
     return 0;
 }
 
-static void ent_ctrl_game_destroy(void)
+static void gamelib_game_destroy(void)
 {
     obj_freeall();
     snake_done();
@@ -266,12 +304,14 @@ static void ent_ctrl_game_destroy(void)
     gamelib.showtiming = 0;
 }
 
-static void ent_ctrl_game_tick(void)
+static void gamelib_game_tick(void)
 {
+    gamelib.ctx->render_background(0x1F, ' ');
+
     game_handle_event_tick();
 }
 
-void ent_show_records(void)
+void gamelib_show_records(void)
 {
     static const char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
 
@@ -309,11 +349,10 @@ void ent_show_records(void)
 void game_ent_ctl_init(game_ctl_t *gctl)
 {
     gctl->max_entities = 80 * 25;
-    gctl->init = ent_ctrl_init;
-    gctl->done = ent_ctrl_done;
-    gctl->game_create = ent_ctrl_game_create;
-    gctl->game_destroy = ent_ctrl_game_destroy;
-    gctl->game_tick = ent_ctrl_game_tick;
-    gctl->game_input = ent_ctrl_game_input;
-    gctl->show_records = ent_show_records;
+    gctl->init = gamelib_init;
+    gctl->done = gamelib_done;
+    gctl->game_create = gamelib_game_create;
+    gctl->game_destroy = gamelib_game_destroy;
+    gctl->game_tick = gamelib_game_tick;
+    gctl->game_input = gamelib_game_input;
 }

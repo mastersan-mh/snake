@@ -8,20 +8,21 @@ snake_CFLAGS = -std=c11 -Wall -D_DEFAULT_SOURCE
 snake_LDFLAGS = -lncursesw
 
 snake_SOURCES = \
-sys_utils.c \
-sys_time.c \
-io.c \
-g_utils.c \
-g_events.c \
-g_ctl.c \
-game.c \
-models.c \
-hud.c \
-render.c \
-world_main.c \
-menu.c \
 gamelib_chart.c \
 gamelib_ctrl.c \
+gamelib_menu.c \
 gamelib_objects.c \
 gamelib_payer_death.c \
+sys_time.c \
+sys_utils.c \
+io.c \
+game.c \
+g_ctl.c \
+g_events.c \
+g_utils.c \
+hud.c \
+models.c \
+render.c \
+world_main.c \
 main.c
+

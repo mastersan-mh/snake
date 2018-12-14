@@ -42,8 +42,7 @@ int game_init(void)
     }
     game_directories_init(home_dir);
 
-    game.showmenu = true;
-    game.started = false;
+    game.created = false;
 
     srand(time(NULL));
 
@@ -90,13 +89,6 @@ void game_done(void)
     game_directories_done();
 }
 
-void game_stop()
-{
-    g_ctl_game_destroy();
-    world_destroy();
-    game.started = false;
-}
-
 bool game_is_quit(void)
 {
     return game.quit;
@@ -107,11 +99,17 @@ void game_quit(void)
     game.quit = true;
 }
 
-void game_start(int stage)
+int game_create(void)
 {
-    game.showmenu = false;
-    game.started = true;
-    g_ctl_game_create(stage);
+    game.created = true;
+    return g_ctl_game_create();
+}
+
+void game_destroy(void)
+{
+    g_ctl_game_destroy();
+    world_destroy();
+    game.created = false;
 }
 
 void game_render(void)
@@ -122,12 +120,6 @@ void game_render(void)
 void game_stop_ticks(void)
 {
     g_event_send(G_EVENT_STOP_GAME_TICKS, NULL);
-}
-
-void game_menu_show(menu_index_t imenu)
-{
-    menu_show_menu(imenu);
-    game.showmenu = true;
 }
 
 void game_ticktime_set(game_time_ms_t ticktime)
@@ -148,46 +140,20 @@ void game_event_handle(const event_t * event)
         }
         case G_EVENT_KEYBOARD:
         {
-            if(game.showmenu)
-            {
-                render_clearbuf();
-                menu_handle(event);
-            }
-            else
-            {
-                if(game.started)
-                {
-                    g_ctl_game_input(event->data.KEYBOARD.key);
-                    world_add_to_render();
-                }
-            }
+            g_ctl_game_input(event->data.KEYBOARD.key);
+            world_add_to_render();
             break;
         }
         case G_EVENT_TICK:
         {
             render_clearbuf();
-            if(game.showmenu)
-            {
-                render_background(0x00, ' ');
-                menu_handle(event);
-            }
-            else
-            {
-                if(game.started)
-                {
-                    render_background(0x1F, ' ');
-                    g_ctl_game_tick();
-                    world_add_to_render();
-                }
-            }
+            g_ctl_game_tick();
+            world_add_to_render();
             break;
         }
         case G_EVENT_STOP_GAME_TICKS:
         {
-            if(game.started)
-            {
-                game_stop();
-            }
+            /* game_destroy(); */
             break;
         }
     }

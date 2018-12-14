@@ -1,15 +1,13 @@
 /*
- * menu.c
+ * gamelib_menu.c
+ *
+ *  Created on: 2 сент. 2018 г.
+ *      Author: mastersan
  */
 
-#include "menu.h"
+#include "gamelib_ctrl.h"
 
-#include "sys_utils.h"
-#include "g_types.h"
-#include "io.h"
-#include "io_keys.h"
-#include "render.h"
-#include "game.h"
+#include "gamelib_menu.h"
 
 #include <string.h>
 
@@ -21,7 +19,7 @@
  * @param[in] format    string
  */
 #define menu_print(x, y, atr, format, ...) \
-        render_add_textf((x), (y), (atr), (format), ##__VA_ARGS__)
+            gamelib.ctx->print((x), (y), (atr), (format), ##__VA_ARGS__)
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
 
@@ -30,7 +28,7 @@ typedef struct
     void (*event_on_enter)(void * ctx);
     void (*event_on_exit)(void * ctx);
     menu_index_t (*event_on_event)(int key, void * ctx);
-    void (*draw_on_update)(void * ctx);
+    void (*draw)(void * ctx);
     void * ctx;
 } menu_t;
 
@@ -145,7 +143,8 @@ static void menu_main_draw(void * ctx_)
  */
 static void menu_newgame0_on_enter(void * ctx_)
 {
-    game_start(0);
+    gamelib.stage = 0;
+    gamelib.ctx->game_create();
 }
 
 /**
@@ -153,7 +152,8 @@ static void menu_newgame0_on_enter(void * ctx_)
  */
 static void menu_newgame1_on_enter(void * ctx_)
 {
-    game_start(1);
+    gamelib.stage = 1;
+    gamelib.ctx->game_create();
 }
 
 /**
@@ -161,7 +161,8 @@ static void menu_newgame1_on_enter(void * ctx_)
  */
 static void menu_newgame2_on_enter(void * ctx_)
 {
-    game_start(2);
+    gamelib.stage = 2;
+    gamelib.ctx->game_create();
 }
 
 /**
@@ -174,7 +175,7 @@ static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
 
 static void menu_chart_draw(void * ctx_)
 {
-    g_ctl_show_records();
+    gamelib_show_records();
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
@@ -214,13 +215,13 @@ static void menu_help_draw(void * ctx_)
 
 static void menu_quit_on_enter(void * ctx_)
 {
-    game_quit();
+    gamelib.ctx->game_quit();
 }
 
 
 static const menu_t menus[] =
 {
-        { NULL, NULL, NULL, NULL, NULL, NULL, NULL },/* IMENU_NONE     */
+        { NULL, NULL, NULL, NULL, NULL },/* IMENU_NONE     */
         { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx },/* IMENU_MAIN     */
         { menu_newgame0_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
         { menu_newgame1_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
@@ -233,17 +234,12 @@ static const menu_t menus[] =
 static menu_index_t m_imenu_prev = IMENU_NONE;
 static menu_index_t m_imenu = IMENU_MAIN;
 
-static void menu_handle_event_tick(const event_t * event)
+
+void menu_handle_input(int key)
 {
-    /* empty */
-}
-
-
-void menu_handle(const event_t * event)
-{
-
     const menu_t * menu = &menus[m_imenu];
     void * ctx = menu->ctx;
+
     if(m_imenu_prev != m_imenu)
     {
         if(menu->event_on_enter)
@@ -253,37 +249,14 @@ void menu_handle(const event_t * event)
         m_imenu_prev = m_imenu;
     }
 
-
-    switch(event->type)
+    if(menu->event_on_event)
     {
-        case G_EVENT_VID_WINCH:
-        {
-            break;
-        }
-        case G_EVENT_KEYBOARD:
-        {
-
-            if(menu->event_on_event)
-            {
-                m_imenu = menu->event_on_event(event->data.KEYBOARD.key, ctx);
-            }
-            else
-            {
-                m_imenu = IMENU_MAIN;
-            }
-            break;
-        }
-        case G_EVENT_TICK:
-        {
-            menu_handle_event_tick(event);
-            break;
-        }
-        case G_EVENT_STOP_GAME_TICKS:
-        {
-            break;
-        }
+        m_imenu = menu->event_on_event(key, ctx);
     }
-
+    else
+    {
+        m_imenu = IMENU_MAIN;
+    }
 
     if(m_imenu_prev != m_imenu)
     {
@@ -293,17 +266,23 @@ void menu_handle(const event_t * event)
         }
     }
 
-    if(menu->draw_on_update)
+}
+
+void menu_handle(void)
+{
+
+    gamelib.ctx->render_background(0x00, ' ');
+
+    const menu_t * menu = &menus[m_imenu];
+
+    if(menu->draw)
     {
-        menu->draw_on_update(ctx);
+        void * ctx = menu->ctx;
+        menu->draw(ctx);
     }
-
-
 }
 
 void menu_show_menu(menu_index_t imenu)
 {
     m_imenu = imenu;
 }
-
-

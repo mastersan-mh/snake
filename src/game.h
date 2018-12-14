@@ -16,8 +16,7 @@
 typedef struct
 {
     bool quit;
-    bool showmenu;
-    bool started;
+    bool created;
 
 } game_t;
 
@@ -26,13 +25,14 @@ void game_done(void);
 
 bool game_is_quit(void);
 void game_quit(void);
-void game_start(int stage);
+
+int game_create(void);
+void game_destroy(void);
 
 void game_loop(void);
 void game_render(void);
 
 void game_stop_ticks(void);
-void game_menu_show(menu_index_t imenu);
 void game_ticktime_set(game_time_ms_t ticktime);
 void game_event_handle(const event_t * event);
 
