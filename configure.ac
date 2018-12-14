@@ -13,7 +13,7 @@ AC_PROG_CC
 # ncursesw
 #
 
-AC_CHECK_HEADER([curses.h])
+AC_CHECK_HEADER([ncurses.h])
 
 AC_CHECK_LIB([ncursesw], [initscr], [], [ AC_MSG_ERROR([Unable to find ncursesw]) ] )
 
