@@ -15,11 +15,21 @@
 
 #include "sys_time.h"
 
+#include <errno.h>
 #include <stdint.h>
 #include <unistd.h>
 #include <sys/select.h>
+#include <stdatomic.h>
 
-#define USE_TICK_LATE
+/* #define USE_TICK_LATE */
+
+
+typedef struct
+{
+    volatile atomic_bool sig_raised_winch;
+} g_events_t;
+
+static g_events_t g_events;
 
 static event_head_t events;
 
@@ -38,11 +48,38 @@ static clockid_t clock_id;
 #   define DEBUG_PRINT_XY(x, y, format, ...) debug_print(x, y, format, ##__VA_ARGS__)
 #endif
 
+
+#include <signal.h>
+
+struct sigaction act;
+
+static void P_raise_winch(void);
+
+static void P_sa_sigaction(int signum, siginfo_t * siginfo, void * additional)
+{
+    P_raise_winch();
+}
+
+
 int g_events_init(void)
 {
+    atomic_init(&g_events.sig_raised_winch, false);
+
     CIRCLEQ_INIT(&events);
 
     int res;
+
+    /* signals */
+    act.sa_sigaction = P_sa_sigaction,
+    act.sa_flags = SA_SIGINFO /* | SA_NOMASK */;
+    sigemptyset (&act.sa_mask);
+    res = sigaction(SIGWINCH, &act, NULL);
+    if(res)
+    {
+        return -1;
+    }
+
+    /* timers */
     struct timespec ts_resolution;
 
     res = app_time_clock_id_get(
@@ -66,6 +103,36 @@ int g_events_init(void)
 
     return 0;
 }
+
+void g_events_done(void)
+{
+
+}
+
+/**
+ * @note Call it from signal handler
+ */
+void P_raise_winch(void)
+{
+    atomic_store(&g_events.sig_raised_winch, true);
+}
+
+/**
+ * @brief Check, witch signal is raised
+ */
+static void P_check_sig_raised(void)
+{
+    bool value;
+
+    value = atomic_load(&g_events.sig_raised_winch);
+    if(value)
+    {
+        atomic_store(&g_events.sig_raised_winch, false);
+        g_event_send(G_EVENT_VID_WINCH, NULL);
+    }
+
+}
+
 
 void g_events_handle(void)
 {
@@ -115,8 +182,11 @@ void g_event_ticktime_set(game_time_ms_t ticktime)
 
 void g_events_pump(void)
 {
+
     /* debug */
+    static long intr_count = 0;
     static long tick_n = 0;
+    static long tick_on_ERROR_n = 0;
     static long tick_on_read_n = 0;
     static long tick_on_timeout_n = 0;
 #ifdef USE_TICK_LATE
@@ -162,10 +232,20 @@ void g_events_pump(void)
 
     clock_gettime(clock_id, &ts_now);
 
-
     if(res < 0)
     {
-        /* error */
+        if(errno == EINTR)
+        {
+            P_check_sig_raised();
+            ++intr_count;
+        }
+
+        if(ts_timercmp(&ts_now, &ts_tick_next,  >=))
+        {
+            tick = true;
+            ++tick_on_ERROR_n;
+            DEBUG_PRINT("TICK ON ERROR\n");
+        }
     }
     else if(res == 0)
     {
@@ -173,7 +253,7 @@ void g_events_pump(void)
         tick = true;
 
         DEBUG_PRINT("TICK ON TIMEOUT");
-        tick_on_timeout_n++;
+        ++tick_on_timeout_n;
 
     }
     else
@@ -214,8 +294,6 @@ void g_events_pump(void)
         {
             ++tick_late_count;
         }
-        DEBUG_PRINT_XY(1, 11, "TICK: tick_late_count = %ld", (long)tick_late_count);
-        DEBUG_PRINT_XY(1, 12, "TICK: ts_tick_late    = " G_PRI_ts(), G_FMT_ts(&ts_tick_late));
 #endif
 
         ts_timeradd(&ts_now, &ts_events_ticktime, &ts_tick_next);
@@ -237,6 +315,10 @@ void g_events_pump(void)
     DEBUG_PRINT_XY(1, 7, "timeout             = " G_PRI_ts(), G_FMT_ts(&timeout));
 
     DEBUG_PRINT_XY(1, 9, "ts_tick_next        = " G_PRI_ts(), G_FMT_ts(&ts_tick_next));
+#ifdef USE_TICK_LATE
+    DEBUG_PRINT_XY(1, 11, "TICK: tick_late_count = %ld", (long)tick_late_count);
+    DEBUG_PRINT_XY(1, 12, "TICK: ts_tick_late    = " G_PRI_ts(), G_FMT_ts(&ts_tick_late));
+#endif
 
 }
 

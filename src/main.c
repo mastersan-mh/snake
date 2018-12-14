@@ -1,5 +1,5 @@
 /**
- * 25.03.2004
+ * 2018
  *
  * snake
  *
@@ -12,10 +12,8 @@ libs:
     ncursesw
  */
 
-#include "io.h"
 #include "game.h"
 #include "render.h"
-#include <stdlib.h>
 
 int main()
 {
@@ -23,6 +21,7 @@ int main()
     {
         return EXIT_FAILURE;
     }
+
     while(!game_is_quit())
     {
         render_begin();

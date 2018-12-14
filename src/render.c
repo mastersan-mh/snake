@@ -15,6 +15,10 @@
 
 #include <stdlib.h>
 
+#include <signal.h>
+#include <sys/ioctl.h>
+
+
 #define RENDER_FAST
 /* #define RENDER_USE_STDSCR */
 
@@ -162,6 +166,61 @@ void render_begin(void)
 void render_end(void)
 {
     wrefresh(ren.mainwindow);
+}
+
+/**
+ * @brief Action on window [size] changing
+ */
+void render_winch(void)
+{
+    struct winsize w;
+    ioctl(0, TIOCGWINSZ, &w);
+
+    int ws_col = w.ws_col;
+    int ws_row = w.ws_row;
+
+    int cols_max;
+    int rows_max;
+    int cols;
+    int rows;
+
+#ifdef RENDER_USE_STDSCR
+    cols_max = ws_row;
+    cols = ws_col;
+    rows_max = ws_col;
+    rows = ws_row;
+#else
+
+    if(ws_col >= VID_SCR_WIDTH)
+    {
+        cols_max = ws_col;
+        cols = VID_SCR_WIDTH;
+    }
+    else
+    {
+        cols_max = ws_col;
+        cols = ws_col;
+    }
+
+    if(ws_row >= VID_SCR_HEIGHT)
+    {
+        rows_max = ws_row;
+        rows = VID_SCR_HEIGHT;
+    }
+    else
+    {
+        rows_max = ws_row;
+        rows = ws_row;
+    }
+
+#endif
+
+    COLS = cols_max;
+    LINES = rows_max;
+    wresize(ren.mainwindow, rows, cols);
+
+    wclear(ren.mainwindow);
+
 }
 
 /*
