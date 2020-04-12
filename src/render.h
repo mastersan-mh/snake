@@ -10,8 +10,8 @@
 
 #include "vec.h"
 #include "models.h"
+#include "eng_curses.h"
 
-#include <curses.h>
 #include <stdint.h>
 
 #define VID_SCR_WIDTH (80)

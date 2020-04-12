@@ -8,6 +8,8 @@
 #include "io.h"
 #include "sys_utils.h"
 
+#include "eng_curses.h"
+
 #include <termios.h>
 #include <unistd.h>
 #include <fcntl.h>
@@ -20,7 +22,6 @@
 
 
 #include <locale.h>
-#include <ncurses.h>
 
 int io_init(void)
 {
