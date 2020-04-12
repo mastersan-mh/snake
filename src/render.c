@@ -10,8 +10,7 @@
 #include "render.h"
 
 #include "io.h"
-
-#include <curses.h>
+#include "eng_curses.h"
 
 #include <stdlib.h>
 
