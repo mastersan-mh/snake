@@ -92,7 +92,7 @@ void obj_new(int x, int y, obj_type_t objtype)
         return;
 
     world_ientity_t ient;
-    res = gamelib.ctx->world_find_first_free(&ient);
+    res = gamelib.geng->world_find_first_free(&ient);
     if(res)
     {
         return;
@@ -120,9 +120,9 @@ void obj_new(int x, int y, obj_type_t objtype)
 
     origin_set(&obj->origin, x, y);
 
-    gamelib.ctx->world_ent_update_orig(ient, &obj->origin);
-    gamelib.ctx->world_ent_update_model(ient, imodel);
-    gamelib.ctx->world_ent_link(ient);
+    gamelib.geng->world_ent_update_orig(ient, &obj->origin);
+    gamelib.geng->world_ent_update_model(ient, imodel);
+    gamelib.geng->world_ent_link(ient);
 
     obj->type = objtype;
     switch(objtype)
@@ -144,7 +144,7 @@ void obj_freeall(void)
     {
         obj    = Hobj;
         Hobj = Hobj->next;
-        gamelib.ctx->world_ent_unlink(obj->ient);
+        gamelib.geng->world_ent_unlink(obj->ient);
         Z_free(obj);
     }
 }
@@ -168,7 +168,7 @@ void obj_free(obj_t **obj)
     if(Hobj == (*obj))
     {
         Hobj = Hobj->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        gamelib.geng->world_ent_unlink((*obj)->ient);
         Z_free((*obj));
         (*obj) = Hobj;
     }
@@ -180,7 +180,7 @@ void obj_free(obj_t **obj)
             P = P->next;
         }
         P->next = (*obj)->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        gamelib.geng->world_ent_unlink((*obj)->ient);
         Z_free((*obj));
         (*obj) = P;
     }
@@ -273,7 +273,7 @@ void gamelib_HUD_draw(void)
 #undef TEXT_ART
 #define TEXT_ART (0x0F)
 
-    gamelib.ctx->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+    gamelib.geng->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
             , player_scores()
             , player_level()
             , player_weight()
@@ -281,7 +281,7 @@ void gamelib_HUD_draw(void)
 
     if(gamelib.showtiming > 0)
     {
-        gamelib.ctx->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
+        gamelib.geng->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
         --gamelib.showtiming;
     }
 }
@@ -365,8 +365,8 @@ void snake_seg_model_update(snake_seg_t *sseg)
     for(sseg_iter = sseg, i = 0; sseg_iter != NULL && i < 2; sseg_iter = sseg_iter->next, ++i)
     {
         size_t imodel = snake_seg_model_get(sseg_iter);
-        gamelib.ctx->world_ent_update_model(sseg_iter->ient, imodel);
-        gamelib.ctx->world_ent_update_skin(sseg->ient, iskin);
+        gamelib.geng->world_ent_update_model(sseg_iter->ient, imodel);
+        gamelib.geng->world_ent_update_skin(sseg->ient, iskin);
     }
 }
 
@@ -380,7 +380,7 @@ static void P_snake_newseg(vec_t x, vec_t y)
     int res;
     snake_seg_t *sseg;
     world_ientity_t ient;
-    res = gamelib.ctx->world_find_first_free(&ient);
+    res = gamelib.geng->world_find_first_free(&ient);
     if(res) return;
     sseg = Z_malloc(sizeof(snake_seg_t));
 
@@ -392,8 +392,8 @@ static void P_snake_newseg(vec_t x, vec_t y)
     origin_set(&sseg->origin, x, y);
     sseg->ient = ient;
 
-    gamelib.ctx->world_ent_update_orig(ient, &sseg->origin);
-    gamelib.ctx->world_ent_link(ient);
+    gamelib.geng->world_ent_update_orig(ient, &sseg->origin);
+    gamelib.geng->world_ent_link(ient);
 
     snake_seg_model_update(sseg);
 
@@ -480,7 +480,7 @@ void snake_done(void)
     {
         sseg       = snake.head;
         snake.head = snake.head->next;
-        gamelib.ctx->world_ent_unlink(sseg->ient);
+        gamelib.geng->world_ent_unlink(sseg->ient);
         Z_free(sseg);
     }
 }
@@ -498,7 +498,7 @@ void snake_get_purgen(void)
     {
         obj_new(sseg->origin.x, sseg->origin.y, OBJ_SHIT);
         sseg = sseg->prev;
-        gamelib.ctx->world_ent_unlink(sseg->next->ient);
+        gamelib.geng->world_ent_unlink(sseg->next->ient);
         Z_free(sseg->next);
         sseg->next = NULL;
         snake_seg_model_update(sseg);
@@ -579,7 +579,7 @@ void snake_think(void)
                 case DIRECTION_WEST : --sseg->origin.x;break;
                 case DIRECTION_EAST : ++sseg->origin.x;break;
             }
-            gamelib.ctx->world_ent_update_orig(sseg->ient, &sseg->origin);
+            gamelib.geng->world_ent_update_orig(sseg->ient, &sseg->origin);
         }
         else
         {
@@ -610,7 +610,7 @@ void snake_think(void)
             }
             snake_seg_model_update(head);
             snake_seg_model_update(tail);
-            gamelib.ctx->world_ent_update_orig(head->ient, &head->origin);
+            gamelib.geng->world_ent_update_orig(head->ient, &head->origin);
         }
     }
     /* self-cross check */

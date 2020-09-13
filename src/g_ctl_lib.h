@@ -13,14 +13,15 @@
 
 #include "Z_mem.h"
 
+#include "g_events.h"
 #include "g_types.h"
 #include "io_keys.h"
 #include "world_gamelib.h"
 #include "sys_utils.h"
 #include "sys_time.h"
 
-/* game context */
-typedef struct
+/* game engine */
+struct game_engine
 {
     /* game */
     void (*game_quit)(void);
@@ -49,22 +50,26 @@ typedef struct
     void (*print)(int x, int y, int atr, const char * format, ...);
     void (*print_centerscreen)(size_t text_width, int atr, const char * format, ...);
     void (*putch)(int x, int y, int atr, char ch);
-    int key;
+    bool (*key_pump)(
+            enum g_event_type * type,
+            struct g_event_data * data
+    );
 
-} game_ctx_t;
+};
 
-/* game control */
-typedef struct
+/**
+ * @brief game control
+ */
+struct gamelib_ctl
 {
     /* requested maximum entities */
     size_t max_entities;
-    int (*init)(const game_ctx_t * gctx);
+    int (*init)(const struct game_engine * geng);
     void (*done)(void);
     int (*game_create)(void);
     void (*game_destroy)(void);
     void (*game_tick)(void);
-    void (*game_input)(int key);
 
-} game_ctl_t;
+};
 
 #endif /* SRC_G_CTL_LIB_H_ */

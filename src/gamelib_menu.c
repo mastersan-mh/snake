@@ -19,7 +19,7 @@
  * @param[in] format    string
  */
 #define menu_print(x, y, atr, format, ...) \
-            gamelib.ctx->print((x), (y), (atr), (format), ##__VA_ARGS__)
+            gamelib.geng->print((x), (y), (atr), (format), ##__VA_ARGS__)
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
 
@@ -144,7 +144,7 @@ static void menu_main_draw(void * ctx_)
 static void menu_newgame0_on_enter(void * ctx_)
 {
     gamelib.stage = 0;
-    gamelib.ctx->game_create();
+    gamelib.geng->game_create();
 }
 
 /**
@@ -153,7 +153,7 @@ static void menu_newgame0_on_enter(void * ctx_)
 static void menu_newgame1_on_enter(void * ctx_)
 {
     gamelib.stage = 1;
-    gamelib.ctx->game_create();
+    gamelib.geng->game_create();
 }
 
 /**
@@ -162,7 +162,7 @@ static void menu_newgame1_on_enter(void * ctx_)
 static void menu_newgame2_on_enter(void * ctx_)
 {
     gamelib.stage = 2;
-    gamelib.ctx->game_create();
+    gamelib.geng->game_create();
 }
 
 /**
@@ -215,7 +215,7 @@ static void menu_help_draw(void * ctx_)
 
 static void menu_quit_on_enter(void * ctx_)
 {
-    gamelib.ctx->game_quit();
+    gamelib.geng->game_quit();
 }
 
 
@@ -271,7 +271,7 @@ void menu_handle_input(int key)
 void menu_handle(void)
 {
 
-    gamelib.ctx->render_background(0x00, ' ');
+    gamelib.geng->render_background(0x00, ' ');
 
     const menu_t * menu = &menus[m_imenu];
 

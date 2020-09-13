@@ -14,6 +14,11 @@
 #include "game.h"
 
 #include "sys_time.h"
+#include "ringbuf.h"
+
+#include "g_utils.h"
+#include "render.h"
+#include "world_main.h"
 
 #include <errno.h>
 #include <stdint.h>
@@ -23,15 +28,33 @@
 
 /* #define USE_TICK_LATE */
 
+#define SYSEVENTS_MAX  128
+#define EVENTS_MAX  SYSEVENTS_MAX
 
-typedef struct
+struct g_event
+{
+    enum g_event_type type;
+    struct g_event_data data;
+};
+
+struct g_sysevent
+{
+    enum g_sysevent_type type;
+    struct g_sysevent_data data;
+};
+
+struct g_events
 {
     volatile atomic_bool sig_raised_winch;
-} g_events_t;
+    struct g_sysevent sysevents[SYSEVENTS_MAX];
+    ringbuf_t sysevents_ring;
 
-static g_events_t g_events;
+    struct g_event events[EVENTS_MAX];
+    ringbuf_t events_ring;
 
-static event_head_t events;
+};
+
+static struct g_events g_events;
 
 struct timespec ts_tick_next;
 
@@ -60,12 +83,12 @@ static void P_sa_sigaction(int signum, siginfo_t * siginfo, void * additional)
     P_raise_winch();
 }
 
-
 int g_events_init(void)
 {
     atomic_init(&g_events.sig_raised_winch, false);
 
-    CIRCLEQ_INIT(&events);
+    ringbuf_init(&g_events.sysevents_ring, SYSEVENTS_MAX);
+    ringbuf_init(&g_events.events_ring, EVENTS_MAX);
 
     int res;
 
@@ -112,7 +135,7 @@ void g_events_done(void)
 /**
  * @note Call it from signal handler
  */
-void P_raise_winch(void)
+static void P_raise_winch(void)
 {
     atomic_store(&g_events.sig_raised_winch, true);
 }
@@ -128,7 +151,7 @@ static void P_check_sig_raised(void)
     if(value)
     {
         atomic_store(&g_events.sig_raised_winch, false);
-        g_event_send(G_EVENT_VID_WINCH, NULL);
+        g_event_send(G_SYSEVENT_VID_WINCH, NULL);
     }
 
 }
@@ -136,41 +159,77 @@ static void P_check_sig_raised(void)
 
 void g_events_handle(void)
 {
-    while(!CIRCLEQ_EMPTY(&events))
+    while(!ringbuf_check_empty(&g_events.sysevents_ring))
     {
-        event_t * event = CIRCLEQ_FIRST(&events);
-        CIRCLEQ_REMOVE(&events, event, queue);
-        game_event_handle(event);
-        Z_free(event);
+        size_t head = ringbuf_head_get(&g_events.sysevents_ring);
+        struct g_sysevent * sysevent = &g_events.sysevents[head];
+
+        switch(sysevent->type)
+        {
+            case G_SYSEVENT_VID_WINCH:
+            {
+                render_winch();
+                break;
+            }
+            case G_SYSEVENT_KEYBOARD:
+            {
+                if(ringbuf_check_full(&g_events.events_ring))
+                {
+                    ERROR("Keyboard events queue overflow");
+                }
+                size_t tail = ringbuf_tail_get(&g_events.events_ring);
+                struct g_event * event = &g_events.events[tail];
+                event->type = G_EVENT_KEYBOARD;
+                event->data.KEYBOARD.key = sysevent->data.KEYBOARD.key;
+                ringbuf_enqueue(&g_events.events_ring);
+                break;
+            }
+            case G_SYSEVENT_TICK:
+            {
+                render_clearbuf();
+                g_ctl_game_tick();
+                world_add_to_render();
+                ringbuf_flush(&g_events.events_ring);
+                break;
+            }
+            case G_SYSEVENT_STOP_GAME_TICKS:
+            {
+                /* game_destroy(); */
+                break;
+            }
+        }
+
+        ringbuf_dequeue(&g_events.sysevents_ring);
     }
 }
 
 bool g_events_is_empty(void)
 {
-    return CIRCLEQ_EMPTY(&events);
+    return ringbuf_check_empty(&g_events.sysevents_ring);
 }
 
 void g_events_flush(void)
 {
-    while(!CIRCLEQ_EMPTY(&events))
-    {
-        event_t * event = CIRCLEQ_FIRST(&events);
-        CIRCLEQ_REMOVE(&events, event, queue);
-        Z_free(event);
-    }
+    ringbuf_flush(&g_events.sysevents_ring);
 }
 
 void g_event_send(
-    event_type_t type,
-    const event_data_t * data
+    enum g_sysevent_type type,
+    const struct g_sysevent_data * data
 )
 {
-    event_t * event = Z_malloc(sizeof(event_t));
+    if(ringbuf_check_full(&g_events.sysevents_ring))
+    {
+        ERROR("System queue overflow");
+        return;
+    }
+
+    size_t tail = ringbuf_tail_get(&g_events.sysevents_ring);
+    struct g_sysevent * event = &g_events.sysevents[tail];
     event->type = type;
     if(data != NULL)
         event->data = *data;
-
-    CIRCLEQ_INSERT_TAIL(&events, event, queue);
+    ringbuf_enqueue(&g_events.sysevents_ring);
 }
 
 static game_time_ms_t events_tick_time = 500;
@@ -193,7 +252,7 @@ void g_events_pump(void)
     static long tick_late_count = 0;
 #endif
 
-    event_data_t data;
+    struct g_sysevent_data data;
     /****/
     int res;
 
@@ -271,7 +330,7 @@ void g_events_pump(void)
             int key = io_getch();
 
             data.KEYBOARD.key = key;
-            g_event_send(G_EVENT_KEYBOARD, &data);
+            g_event_send(G_SYSEVENT_KEYBOARD, &data);
         }
 
 
@@ -299,7 +358,7 @@ void g_events_pump(void)
         ts_timeradd(&ts_now, &ts_events_ticktime, &ts_tick_next);
 
         data.TICK.time = ts_now;
-        g_event_send(G_EVENT_TICK, NULL);
+        g_event_send(G_SYSEVENT_TICK, NULL);
 
         tick_n++;
 
@@ -322,3 +381,20 @@ void g_events_pump(void)
 
 }
 
+bool g_events_event_pump(
+        enum g_event_type * type,
+        struct g_event_data * data
+)
+{
+    if(ringbuf_check_empty(&g_events.events_ring))
+    {
+        return false;
+    }
+
+    size_t head = ringbuf_head_get(&g_events.events_ring);
+    struct g_event * event = &g_events.events[head];
+    *type = event->type;
+    *data = event->data;
+    ringbuf_dequeue(&g_events.events_ring);
+    return true;
+}

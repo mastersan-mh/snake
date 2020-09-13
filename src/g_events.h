@@ -11,47 +11,67 @@
 #include "sys_time.h"
 #include "g_types.h"
 
-#include <sys/queue.h>
+/**
+ * @brief Game event type
+ */
 
-typedef enum
+enum g_event_type
+{
+    G_EVENT_KEYBOARD
+};
+
+/**
+ * @brief Game event data
+ */
+struct g_event_data
+{
+    union
+    {
+        struct
+        {
+            int key;
+        } KEYBOARD;
+    };
+};
+
+/**
+ * @brief System event type
+ */
+enum g_sysevent_type
 {
     /* changing window size */
-    G_EVENT_VID_WINCH,
+    G_SYSEVENT_VID_WINCH,
     /* keyboard */
-    G_EVENT_KEYBOARD,
+    G_SYSEVENT_KEYBOARD,
     /* game tick */
-    G_EVENT_TICK,
+    G_SYSEVENT_TICK,
     /* stop game ticks */
-    G_EVENT_STOP_GAME_TICKS
-} event_type_t;
+    G_SYSEVENT_STOP_GAME_TICKS
+};
 
-typedef union
+/**
+ * @brief System event data
+ */
+struct g_sysevent_data
 {
-    struct
+    union
     {
-        /* empty */
-    } WINCH;
+        struct
+        {
+            /* empty */
+        } WINCH;
 
-    struct
-    {
-        int key;
-    } KEYBOARD;
+        struct
+        {
+            int key;
+        } KEYBOARD;
 
-    struct
-    {
-        struct timespec time;
-    } TICK;
-} event_data_t;
-
-
-typedef struct event_s
-{
-    CIRCLEQ_ENTRY(event_s) queue;
-    event_type_t type;
-    event_data_t data;
-} event_t;
-
-typedef CIRCLEQ_HEAD(event_head_s, event_s) event_head_t;
+        struct
+        {
+            struct timespec time;
+        } TICK;
+    };
+};
 
 int g_events_init(void);
 void g_events_done(void);
@@ -60,12 +80,17 @@ bool g_events_is_empty(void);
 void g_events_flush(void);
 
 void g_event_send(
-    event_type_t type,
-    const event_data_t * data
+        enum g_sysevent_type type,
+        const struct g_sysevent_data * data
 );
 
 void g_event_ticktime_set(game_time_ms_t ticktime);
 
 void g_events_pump(void);
+
+bool g_events_event_pump(
+        enum g_event_type * type,
+        struct g_event_data * data
+);
 
 #endif /* SRC_G_EVENTS_H_ */

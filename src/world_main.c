@@ -17,7 +17,7 @@
 
 typedef struct
 {
-    bool bisy;
+    bool used;
     origin_t orig;
     origin_t orig_prev;
     size_t imodel;
@@ -69,7 +69,7 @@ void world_destroy(void)
     for(i = 0; i < entities_max; ++i)
     {
         entity_t * ent = &entities[i];
-        ent->bisy = false;
+        ent->used = false;
     }
 }
 
@@ -85,7 +85,7 @@ int world_find_first_free(world_ientity_t * ient)
     for(i = 0; i < entities_num; ++i)
     {
         entity_t * ent = &entities[i];
-        if(!ent->bisy)
+        if(!ent->used)
         {
             *ient = i;
             return 0;
@@ -101,7 +101,7 @@ int world_ent_unlink(world_ientity_t ient)
 {
     PROTECT_IENT(ient, -1);
     entity_t * ent = &entities[ient];
-    ent->bisy = false;
+    ent->used = false;
     return 0;
 }
 
@@ -115,7 +115,7 @@ int world_ent_link(world_ientity_t ient)
     P_entities_map_update(ient);
 
     entity_t * ent = &entities[ient];
-    ent->bisy = true;
+    ent->used = true;
     return 0;
 }
 
@@ -127,7 +127,7 @@ int world_ent_update_orig(world_ientity_t ient, const origin_t * origin)
     PROTECT_IENT(ient, -1);
 
     entity_t * ent = &entities[ient];
-    if(!ent->bisy)
+    if(!ent->used)
     {
         ent->orig_prev = *origin;
     }
@@ -166,7 +166,7 @@ void world_add_to_render(void)
     for(i = 0; i < entities_max; ++i)
     {
         entity_t * ent = &entities[i];
-        if(!ent->bisy)
+        if(!ent->used)
         {
             continue;
         }

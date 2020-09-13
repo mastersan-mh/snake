@@ -13,6 +13,7 @@ gamelib_ctrl.c \
 gamelib_menu.c \
 gamelib_objects.c \
 gamelib_payer_death.c \
+ringbuf.c \
 sys_time.c \
 sys_utils.c \
 io.c \

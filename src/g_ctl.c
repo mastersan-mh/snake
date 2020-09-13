@@ -16,73 +16,69 @@
 
 #define FCHECK(xfunc, xres) if((xfunc) == NULL) { return xres; }
 
-static game_ctl_t gctl = {};
-static game_ctx_t gctx = {};
+static struct gamelib_ctl glibctl = {};
+static struct game_engine geng = {};
 
-void game_ent_ctl_init(game_ctl_t *gctl);
+void game_ent_ctl_init(struct gamelib_ctl *glibctl);
 
 int g_ctl_init(void)
 {
-    gctx.game_quit = game_quit;
-    gctx.game_create = game_create;
-    gctx.game_destroy = game_destroy;
+    geng.game_quit = game_quit;
+    geng.game_create = game_create;
+    geng.game_destroy = game_destroy;
 
-    gctx.render_background = render_background;
+    geng.render_background = render_background;
 
-    gctx.world_find_first_free = world_find_first_free;
-    gctx.world_ent_unlink = world_ent_unlink;
-    gctx.world_ent_link = world_ent_link;
-    gctx.world_ent_update_orig = world_ent_update_orig;
-    gctx.world_ent_update_model = world_ent_update_model;
-    gctx.world_ent_update_skin = world_ent_update_skin;
+    geng.world_find_first_free = world_find_first_free;
+    geng.world_ent_unlink = world_ent_unlink;
+    geng.world_ent_link = world_ent_link;
+    geng.world_ent_update_orig = world_ent_update_orig;
+    geng.world_ent_update_model = world_ent_update_model;
+    geng.world_ent_update_skin = world_ent_update_skin;
 
-    gctx.model_precache = model_precache;
+    geng.model_precache = model_precache;
 
-    gctx.stop_ticks = game_stop_ticks;
-    gctx.ticktime_set = game_ticktime_set;
-    gctx.print = hud_print;
-    gctx.print_centerscreen = hud_print_centerscreen;
-    gctx.putch = hud_putch;
+    geng.stop_ticks = game_stop_ticks;
+    geng.ticktime_set = game_ticktime_set;
+    geng.print = hud_print;
+    geng.print_centerscreen = hud_print_centerscreen;
+    geng.putch = hud_putch;
+    geng.key_pump = g_events_event_pump;
 
-    gctl.max_entities = 0;
-    game_ent_ctl_init(&gctl);
-    gctx.max_entities = gctl.max_entities;
+    glibctl.max_entities = 0;
+    game_ent_ctl_init(&glibctl);
+    geng.max_entities = glibctl.max_entities;
 
-    FCHECK(gctl.init, 0);
-    return gctl.init(&gctx);
+    FCHECK(glibctl.init, 0);
+    return glibctl.init(&geng);
 }
 
 void g_ctl_done(void)
 {
-    FCHECK(gctl.done, );
-    gctl.done();
+    FCHECK(glibctl.done, );
+    glibctl.done();
 }
 
 size_t g_ctl_max_entities_get(void)
 {
-    return gctl.max_entities;
+    return glibctl.max_entities;
 }
 
 int g_ctl_game_create(void)
 {
-    FCHECK(gctl.game_create, 0);
-    return gctl.game_create();
+    FCHECK(glibctl.game_create, 0);
+    return glibctl.game_create();
 }
 
 void g_ctl_game_destroy(void)
 {
-    FCHECK(gctl.game_destroy, );
-    gctl.game_destroy();
+    FCHECK(glibctl.game_destroy, );
+    glibctl.game_destroy();
 }
 
 void g_ctl_game_tick(void)
 {
-    FCHECK(gctl.game_tick, );
-    gctl.game_tick();
+    FCHECK(glibctl.game_tick, );
+    glibctl.game_tick();
 }
 
-void g_ctl_game_input(int key)
-{
-    FCHECK(gctl.game_input, );
-    gctl.game_input(key);
-}

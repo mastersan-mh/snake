@@ -34,6 +34,5 @@ void game_render(void);
 
 void game_stop_ticks(void);
 void game_ticktime_set(game_time_ms_t ticktime);
-void game_event_handle(const event_t * event);
 
 #endif /* SRC_GAME_H_ */

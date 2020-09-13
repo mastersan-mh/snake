@@ -30,7 +30,7 @@ typedef enum
     MDL__NUM
 } model_index_t;
 
-typedef enum
+enum gamelib_state
 {
     GSTATE_NONE,
     GSTATE_START,
@@ -39,15 +39,15 @@ typedef enum
     GSTATE_REQUEST_STOP,
     GSTATE_ENDGAME,
     GSTATE_RUN,
-} game_state_t;
+};
 
 typedef struct
 {
-    const game_ctx_t * ctx;
+    const struct game_engine * geng;
     size_t mdlidx[MDL__NUM];
     bool started;
     int stage;
-    game_state_t state;
+    enum gamelib_state state;
     bool showmenu;
     bool paused;
     bool intermission;

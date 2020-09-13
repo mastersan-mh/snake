@@ -8,8 +8,9 @@
 #ifndef SRC_G_UTILS_H_
 #define SRC_G_UTILS_H_
 
+#include <stdio.h>
 
-#define ERROR(format, ...)
+#define ERROR(format, ...) printf(format, ##__VA_ARGS__)
 
 int game_directories_init(const char * homedir);
 void game_directories_done(void);

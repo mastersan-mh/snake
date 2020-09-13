@@ -17,6 +17,11 @@
 
 gamelib_t gamelib = {};
 
+static void gamelib_game_input(
+        int key,
+        enum gamelib_state * newstate
+);
+
 void gamelib_menu_show(menu_index_t imenu)
 {
     menu_show_menu(imenu);
@@ -32,16 +37,16 @@ void ents_game_timing_update(ent_direction_t direction)
     switch(direction)
     {
         case DIRECTION_NORTH:
-            gamelib.ctx->ticktime_set(gamelib.timing * 3 / 2); /* FIXME: 80 / 25 */
+            gamelib.geng->ticktime_set(gamelib.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_SOUTH:
-            gamelib.ctx->ticktime_set(gamelib.timing * 3 / 2); /* FIXME: 80 / 25 */
+            gamelib.geng->ticktime_set(gamelib.timing * 3 / 2); /* FIXME: 80 / 25 */
             break;
         case DIRECTION_WEST:
-            gamelib.ctx->ticktime_set(gamelib.timing);
+            gamelib.geng->ticktime_set(gamelib.timing);
             break;
         case DIRECTION_EAST:
-            gamelib.ctx->ticktime_set(gamelib.timing);
+            gamelib.geng->ticktime_set(gamelib.timing);
             break;
     }
 }
@@ -49,7 +54,22 @@ void ents_game_timing_update(ent_direction_t direction)
 
 static void game_handle_event_tick(void)
 {
-    game_state_t newstate = gamelib.state;
+    enum gamelib_state newstate = gamelib.state;
+
+    enum g_event_type type;
+    struct g_event_data data;
+
+    while(gamelib.geng->key_pump(&type, &data))
+    {
+        switch(type)
+        {
+            case G_EVENT_KEYBOARD:
+            {
+                gamelib_game_input(data.KEYBOARD.key, &newstate);
+                break;
+            }
+        }
+    }
 
     switch(gamelib.state)
     {
@@ -72,7 +92,7 @@ static void game_handle_event_tick(void)
         case GSTATE_REQUEST_STOP:
 #undef TEXT_ATR
 #define TEXT_ATR (0x0F)
-            gamelib.ctx->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
+            gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
             break;
         case GSTATE_ENDGAME:
         {
@@ -107,7 +127,7 @@ static void game_handle_event_tick(void)
         {
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
-            gamelib.ctx->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
+            gamelib.geng->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
         }
 
         if(gamelib.intermission)
@@ -121,7 +141,10 @@ static void game_handle_event_tick(void)
 
 }
 
-static void gamelib_game_input(int key)
+static void gamelib_game_input(
+        int key,
+        enum gamelib_state * newstate
+)
 {
     if(gamelib.showmenu)
     {
@@ -129,7 +152,7 @@ static void gamelib_game_input(int key)
     }
 
 
-    switch(gamelib.state)
+    switch(*newstate)
     {
         case GSTATE_NONE:
             break;
@@ -146,14 +169,14 @@ static void gamelib_game_input(int key)
                 case 'Y':
                 case 'y':
                 {
-                    gamelib.state = GSTATE_STOP_WIN;
+                    *newstate = GSTATE_STOP_WIN;
                     break;
                 }
                 case IO_KB_ESC:
                 case 'N':
                 case 'n':
                 {
-                    gamelib.state = GSTATE_RUN;
+                    *newstate = GSTATE_RUN;
                     break;
                 }
             }
@@ -164,10 +187,10 @@ static void gamelib_game_input(int key)
             bool exit = menu_death_on_event(key);
             if(exit)
             {
-                gamelib.ctx->game_destroy();
-                gamelib.ctx->stop_ticks();
+                gamelib.geng->game_destroy();
+                gamelib.geng->stop_ticks();
                 menu_show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
-                gamelib.state = GSTATE_NONE;
+                *newstate = GSTATE_NONE;
             }
             break;
         }
@@ -229,7 +252,7 @@ static void gamelib_game_input(int key)
                 }
                 case IO_KB_ESC:
                 {
-                    gamelib.state = GSTATE_REQUEST_STOP;
+                    *newstate = GSTATE_REQUEST_STOP;
                     break;
                 }
             }
@@ -238,30 +261,30 @@ static void gamelib_game_input(int key)
     }
 }
 
-static int gamelib_init(const game_ctx_t * gctx)
+static int gamelib_init(const struct game_engine * geng)
 {
-    gamelib.ctx = gctx;
+    gamelib.geng = geng;
     gamelib.state = GSTATE_NONE;
 
     gamelib_menu_show(IMENU_MAIN);
 
     chart_load();
     gamelib.timing = ENTS_GAME_DEFAULT_TIMING;
-    gctx->ticktime_set(gamelib.timing);
+    geng->ticktime_set(gamelib.timing);
 
-    gctx->model_precache("?" /* 0x05 */, &gamelib.mdlidx[MDL_DEFAULT]);
-    gctx->model_precache("m" /* 0x05 */, &gamelib.mdlidx[MDL_MARIJUANA]);
-    gctx->model_precache("M" /* 0x06 */, &gamelib.mdlidx[MDL_MARIJUANAP]);
-    gctx->model_precache("P" /* 0x0B */, &gamelib.mdlidx[MDL_PURGEN]);
-    gctx->model_precache("@" , &gamelib.mdlidx[MDL_SHIT]);
-    gctx->model_precache("0" /* 0x01 */, &gamelib.mdlidx[MDL_SNAKE_HEAD]);
-    gctx->model_precache("*" , &gamelib.mdlidx[MDL_SNAKE_TAIL]);
-    gctx->model_precache("|" /* 186 */, &gamelib.mdlidx[MDL_SNAKE_BODY_VERTICAL]);
-    gctx->model_precache("-" /* 205 */, &gamelib.mdlidx[MDL_SNAKE_BODY_HORIZONTAL]);
-    gctx->model_precache("/" /* 201 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_UP]);
-    gctx->model_precache("\\" /* 187 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_UP]);
-    gctx->model_precache("L" /* 200 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_DOWN]);
-    gctx->model_precache("J" /* 188 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_DOWN]);
+    geng->model_precache("?" /* 0x05 */, &gamelib.mdlidx[MDL_DEFAULT]);
+    geng->model_precache("m" /* 0x05 */, &gamelib.mdlidx[MDL_MARIJUANA]);
+    geng->model_precache("M" /* 0x06 */, &gamelib.mdlidx[MDL_MARIJUANAP]);
+    geng->model_precache("P" /* 0x0B */, &gamelib.mdlidx[MDL_PURGEN]);
+    geng->model_precache("@" , &gamelib.mdlidx[MDL_SHIT]);
+    geng->model_precache("0" /* 0x01 */, &gamelib.mdlidx[MDL_SNAKE_HEAD]);
+    geng->model_precache("*" , &gamelib.mdlidx[MDL_SNAKE_TAIL]);
+    geng->model_precache("|" /* 186 */, &gamelib.mdlidx[MDL_SNAKE_BODY_VERTICAL]);
+    geng->model_precache("-" /* 205 */, &gamelib.mdlidx[MDL_SNAKE_BODY_HORIZONTAL]);
+    geng->model_precache("/" /* 201 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_UP]);
+    geng->model_precache("\\" /* 187 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_UP]);
+    geng->model_precache("L" /* 200 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_DOWN]);
+    geng->model_precache("J" /* 188 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_DOWN]);
 
     return 0;
 }
@@ -280,7 +303,7 @@ static int gamelib_game_create(void)
     }
 
     gamelib.timing = ENTS_GAME_DEFAULT_TIMING;
-    gamelib.ctx->ticktime_set(gamelib.timing);
+    gamelib.geng->ticktime_set(gamelib.timing);
 
     snake_init(&info_snake[stage]);
 
@@ -306,7 +329,7 @@ static void gamelib_game_destroy(void)
 
 static void gamelib_game_tick(void)
 {
-    gamelib.ctx->render_background(0x1F, ' ');
+    gamelib.geng->render_background(0x1F, ' ');
 
     game_handle_event_tick();
 }
@@ -320,7 +343,7 @@ void gamelib_show_records(void)
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
-    gamelib.ctx->print(20, 7, TEXT_ATR, "МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
+    gamelib.geng->print(20, 7, TEXT_ATR, "МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
 
     size_t len = chart_len();
 
@@ -332,7 +355,7 @@ void gamelib_show_records(void)
         {
             lev = LEVEL_MAX - 1;
         }
-        gamelib.ctx->print(20, 7 + row, TEXT_ATR, "%-5d %-15s %-6d %-6d %-20s"
+        gamelib.geng->print(20, 7 + row, TEXT_ATR, "%-5d %-15s %-6d %-6d %-20s"
                 , (int)row
                 , rec->name
                 , (int)rec->scores
@@ -343,16 +366,15 @@ void gamelib_show_records(void)
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x5f)
-    gamelib.ctx->print((80 - 29) / 2, 22, TEXT_ATR, anti_war);
+    gamelib.geng->print((80 - 29) / 2, 22, TEXT_ATR, anti_war);
 }
 
-void game_ent_ctl_init(game_ctl_t *gctl)
+void game_ent_ctl_init(struct gamelib_ctl *glibctl)
 {
-    gctl->max_entities = 80 * 25;
-    gctl->init = gamelib_init;
-    gctl->done = gamelib_done;
-    gctl->game_create = gamelib_game_create;
-    gctl->game_destroy = gamelib_game_destroy;
-    gctl->game_tick = gamelib_game_tick;
-    gctl->game_input = gamelib_game_input;
+    glibctl->max_entities = 80 * 25;
+    glibctl->init = gamelib_init;
+    glibctl->done = gamelib_done;
+    glibctl->game_create = gamelib_game_create;
+    glibctl->game_destroy = gamelib_game_destroy;
+    glibctl->game_tick = gamelib_game_tick;
 }

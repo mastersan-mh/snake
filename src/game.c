@@ -15,7 +15,7 @@
 #include "models.h"
 #include "render.h"
 
-#include "menu.h"
+#include "gamelib_menu.h"
 
 #include "sys_time.h"
 
@@ -37,7 +37,7 @@ int game_init(void)
     char * home_dir = getenv("HOME");
     if(home_dir == NULL)
     {
-        ERROR("Environment variable HOME is NULL")
+        ERROR("Environment variable HOME is NULL");
         return -1;
     }
     game_directories_init(home_dir);
@@ -119,44 +119,12 @@ void game_render(void)
 
 void game_stop_ticks(void)
 {
-    g_event_send(G_EVENT_STOP_GAME_TICKS, NULL);
+    g_event_send(G_SYSEVENT_STOP_GAME_TICKS, NULL);
 }
 
 void game_ticktime_set(game_time_ms_t ticktime)
 {
     g_event_ticktime_set(ticktime);
-}
-
-/* game finite-state machine */
-void game_event_handle(const event_t * event)
-{
-
-    switch(event->type)
-    {
-        case G_EVENT_VID_WINCH:
-        {
-            render_winch();
-            break;
-        }
-        case G_EVENT_KEYBOARD:
-        {
-            g_ctl_game_input(event->data.KEYBOARD.key);
-            world_add_to_render();
-            break;
-        }
-        case G_EVENT_TICK:
-        {
-            render_clearbuf();
-            g_ctl_game_tick();
-            world_add_to_render();
-            break;
-        }
-        case G_EVENT_STOP_GAME_TICKS:
-        {
-            /* game_destroy(); */
-            break;
-        }
-    }
 }
 
 void game_loop(void)
