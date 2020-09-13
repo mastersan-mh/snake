@@ -39,14 +39,9 @@ struct g_event_data
  */
 enum g_sysevent_type
 {
-    /* changing window size */
-    G_SYSEVENT_VID_WINCH,
-    /* keyboard */
-    G_SYSEVENT_KEYBOARD,
-    /* game tick */
-    G_SYSEVENT_TICK,
-    /* stop game ticks */
-    G_SYSEVENT_STOP_GAME_TICKS
+    G_SYSEVENT_TICK     , /**< game tick */
+    G_SYSEVENT_VID_WINCH, /**< changing window size */
+    G_SYSEVENT_KEYBOARD , /**< keyboard */
 };
 
 /**
@@ -58,25 +53,24 @@ struct g_sysevent_data
     {
         struct
         {
+            struct timespec time;
+        } TICK;
+
+        struct
+        {
             /* empty */
-        } WINCH;
+        } VID_WINCH;
 
         struct
         {
             int key;
         } KEYBOARD;
-
-        struct
-        {
-            struct timespec time;
-        } TICK;
     };
 };
 
 int g_events_init(void);
 void g_events_done(void);
 void g_events_handle(void);
-bool g_events_is_empty(void);
 void g_events_flush(void);
 
 void g_event_send(

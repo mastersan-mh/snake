@@ -97,20 +97,9 @@ void game_quit(void)
     game.quit = true;
 }
 
-void game_destroy(void)
-{
-    g_ctl_game_destroy();
-    world_destroy();
-}
-
 void game_render(void)
 {
     render();
-}
-
-void game_stop_ticks(void)
-{
-    g_event_send(G_SYSEVENT_STOP_GAME_TICKS, NULL);
 }
 
 void game_ticktime_set(game_time_ms_t ticktime)

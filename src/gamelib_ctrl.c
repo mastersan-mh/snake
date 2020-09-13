@@ -12,20 +12,17 @@
 #include "gamelib_objects.h"
 #include "gamelib_chart.h"
 #include "gamelib_payer_death.h"
+#include "gamelib_common.h"
 
 #define ENTS_GAME_DEFAULT_TIMING 300
 
 gamelib_t gamelib = {};
 
-static void gamelib_game_input(
-        int key,
-        enum gamelib_state * newstate
-);
+static void gamelib_game_input(int key);
 
 void gamelib_menu_show(menu_index_t imenu)
 {
     menu_show_menu(imenu);
-    gamelib.showmenu = true;
 }
 
 
@@ -54,8 +51,6 @@ void ents_game_timing_update(ent_direction_t direction)
 
 static void game_handle_event_tick(void)
 {
-    enum gamelib_state newstate = gamelib.state;
-
     enum g_event_type type;
     struct g_event_data data;
 
@@ -65,7 +60,7 @@ static void game_handle_event_tick(void)
         {
             case G_EVENT_KEYBOARD:
             {
-                gamelib_game_input(data.KEYBOARD.key, &newstate);
+                gamelib_game_input(data.KEYBOARD.key);
                 break;
             }
         }
@@ -77,15 +72,15 @@ static void game_handle_event_tick(void)
             break;
         case GSTATE_START:
             obj_put(OBJ_MARIJUANA);
-            newstate = GSTATE_RUN;
+            gamelib.state = GSTATE_RUN;
             break;
         case GSTATE_STOP_WIN:
-            newstate = GSTATE_ENDGAME;
+            gamelib.state = GSTATE_ENDGAME;
             menu_death_on_enter();
             gamelib.intermission = true;
             break;
         case GSTATE_STOP_LOSE:
-            newstate = GSTATE_ENDGAME;
+            gamelib.state = GSTATE_ENDGAME;
             menu_death_on_enter();
             gamelib.intermission = true;
             break;
@@ -108,7 +103,7 @@ static void game_handle_event_tick(void)
             snake_think();
             if(snake_is_dead())
             {
-                newstate = GSTATE_STOP_LOSE;
+                gamelib.state = GSTATE_STOP_LOSE;
             }
 
             break;
@@ -136,15 +131,9 @@ static void game_handle_event_tick(void)
         }
     }
 
-    gamelib.state = newstate;
-
-
 }
 
-static void gamelib_game_input(
-        int key,
-        enum gamelib_state * newstate
-)
+static void gamelib_game_input(int key)
 {
     if(gamelib.showmenu)
     {
@@ -152,7 +141,7 @@ static void gamelib_game_input(
     }
 
 
-    switch(*newstate)
+    switch(gamelib.state)
     {
         case GSTATE_NONE:
             break;
@@ -169,14 +158,14 @@ static void gamelib_game_input(
                 case 'Y':
                 case 'y':
                 {
-                    *newstate = GSTATE_STOP_WIN;
+                    gamelib.state = GSTATE_STOP_WIN;
                     break;
                 }
                 case IO_KB_ESC:
                 case 'N':
                 case 'n':
                 {
-                    *newstate = GSTATE_RUN;
+                    gamelib.state = GSTATE_RUN;
                     break;
                 }
             }
@@ -187,10 +176,9 @@ static void gamelib_game_input(
             bool exit = menu_death_on_event(key);
             if(exit)
             {
-                gamelib.geng->game_destroy();
-                gamelib.geng->stop_ticks();
+                gamelib_game_destroy();
                 menu_show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
-                *newstate = GSTATE_NONE;
+                gamelib.state = GSTATE_NONE;
             }
             break;
         }
@@ -252,7 +240,7 @@ static void gamelib_game_input(
                 }
                 case IO_KB_ESC:
                 {
-                    *newstate = GSTATE_REQUEST_STOP;
+                    gamelib.state = GSTATE_REQUEST_STOP;
                     break;
                 }
             }
@@ -319,12 +307,13 @@ int gamelib_game_create(void)
     return 0;
 }
 
-static void gamelib_game_destroy(void)
+void gamelib_game_destroy(void)
 {
     obj_freeall();
     snake_done();
     gamelib.timing = ENTS_GAME_DEFAULT_TIMING;
     gamelib.showtiming = 0;
+    gamelib.geng->world_destroy();
 }
 
 static void gamelib_game_tick(void)
@@ -374,6 +363,5 @@ void game_ent_ctl_init(struct gamelib_ctl *glibctl)
     glibctl->max_entities = 80 * 25;
     glibctl->init = gamelib_init;
     glibctl->done = gamelib_done;
-    glibctl->game_destroy = gamelib_game_destroy;
     glibctl->game_tick = gamelib_game_tick;
 }

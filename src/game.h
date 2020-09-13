@@ -25,12 +25,9 @@ void game_done(void);
 bool game_is_quit(void);
 void game_quit(void);
 
-void game_destroy(void);
-
 void game_loop(void);
 void game_render(void);
 
-void game_stop_ticks(void);
 void game_ticktime_set(game_time_ms_t ticktime);
 
 #endif /* SRC_GAME_H_ */

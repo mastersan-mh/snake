@@ -13,7 +13,6 @@
 int g_ctl_init(void);
 void g_ctl_done(void);
 size_t g_ctl_max_entities_get(void);
-void g_ctl_game_destroy(void);
 void g_ctl_game_tick(void);
 void g_ctl_game_input(int key);
 

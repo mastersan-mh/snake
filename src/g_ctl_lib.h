@@ -25,7 +25,6 @@ struct game_engine
 {
     /* game */
     void (*game_quit)(void);
-    void (*game_destroy)(void);
 
     /* render */
     void (*render_background)(int atr, uint64_t ch);
@@ -39,12 +38,11 @@ struct game_engine
     int (*world_ent_update_orig)(world_ientity_t ient, const origin_t * origin);
     int (*world_ent_update_model)(world_ientity_t ient, size_t imodel);
     int (*world_ent_update_skin)(world_ientity_t ient, size_t iskin);
-
+    void (*world_destroy)(void);
     /* models */
     int (*model_precache)(const char * s, size_t * imodel);
 
     /* stop the game cycle */
-    void (*stop_ticks)(void);
     void (*ticktime_set)(game_time_ms_t ticktime);
     void (*print)(int x, int y, int atr, const char * format, ...);
     void (*print_centerscreen)(size_t text_width, int atr, const char * format, ...);
@@ -65,7 +63,6 @@ struct gamelib_ctl
     size_t max_entities;
     int (*init)(const struct game_engine * geng);
     void (*done)(void);
-    void (*game_destroy)(void);
     void (*game_tick)(void);
 
 };

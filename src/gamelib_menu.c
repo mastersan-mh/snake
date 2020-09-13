@@ -284,4 +284,5 @@ void menu_handle(void)
 void menu_show_menu(menu_index_t imenu)
 {
     m_imenu = imenu;
+    gamelib.showmenu = true;
 }

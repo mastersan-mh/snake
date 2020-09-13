@@ -24,7 +24,6 @@ void game_ent_ctl_init(struct gamelib_ctl *glibctl);
 int g_ctl_init(void)
 {
     geng.game_quit = game_quit;
-    geng.game_destroy = game_destroy;
 
     geng.render_background = render_background;
 
@@ -34,10 +33,10 @@ int g_ctl_init(void)
     geng.world_ent_update_orig = world_ent_update_orig;
     geng.world_ent_update_model = world_ent_update_model;
     geng.world_ent_update_skin = world_ent_update_skin;
+    geng.world_destroy = world_destroy;
 
     geng.model_precache = model_precache;
 
-    geng.stop_ticks = game_stop_ticks;
     geng.ticktime_set = game_ticktime_set;
     geng.print = hud_print;
     geng.print_centerscreen = hud_print_centerscreen;
@@ -61,12 +60,6 @@ void g_ctl_done(void)
 size_t g_ctl_max_entities_get(void)
 {
     return glibctl.max_entities;
-}
-
-void g_ctl_game_destroy(void)
-{
-    FCHECK(glibctl.game_destroy, );
-    glibctl.game_destroy();
 }
 
 void g_ctl_game_tick(void)

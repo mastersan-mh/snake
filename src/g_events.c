@@ -166,6 +166,14 @@ void g_events_handle(void)
 
         switch(sysevent->type)
         {
+            case G_SYSEVENT_TICK:
+            {
+                render_clearbuf();
+                g_ctl_game_tick();
+                world_add_to_render();
+                ringbuf_flush(&g_events.events_ring);
+                break;
+            }
             case G_SYSEVENT_VID_WINCH:
             {
                 render_winch();
@@ -184,28 +192,10 @@ void g_events_handle(void)
                 ringbuf_enqueue(&g_events.events_ring);
                 break;
             }
-            case G_SYSEVENT_TICK:
-            {
-                render_clearbuf();
-                g_ctl_game_tick();
-                world_add_to_render();
-                ringbuf_flush(&g_events.events_ring);
-                break;
-            }
-            case G_SYSEVENT_STOP_GAME_TICKS:
-            {
-                /* game_destroy(); */
-                break;
-            }
         }
 
         ringbuf_dequeue(&g_events.sysevents_ring);
     }
-}
-
-bool g_events_is_empty(void)
-{
-    return ringbuf_check_empty(&g_events.sysevents_ring);
 }
 
 void g_events_flush(void)

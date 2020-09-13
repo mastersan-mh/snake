@@ -10,5 +10,6 @@
 
 
 int gamelib_game_create(void);
+void gamelib_game_destroy(void);
 
 #endif /* SRC_GAMELIB_COMMON_H_ */

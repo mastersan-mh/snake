@@ -65,6 +65,14 @@ bool menu_death_on_event(int key)
             }
             return true;
         }
+        case IO_KB_ESC:
+        {
+            if(ctx->top10)
+            {
+                break;
+            }
+            return true;
+        }
         default:
         {
             if(!ctx->top10) break;
