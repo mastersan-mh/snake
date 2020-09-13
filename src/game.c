@@ -42,8 +42,6 @@ int game_init(void)
     }
     game_directories_init(home_dir);
 
-    game.created = false;
-
     srand(time(NULL));
 
     res = models_init();
@@ -99,17 +97,10 @@ void game_quit(void)
     game.quit = true;
 }
 
-int game_create(void)
-{
-    game.created = true;
-    return g_ctl_game_create();
-}
-
 void game_destroy(void)
 {
     g_ctl_game_destroy();
     world_destroy();
-    game.created = false;
 }
 
 void game_render(void)

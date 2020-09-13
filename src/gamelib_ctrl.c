@@ -294,7 +294,7 @@ static void gamelib_done(void)
     chart_save();
 }
 
-static int gamelib_game_create(void)
+int gamelib_game_create(void)
 {
     int stage = gamelib.stage;
     if(stage < 0 || 2 < stage)
@@ -374,7 +374,6 @@ void game_ent_ctl_init(struct gamelib_ctl *glibctl)
     glibctl->max_entities = 80 * 25;
     glibctl->init = gamelib_init;
     glibctl->done = gamelib_done;
-    glibctl->game_create = gamelib_game_create;
     glibctl->game_destroy = gamelib_game_destroy;
     glibctl->game_tick = gamelib_game_tick;
 }

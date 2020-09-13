@@ -16,7 +16,6 @@
 typedef struct
 {
     bool quit;
-    bool created;
 
 } game_t;
 
@@ -26,7 +25,6 @@ void game_done(void);
 bool game_is_quit(void);
 void game_quit(void);
 
-int game_create(void);
 void game_destroy(void);
 
 void game_loop(void);

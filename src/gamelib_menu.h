@@ -12,7 +12,6 @@
 
 typedef enum
 {
-    IMENU_NONE    ,
     IMENU_MAIN    ,
     IMENU_NEWGAME0,
     IMENU_NEWGAME1,

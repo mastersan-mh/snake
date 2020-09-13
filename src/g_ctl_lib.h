@@ -25,7 +25,6 @@ struct game_engine
 {
     /* game */
     void (*game_quit)(void);
-    int (*game_create)(void);
     void (*game_destroy)(void);
 
     /* render */
@@ -66,7 +65,6 @@ struct gamelib_ctl
     size_t max_entities;
     int (*init)(const struct game_engine * geng);
     void (*done)(void);
-    int (*game_create)(void);
     void (*game_destroy)(void);
     void (*game_tick)(void);
 

@@ -24,7 +24,6 @@ void game_ent_ctl_init(struct gamelib_ctl *glibctl);
 int g_ctl_init(void)
 {
     geng.game_quit = game_quit;
-    geng.game_create = game_create;
     geng.game_destroy = game_destroy;
 
     geng.render_background = render_background;
@@ -62,12 +61,6 @@ void g_ctl_done(void)
 size_t g_ctl_max_entities_get(void)
 {
     return glibctl.max_entities;
-}
-
-int g_ctl_game_create(void)
-{
-    FCHECK(glibctl.game_create, 0);
-    return glibctl.game_create();
 }
 
 void g_ctl_game_destroy(void)

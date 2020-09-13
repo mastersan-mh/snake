@@ -9,6 +9,8 @@
 
 #include "gamelib_menu.h"
 
+#include "gamelib_common.h"
+
 #include <string.h>
 
 /**
@@ -144,7 +146,7 @@ static void menu_main_draw(void * ctx_)
 static void menu_newgame0_on_enter(void * ctx_)
 {
     gamelib.stage = 0;
-    gamelib.geng->game_create();
+    gamelib_game_create();
 }
 
 /**
@@ -153,7 +155,7 @@ static void menu_newgame0_on_enter(void * ctx_)
 static void menu_newgame1_on_enter(void * ctx_)
 {
     gamelib.stage = 1;
-    gamelib.geng->game_create();
+    gamelib_game_create();
 }
 
 /**
@@ -162,7 +164,7 @@ static void menu_newgame1_on_enter(void * ctx_)
 static void menu_newgame2_on_enter(void * ctx_)
 {
     gamelib.stage = 2;
-    gamelib.geng->game_create();
+    gamelib_game_create();
 }
 
 /**
@@ -221,7 +223,6 @@ static void menu_quit_on_enter(void * ctx_)
 
 static const menu_t menus[] =
 {
-        { NULL, NULL, NULL, NULL, NULL },/* IMENU_NONE     */
         { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx },/* IMENU_MAIN     */
         { menu_newgame0_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
         { menu_newgame1_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
@@ -231,25 +232,15 @@ static const menu_t menus[] =
         { menu_quit_on_enter    , NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
 };
 
-static menu_index_t m_imenu_prev = IMENU_NONE;
-static menu_index_t m_imenu = IMENU_MAIN;
+static menu_index_t m_imenu_prev = IMENU_MAIN;
+static menu_index_t m_imenu;
 
 
 void menu_handle_input(int key)
 {
     const menu_t * menu = &menus[m_imenu];
     void * ctx = menu->ctx;
-
-    if(m_imenu_prev != m_imenu)
-    {
-        if(menu->event_on_enter)
-        {
-            menu->event_on_enter(ctx);
-        }
-        m_imenu_prev = m_imenu;
-    }
-
-    if(menu->event_on_event)
+    if(menu->event_on_event != NULL)
     {
         m_imenu = menu->event_on_event(key, ctx);
     }
@@ -258,14 +249,22 @@ void menu_handle_input(int key)
         m_imenu = IMENU_MAIN;
     }
 
+    /* Menu was changed */
     if(m_imenu_prev != m_imenu)
     {
-        if(menu->event_on_exit)
+        const menu_t * menu_old = &menus[m_imenu_prev];
+        if(menu_old->event_on_exit != NULL)
         {
-            menu->event_on_exit(ctx);
+            menu_old->event_on_exit(menu_old->ctx);
         }
-    }
 
+        const menu_t * menu_new = &menus[m_imenu];
+        if(menu_new->event_on_enter != NULL)
+        {
+            menu_new->event_on_enter(menu_new->ctx);
+        }
+        m_imenu_prev = m_imenu;
+    }
 }
 
 void menu_handle(void)
