@@ -239,6 +239,10 @@ int P_calculate_atr(uint8_t atr)
     {
         additional_atr = additional_atr | A_BLINK;
     }
+    else
+    {
+        additional_atr = additional_atr | A_NORMAL;
+    }
     uint8_t bg = ((atr & 0x70) >> 4);
     uint8_t fg = (atr & 0x0F);
 
@@ -256,6 +260,7 @@ int P_calculate_atr(uint8_t atr)
 
 static void P_atr_set(uint8_t atr)
 {
+    wattroff(ren.mainwindow, ~(attr_t)0);
     wattron(ren.mainwindow, P_calculate_atr(atr));
 };
 

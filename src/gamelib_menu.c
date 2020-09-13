@@ -34,8 +34,8 @@ typedef struct
     void * ctx;
 } menu_t;
 
-char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
-char sys_special    [] = "Здесь никогда не будет вашей рекламы";
+static const char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
+static const char sys_special    [] = "Здесь никогда не будет вашей рекламы";
 
 
 static void P_menu_dec(int menu_amount, int * imenu)
@@ -182,6 +182,7 @@ static void menu_chart_draw(void * ctx_)
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
     menu_print((80-16)/2, 23, TEXT_ATR, "PRESS ANY KEY...");
+    menu_print((80-16)/2, 24, 0x0F, "PRESS ANY KEY1...");
 }
 
 /**
