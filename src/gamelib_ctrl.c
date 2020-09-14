@@ -56,65 +56,68 @@ void gamelib_handle_event_tick(void)
         }
     }
 
-    switch(gamelib.state)
-    {
-        case GSTATE_NONE:
-            break;
-        case GSTATE_START:
-            obj_put(OBJ_MARIJUANA);
-            gamelib.state = GSTATE_RUN;
-            break;
-        case GSTATE_STOP_WIN:
-            gamelib.state = GSTATE_ENDGAME;
-            menu_death_on_enter();
-            gamelib.intermission = true;
-            break;
-        case GSTATE_STOP_LOSE:
-            gamelib.state = GSTATE_ENDGAME;
-            menu_death_on_enter();
-            gamelib.intermission = true;
-            break;
-        case GSTATE_REQUEST_STOP:
-#undef TEXT_ATR
-#define TEXT_ATR (0x0F)
-            gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШЬ[Y/N]?");
-            break;
-        case GSTATE_ENDGAME:
-        {
-            /* show your scores an enter your name */
-            break;
-        }
-        case GSTATE_RUN:
-            if(gamelib.paused)
-            {
-                break;
-            }
-
-            if(gamelib.idle_cycle < gamelib.idle_cycles_num)
-            {
-                gamelib.idle_cycle++;
-            }
-            else
-            {
-                obj_think();
-                snake_think();
-                if(snake_is_dead())
-                {
-                    gamelib.state = GSTATE_STOP_LOSE;
-                }
-
-                gamelib.idle_cycle = 0;
-            }
-
-            break;
-    }
-
     if(gamelib.showmenu)
     {
-        menu_handle();
+        menu_draw();
     }
     else
     {
+        switch(gamelib.state)
+        {
+            case GSTATE_NONE:
+                break;
+            case GSTATE_STOP_WIN:
+            {
+                gamelib.state = GSTATE_ENDGAME;
+                menu_death_on_enter();
+                gamelib.intermission = true;
+                break;
+            }
+            case GSTATE_STOP_LOSE:
+            {
+                gamelib.state = GSTATE_ENDGAME;
+                menu_death_on_enter();
+                gamelib.intermission = true;
+                break;
+            }
+            case GSTATE_REQUEST_STOP:
+            {
+#undef TEXT_ATR
+#define TEXT_ATR (0x0F)
+                gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШЬ[Y/N]?");
+                break;
+            }
+            case GSTATE_ENDGAME:
+            {
+                /* show your scores an enter your name */
+                break;
+            }
+            case GSTATE_RUN:
+            {
+                if(gamelib.paused)
+                {
+                    break;
+                }
+
+                if(gamelib.idle_cycle < gamelib.idle_cycles_num)
+                {
+                    gamelib.idle_cycle++;
+                }
+                else
+                {
+                    obj_think();
+                    snake_think();
+                    if(snake_is_dead())
+                    {
+                        gamelib.state = GSTATE_STOP_LOSE;
+                    }
+
+                    gamelib.idle_cycle = 0;
+                }
+
+                break;
+            }
+        }
 
         gamelib_HUD_draw();
 
@@ -139,112 +142,111 @@ static void gamelib_game_input(int key)
     {
         menu_handle_input(key);
     }
-
-
-    switch(gamelib.state)
+    else
     {
-        case GSTATE_NONE:
-            break;
-        case GSTATE_START:
-            break;
-        case GSTATE_STOP_WIN:
-            break;
-        case GSTATE_STOP_LOSE:
-            break;
-        case GSTATE_REQUEST_STOP:
+        switch(gamelib.state)
         {
-            switch(key)
+            case GSTATE_NONE:
+                break;
+            case GSTATE_STOP_WIN:
+                break;
+            case GSTATE_STOP_LOSE:
+                break;
+            case GSTATE_REQUEST_STOP:
             {
-                case 'Y':
-                case 'y':
+                switch(key)
                 {
-                    gamelib.state = GSTATE_STOP_WIN;
-                    break;
-                }
-                case IO_KB_ESC:
-                case 'N':
-                case 'n':
-                {
-                    gamelib.state = GSTATE_RUN;
-                    break;
-                }
-            }
-            break;
-        }
-        case GSTATE_ENDGAME:
-        {
-            bool exit = menu_death_on_event(key);
-            if(exit)
-            {
-                gamelib_game_destroy();
-                menu_show_menu(IMENU_MAIN); /* TODO: move to stop_ticks? */
-                gamelib.state = GSTATE_NONE;
-            }
-            break;
-        }
-        case GSTATE_RUN:
-        {
-            switch(key)
-            {
-                case 'P':
-                case 'p':
-                {
-                    gamelib.paused = !gamelib.paused;
-                    break;
-                }
-                case '=':
-                case '+':
-                {
-                    if(gamelib.timing < 1000)
+                    case 'Y':
+                    case 'y':
                     {
-                        gamelib.timing +=10;
+                        gamelib.state = GSTATE_STOP_WIN;
+                        break;
                     }
-                    gamelib.showtiming = (1100 - gamelib.timing) / 10;
-                    ents_game_timing_update(player_direction());
-                    break;
-                }
-                case '-':
-                case '_':
-                {
-                    if(gamelib.timing > 10)
+                    case IO_KB_ESC:
+                    case 'N':
+                    case 'n':
                     {
-                        gamelib.timing -= 10;
+                        gamelib.state = GSTATE_RUN;
+                        break;
                     }
-                    gamelib.showtiming = 1100 - gamelib.timing;
-                    ents_game_timing_update(player_direction());
-                    break;
                 }
-                case IO_KB_UP:
-                {
-                    player_setdir(DIRECTION_NORTH);
-                    ents_game_timing_update(DIRECTION_NORTH);
-                    break;
-                }
-                case IO_KB_DN:
-                {
-                    player_setdir(DIRECTION_SOUTH);
-                    ents_game_timing_update(DIRECTION_SOUTH);
-                    break;
-                }
-                case IO_KB_LF:
-                {
-                    player_setdir(DIRECTION_WEST);
-                    ents_game_timing_update(DIRECTION_WEST);
-                    break;
-                }
-                case IO_KB_RT:
-                {
-                    player_setdir(DIRECTION_EAST);
-                    ents_game_timing_update(DIRECTION_EAST);
-                    break;
-                }
-                case IO_KB_ESC:
-                {
-                    gamelib.state = GSTATE_REQUEST_STOP;
-                    break;
-                }
+                break;
             }
-            break;
+            case GSTATE_ENDGAME:
+            {
+                bool exit = menu_death_on_event(key);
+                if(exit)
+                {
+                    gamelib_game_destroy();
+                    menu_show_menu(IMENU_MAIN);
+                    gamelib.state = GSTATE_NONE;
+                }
+                break;
+            }
+            case GSTATE_RUN:
+            {
+                switch(key)
+                {
+                    case 'P':
+                    case 'p':
+                    {
+                        gamelib.paused = !gamelib.paused;
+                        break;
+                    }
+                    case '=':
+                    case '+':
+                    {
+                        if(gamelib.timing < 1000)
+                        {
+                            gamelib.timing +=10;
+                        }
+                        gamelib.showtiming = (1100 - gamelib.timing) / 10;
+                        ents_game_timing_update(player_direction());
+                        break;
+                    }
+                    case '-':
+                    case '_':
+                    {
+                        if(gamelib.timing > 10)
+                        {
+                            gamelib.timing -= 10;
+                        }
+                        gamelib.showtiming = 1100 - gamelib.timing;
+                        ents_game_timing_update(player_direction());
+                        break;
+                    }
+                    case IO_KB_UP:
+                    {
+                        player_setdir(DIRECTION_NORTH);
+                        ents_game_timing_update(DIRECTION_NORTH);
+                        break;
+                    }
+                    case IO_KB_DN:
+                    {
+                        player_setdir(DIRECTION_SOUTH);
+                        ents_game_timing_update(DIRECTION_SOUTH);
+                        break;
+                    }
+                    case IO_KB_LF:
+                    {
+                        player_setdir(DIRECTION_WEST);
+                        ents_game_timing_update(DIRECTION_WEST);
+                        break;
+                    }
+                    case IO_KB_RT:
+                    {
+                        player_setdir(DIRECTION_EAST);
+                        ents_game_timing_update(DIRECTION_EAST);
+                        break;
+                    }
+                    case IO_KB_ESC:
+                    {
+                        gamelib.state = GSTATE_REQUEST_STOP;
+                        break;
+                    }
+                }
+                break;
+            }
         }
     }
 }
@@ -261,7 +263,8 @@ int gamelib_game_create(int stage)
 
     snake_init(&info_snake[stage]);
 
-    gamelib.state = GSTATE_START;
+    obj_put(OBJ_MARIJUANA);
+    gamelib.state = GSTATE_RUN;
 
     gamelib.showmenu = false;
 

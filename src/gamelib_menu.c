@@ -301,7 +301,7 @@ void menu_handle_input(int key)
     P_menu_change(imenu);
 }
 
-void menu_handle(void)
+void menu_draw(void)
 {
 
     gamelib.geng->render_background(0x00, ' ');

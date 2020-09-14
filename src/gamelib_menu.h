@@ -23,7 +23,7 @@ enum imenu
 
 void menu_handle_input(int key);
 
-void menu_handle(void);
+void menu_draw(void);
 
 void menu_show_menu(enum imenu imenu);
 

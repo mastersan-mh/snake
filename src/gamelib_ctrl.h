@@ -32,7 +32,6 @@ enum model_index
 enum gamelib_state
 {
     GSTATE_NONE,
-    GSTATE_START,
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,
     GSTATE_REQUEST_STOP,
