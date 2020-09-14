@@ -1,20 +1,9 @@
-#ifndef UTILS_H_
-#define UTILS_H_
+#ifndef RINGBUF_H_
+#define RINGBUF_H_
 
 #include <stdlib.h>
-#include <stddef.h>
 #include <stdbool.h>
-#include <string.h>
 #include <stdbool.h>
-
-#ifndef ARRAY_SIZE
-#   define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
-#endif
-
-#define PAIR_INT_STRING(value) { value, #value }
-
-#define min(a,b) ((a) < (b) ? (a) : (b))
-#define max(a,b) ((a) > (b) ? (a) : (b))
 
 typedef struct
 {
@@ -86,19 +75,19 @@ static inline size_t ringbuf_tail_get(const ringbuf_t * ringbuf)
 }
 
 /**
- * @return The index, where write the item.
+ * @brief Enqueue element to the tail
  */
-size_t ringbuf_enqueue(ringbuf_t * ringbuf);
+void ringbuf_enqueue_tail(ringbuf_t * ringbuf);
 
 /**
- * @return The index, where read the item.
+ * @brief Enqueue element to the head
  */
-size_t ringbuf_enqueue_head(ringbuf_t * ringbuf);
+void ringbuf_enqueue_head(ringbuf_t * ringbuf);
 
 /**
- * @return The index, where read the item.
+ * @brief Dequeue element from the head
  */
-size_t ringbuf_dequeue(ringbuf_t * ringbuf);
+void ringbuf_dequeue_head(ringbuf_t * ringbuf);
 
-#endif /* UTILS_H_ */
+#endif /* RINGBUF_H_ */
 

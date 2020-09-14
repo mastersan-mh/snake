@@ -73,10 +73,8 @@ int ringbuf_resize(ringbuf_t * ringbuf_new, const ringbuf_t * ringbuf, size_t si
     return res;
 }
 
-size_t ringbuf_enqueue(ringbuf_t * ringbuf)
+void ringbuf_enqueue_tail(ringbuf_t * ringbuf)
 {
-    size_t index = ringbuf->tail;
-
     ++(ringbuf->len);
 
     if(ringbuf->tail == ringbuf->size - 1)
@@ -87,10 +85,9 @@ size_t ringbuf_enqueue(ringbuf_t * ringbuf)
     {
         ++(ringbuf->tail);
     }
-    return index;
 }
 
-size_t ringbuf_enqueue_head(ringbuf_t * ringbuf)
+void ringbuf_enqueue_head(ringbuf_t * ringbuf)
 {
     ++(ringbuf->len);
 
@@ -102,16 +99,10 @@ size_t ringbuf_enqueue_head(ringbuf_t * ringbuf)
     {
         --(ringbuf->head);
     }
-
-    size_t index = ringbuf->head;
-
-    return index;
 }
 
-size_t ringbuf_dequeue(ringbuf_t * ringbuf)
+void ringbuf_dequeue_head(ringbuf_t * ringbuf)
 {
-    size_t index = ringbuf->head;
-
     --(ringbuf->len);
 
     if(ringbuf->head == ringbuf->size - 1)
@@ -122,5 +113,4 @@ size_t ringbuf_dequeue(ringbuf_t * ringbuf)
     {
         ++(ringbuf->head);
     }
-    return index;
 }

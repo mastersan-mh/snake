@@ -18,7 +18,7 @@
 #include "io_keys.h"
 #include "world_gamelib.h"
 #include "sys_utils.h"
-#include "sys_time.h"
+#include "ringbuf.h"
 
 /**
  * @brief Game engine functions

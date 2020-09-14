@@ -70,8 +70,10 @@ void obj_free(struct obj_st **obj);
 
 void obj_put(enum obj_type objtype);
 void obj_think(void);
-void snake_think(void);
 
+void snake_init(const struct snake_pattern * pat);
+void snake_done(void);
+void snake_think(void);
 void snake_die(void);
 bool snake_is_dead(void);
 

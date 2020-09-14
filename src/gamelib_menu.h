@@ -8,8 +8,6 @@
 #ifndef SRC_GAMELIB_MENU_H_
 #define SRC_GAMELIB_MENU_H_
 
-#include "g_eng_exports.h"
-
 enum imenu
 {
     IMENU_MAIN    ,

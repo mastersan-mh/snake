@@ -175,12 +175,12 @@ void g_events_handle(void)
                 struct g_event * event = &g_events.events[tail];
                 event->type = G_EVENT_KEYBOARD;
                 event->data.KEYBOARD.key = sysevent->data.KEYBOARD.key;
-                ringbuf_enqueue(&g_events.events_ring);
+                ringbuf_enqueue_tail(&g_events.events_ring);
                 break;
             }
         }
 
-        ringbuf_dequeue(&g_events.sysevents_ring);
+        ringbuf_dequeue_head(&g_events.sysevents_ring);
     }
 }
 
@@ -205,7 +205,7 @@ void g_event_send(
     event->type = type;
     if(data != NULL)
         event->data = *data;
-    ringbuf_enqueue(&g_events.sysevents_ring);
+    ringbuf_enqueue_tail(&g_events.sysevents_ring);
 }
 
 static game_time_ms_t events_tick_time = 500;
@@ -341,6 +341,6 @@ bool g_events_event_pump(
     struct g_event * event = &g_events.events[head];
     *type = event->type;
     *data = event->data;
-    ringbuf_dequeue(&g_events.events_ring);
+    ringbuf_dequeue_head(&g_events.events_ring);
     return true;
 }

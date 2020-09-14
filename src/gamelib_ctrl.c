@@ -16,9 +16,6 @@
 
 static void gamelib_game_input(int key);
 
-void snake_init(const struct snake_pattern * pat);
-void snake_done(void);
-
 void ents_game_timing_update(enum direction direction)
 {
     switch(direction)
@@ -37,7 +34,6 @@ void ents_game_timing_update(enum direction direction)
             break;
     }
 }
-
 
 void gamelib_handle_event_tick(void)
 {
@@ -198,7 +194,7 @@ static void gamelib_game_input(int key)
                     {
                         if(gamelib.timing < 1000)
                         {
-                            gamelib.timing +=10;
+                            gamelib.timing += 10;
                         }
                         gamelib.showtiming = (1100 - gamelib.timing) / 10;
                         ents_game_timing_update(player_direction());
