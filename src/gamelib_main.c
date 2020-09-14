@@ -17,6 +17,7 @@ struct gamelib gamelib = {};
 static int gamelib_init(const struct game_engine * geng)
 {
     gamelib.geng = geng;
+    gamelib.started = false;
     gamelib.state = GSTATE_NONE;
 
     menu_show_menu(IMENU_MAIN);

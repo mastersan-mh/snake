@@ -87,4 +87,6 @@ bool g_events_event_pump(
         struct g_event_data * data
 );
 
+uint16_t g_events_random(void);
+
 #endif /* SRC_G_EVENTS_H_ */

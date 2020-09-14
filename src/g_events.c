@@ -75,6 +75,8 @@ static void P_sa_sigaction(int signum, siginfo_t * siginfo, void * additional)
 
 int g_events_init(void)
 {
+    srand(time(NULL));
+
     atomic_init(&g_events.sig_raised_winch, false);
 
     ringbuf_init(&g_events.sysevents_ring, SYSEVENTS_MAX);
@@ -343,4 +345,10 @@ bool g_events_event_pump(
     *data = event->data;
     ringbuf_dequeue_head(&g_events.events_ring);
     return true;
+}
+
+uint16_t g_events_random(void)
+{
+    uint16_t r = rand() % UINT16_MAX;
+    return r;
 }

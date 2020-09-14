@@ -22,7 +22,11 @@ static struct game_engine geng = {};
 
 int g_eng_init(void)
 {
+    geng.ticktime_set = game_ticktime_set;
+
     geng.game_quit = game_quit;
+    geng.event_pump = g_events_event_pump;
+    geng.rand = g_events_random;
 
     geng.render_background = render_background;
 
@@ -36,11 +40,9 @@ int g_eng_init(void)
 
     geng.model_precache = model_precache;
 
-    geng.ticktime_set = game_ticktime_set;
     geng.print = hud_print;
     geng.print_centerscreen = hud_print_centerscreen;
     geng.putch = hud_putch;
-    geng.key_pump = g_events_event_pump;
 
     glibctl.max_entities = 0;
     gamelib_entrypoint(&glibctl);

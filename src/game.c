@@ -46,8 +46,6 @@ int game_init(void)
     }
     game_directories_init(home_dir);
 
-    srand(time(NULL));
-
     res = models_init();
     if(res)
     {
