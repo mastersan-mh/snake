@@ -262,23 +262,12 @@ static const struct menu menus[] =
 static enum imenu m_imenu_prev = IMENU_MAIN;
 static enum imenu m_imenu;
 
-
-void menu_handle_input(int key)
+static void P_menu_change(enum imenu imenu)
 {
-    const struct menu * menu = &menus[m_imenu];
-    void * ctx = menu->ctx;
-    if(menu->event_on_event != NULL)
-    {
-        m_imenu = menu->event_on_event(key, ctx);
-    }
-    else
-    {
-        m_imenu = IMENU_MAIN;
-    }
-
-    /* Menu was changed */
+    m_imenu = imenu;
     if(m_imenu_prev != m_imenu)
     {
+        /* Menu was changed */
         const struct menu * menu_old = &menus[m_imenu_prev];
         if(menu_old->event_on_exit != NULL)
         {
@@ -294,6 +283,24 @@ void menu_handle_input(int key)
     }
 }
 
+
+void menu_handle_input(int key)
+{
+    const struct menu * menu = &menus[m_imenu];
+    void * ctx = menu->ctx;
+    enum imenu imenu;
+    if(menu->event_on_event != NULL)
+    {
+        imenu = menu->event_on_event(key, ctx);
+    }
+    else
+    {
+        imenu = IMENU_MAIN;
+    }
+
+    P_menu_change(imenu);
+}
+
 void menu_handle(void)
 {
 
@@ -301,7 +308,7 @@ void menu_handle(void)
 
     const struct menu * menu = &menus[m_imenu];
 
-    if(menu->draw)
+    if(menu->draw != NULL)
     {
         void * ctx = menu->ctx;
         menu->draw(ctx);
@@ -310,6 +317,6 @@ void menu_handle(void)
 
 void menu_show_menu(enum imenu imenu)
 {
-    m_imenu = imenu;
+    P_menu_change(imenu);
     gamelib.showmenu = true;
 }
