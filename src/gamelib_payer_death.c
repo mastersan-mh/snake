@@ -19,7 +19,7 @@
 #define MENU_DEATH_NAME_MAXLEN (ENTS_CHARTREC_NAME_SIZE - 1)
 static struct menu_death_ctx
 {
-    chartrec_t rec;
+    struct chartrec rec;
     bool top10;
     size_t count;
 } menu_death_ctx = {};
@@ -43,7 +43,7 @@ bool menu_death_on_event(int key)
 {
     struct menu_death_ctx * ctx = &menu_death_ctx;
 
-    chartrec_t * rec = &ctx->rec;
+    struct chartrec * rec = &ctx->rec;
 
     switch(key)
     {
@@ -92,7 +92,7 @@ bool menu_death_on_event(int key)
 static void menu_death_print_name(const struct menu_death_ctx * ctx)
 {
     size_t i = 0;
-    const chartrec_t * rec = &ctx->rec;
+    const struct chartrec * rec = &ctx->rec;
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x0f)

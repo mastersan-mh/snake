@@ -8,9 +8,9 @@
 #ifndef SRC_GAMELIB_MENU_H_
 #define SRC_GAMELIB_MENU_H_
 
-#include "g_ctl_lib.h"
+#include "g_eng_exports.h"
 
-typedef enum
+enum imenu
 {
     IMENU_MAIN    ,
     IMENU_NEWGAME0,
@@ -19,13 +19,13 @@ typedef enum
     IMENU_CHART   ,
     IMENU_HELP    ,
     IMENU_QUIT    ,
-} menu_index_t;
+};
 
 void menu_handle_input(int key);
 
 void menu_handle(void);
 
-void menu_show_menu(menu_index_t imenu);
+void menu_show_menu(enum imenu imenu);
 
 
 #endif /* SRC_GAMELIB_MENU_H_ */

@@ -11,13 +11,7 @@
 #include "sys_time.h"
 #include "g_types.h"
 #include "g_events.h"
-#include "g_ctl.h"
-
-typedef struct
-{
-    bool quit;
-
-} game_t;
+#include "g_eng.h"
 
 int game_init(void);
 void game_done(void);

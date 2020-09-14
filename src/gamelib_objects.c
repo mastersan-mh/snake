@@ -18,6 +18,33 @@
 
 #include <stdlib.h>
 
+/**
+ * @brief Segment of the snake
+ */
+struct snake_seg
+{
+    struct snake_seg *prev;
+    struct snake_seg *next;
+
+    world_ientity_t ient;
+    origin_t origin;
+};
+
+/**
+ * @brief snake
+ */
+struct snake
+{
+    struct snake_seg *head;
+
+    /* movement direction */
+    enum direction movedir;
+    int       level;   //уровень развитости
+    bool      dead;     //умерла?
+    long      weight;  //вес змеи
+    long      scores;  //очки
+};
+
 char *level_str[LEVEL_MAX] =
 {
         "Так себе, микробик:)",
@@ -55,25 +82,24 @@ static int pt2[5 * 20] =
         81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
 };
 
-snake_pattern_t info_snake[] =
+struct snake_pattern info_snake[] =
 {
         {DIRECTION_EAST , 3 , 1, pt0},
         {DIRECTION_SOUTH, 23, 7, pt1},
         {DIRECTION_SOUTH, 20, 5, pt2}
 };
 
-
-static obj_t *Hobj = NULL;
-static snake_t snake;
+static struct obj_st *Hobj = NULL;
+static struct snake snake;
 
 /**
  * @brief create object on the map
  */
-void obj_new(int x, int y, obj_type_t objtype)
+void obj_new(int x, int y, enum obj_type objtype)
 {
     int res;
     bool clean = true;
-    obj_t *obj;
+    struct obj_st *obj;
 
     if(x < 0 || MAP_SX <= x || y < 0 || MAP_SY <= y)
         return;
@@ -98,7 +124,7 @@ void obj_new(int x, int y, obj_type_t objtype)
         return;
     }
 
-    obj = Z_malloc(sizeof(obj_t));
+    obj = Z_malloc(sizeof(struct obj_st));
     if(obj == NULL)
     {
         return;
@@ -106,7 +132,7 @@ void obj_new(int x, int y, obj_type_t objtype)
     obj->next = Hobj;
     Hobj = obj;
 
-    model_index_t model_index = -1;
+    enum model_index model_index = -1;
     switch(objtype)
     {
         case OBJ_MARIJUANA : model_index = MDL_MARIJUANA ; break;
@@ -139,7 +165,7 @@ void obj_new(int x, int y, obj_type_t objtype)
  */
 void obj_freeall(void)
 {
-    obj_t *obj;
+    struct obj_st *obj;
     while(Hobj != NULL)
     {
         obj    = Hobj;
@@ -157,9 +183,9 @@ void obj_freeall(void)
  * @brief Erase object
  * param[in/out] obj    object
  */
-void obj_free(obj_t **obj)
+void obj_free(struct obj_st **obj)
 {
-    obj_t *P;
+    struct obj_st *P;
     if(Hobj == NULL || obj == NULL)
     {
         return;
@@ -189,9 +215,9 @@ void obj_free(obj_t **obj)
 /**
  * @brief Enplace object on map in random place
  */
-void obj_put(obj_type_t id)
+void obj_put(enum obj_type objtype)
 {
-    snake_seg_t *snakeseg;
+    struct snake_seg * snakeseg;
     int x;
     int y;
     bool clean; /* the place is clean */
@@ -221,7 +247,7 @@ void obj_put(obj_type_t id)
         trycount++;
 
     }while(clean != true && trycount < 16);//чобы объект все-таки был создан
-    obj_new(x, y, id);
+    obj_new(x, y, objtype);
 }
 
 /**
@@ -229,7 +255,7 @@ void obj_put(obj_type_t id)
  */
 void obj_think(void)
 {
-    obj_t *obj;
+    struct obj_st *obj;
     int x;
     int y;
     int id;
@@ -291,7 +317,7 @@ void gamelib_HUD_draw(void)
  * выход:
  * *obj  -указатель на объект
  */
-int snake_obj_check(obj_t **obj){
+int snake_obj_check(struct obj_st **obj){
     (*obj)=Hobj;
     while((*obj))
     {
@@ -318,7 +344,7 @@ int snake_obj_check(obj_t **obj){
 /**
  * @brief Get the model of the snake segment
  */
-size_t snake_seg_model_get(const snake_seg_t *sseg)
+size_t snake_seg_model_get(const struct snake_seg *sseg)
 {
     /* head */
     if(!sseg->prev) return gamelib.mdlidx[MDL_SNAKE_HEAD];
@@ -355,9 +381,9 @@ size_t snake_seg_model_get(const snake_seg_t *sseg)
     return -1;
 }
 
-void snake_seg_model_update(snake_seg_t *sseg)
+void snake_seg_model_update(struct snake_seg *sseg)
 {
-    snake_seg_t *sseg_iter;
+    struct snake_seg *sseg_iter;
 
     int iskin = (snake.dead ? 1 : 0);
     /* update the model of the new segment and previous segment */
@@ -378,11 +404,11 @@ void snake_seg_model_update(snake_seg_t *sseg)
 static void P_snake_newseg(vec_t x, vec_t y)
 {
     int res;
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     world_ientity_t ient;
     res = gamelib.geng->world_find_first_free(&ient);
     if(res) return;
-    sseg = Z_malloc(sizeof(snake_seg_t));
+    sseg = Z_malloc(sizeof(struct snake_seg));
 
     sseg->prev = NULL;
     sseg->next = snake.head;
@@ -406,7 +432,7 @@ static void P_snake_newseg(vec_t x, vec_t y)
  * вход:
  * pat  -шаблон
  */
-void snake_init(const snake_pattern_t * pat)
+void snake_init(const struct snake_pattern * pat)
 {
     int x,y;
     size_t count;
@@ -475,7 +501,7 @@ void snake_init(const snake_pattern_t * pat)
  */
 void snake_done(void)
 {
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     while(snake.head)
     {
         sseg       = snake.head;
@@ -491,7 +517,7 @@ void snake_done(void)
 void snake_get_purgen(void)
 {
     int num = 2;
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     sseg=snake.head;
     while(sseg->next) sseg = sseg->next;
     while(num > 0 && sseg->prev)
@@ -522,9 +548,9 @@ void snake_get_shit()
  */
 void snake_think(void)
 {
-    snake_seg_t *sseg;
-    snake_seg_t *pt;
-    obj_t *obj;
+    struct snake_seg *sseg;
+    struct snake_seg *pt;
+    struct obj_st *obj;
 
     snake.level = snake.scores / SCORES_PER_LEVEL;
 
@@ -570,7 +596,7 @@ void snake_think(void)
         /* moving */
         if(snake.head->next == NULL)
         {
-            snake_seg_t * sseg = snake.head;
+            struct snake_seg * sseg = snake.head;
 
             switch(snake.movedir)
             {
@@ -584,8 +610,8 @@ void snake_think(void)
         else
         {
             /* more than one segment */
-            snake_seg_t * head;
-            snake_seg_t * tail;
+            struct snake_seg * head;
+            struct snake_seg * tail;
             tail = snake.head;
             while(tail->next != NULL)
             {
@@ -641,13 +667,11 @@ void snake_die(void)
 {
     snake.dead = true;
 
-    snake_seg_t * sseg;
+    struct snake_seg * sseg;
     for(sseg = snake.head; sseg; sseg = sseg->next)
     {
         snake_seg_model_update(sseg);
     }
-
-
 }
 
 bool snake_is_dead(void)
@@ -660,9 +684,9 @@ bool snake_is_dead(void)
  * @param[in] player    змея
  * @param[in] movedir   направление
  */
-void player_setdir(ent_direction_t movedir)
+void player_setdir(enum direction movedir)
 {
-    snake_seg_t *neck;//шея змеи :)
+    struct snake_seg *neck; /* шея */
     if(snake.head == NULL)
     {
         return;
@@ -683,7 +707,7 @@ void player_setdir(ent_direction_t movedir)
     }
 }
 
-ent_direction_t player_direction(void)
+enum direction player_direction(void)
 {
     return snake.movedir;
 }

@@ -10,7 +10,7 @@
 #include "g_types.h"
 #include "g_utils.h"
 #include "g_events.h"
-#include "g_ctl.h"
+#include "g_eng.h"
 #include "world_main.h"
 #include "models.h"
 #include "render.h"
@@ -25,10 +25,14 @@
 #include <time.h>
 
 #include <stdlib.h>
-
 #include <string.h>
 
-static game_t game = {};
+struct game
+{
+    bool quit;
+};
+
+static struct game game = {};
 
 int game_init(void)
 {
@@ -51,14 +55,14 @@ int game_init(void)
     }
 
     g_events_init();
-    res = g_ctl_init();
+    res = g_eng_init();
     if(res) return res;
 
-    size_t max_entities = g_ctl_max_entities_get();
+    size_t max_entities = g_eng_entities_max_get();
     res = world_init(max_entities);
     if(res)
     {
-        g_ctl_done();
+        g_eng_done();
         models_done();
         return res;
     }
@@ -68,7 +72,7 @@ int game_init(void)
     if(res)
     {
         io_done();
-        g_ctl_done();
+        g_eng_done();
         models_done();
         return -1;
     }
@@ -81,7 +85,7 @@ void game_done(void)
     render_done();
     io_done();
     world_done();
-    g_ctl_done();
+    g_eng_done();
     g_events_done();
     models_done();
     game_directories_done();

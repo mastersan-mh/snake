@@ -8,8 +8,7 @@
 #ifndef SRC_GAMELIB_COMMON_H_
 #define SRC_GAMELIB_COMMON_H_
 
-
-int gamelib_game_create(void);
-void gamelib_game_destroy(void);
+#define ENTS_GAME_DEFAULT_TIMING  40
+#define ILDE_CYCLES               (8 - 1)
 
 #endif /* SRC_GAMELIB_COMMON_H_ */

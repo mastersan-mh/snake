@@ -16,13 +16,13 @@
 /**
  * @brief таблица победителей
  */
-typedef struct __attribute__((packed))
+struct __attribute__((packed)) chart
 {
-    chartrec_t r[CHART_RMAX];
+    struct chartrec r[CHART_RMAX];
     int num;//количество записей
-} chart_t;
+};
 
-static chart_t chart;
+static struct chart chart;
 
 /*
  * прочитать файл с таблицей
@@ -39,7 +39,7 @@ void chart_load(void)
     }
 
     do{
-        if(fread(&chart.r[chart.num], sizeof(chartrec_t), 1, F) == 1)
+        if(fread(&chart.r[chart.num], sizeof(struct chartrec), 1, F) == 1)
         {
             ++chart.num;
         }
@@ -66,14 +66,14 @@ void chart_save(void)
     {
         return;
     }
-    fwrite(chart.r, sizeof(chartrec_t), chart.num, F);
+    fwrite(chart.r, sizeof(struct chartrec), chart.num, F);
     fclose(F);
 }
 
 /**
  * @brief insert player's scores into chart
  */
-void chart_insert(const chartrec_t *rec)
+void chart_insert(const struct chartrec *rec)
 {
     size_t iplace;
     size_t i;
@@ -105,7 +105,7 @@ size_t chart_len(void)
 /**
  * @param row = [0; n)
  */
-const chartrec_t * chart_row_get(size_t row)
+const struct chartrec * chart_row_get(size_t row)
 {
     if(row >= chart.num)
     {
@@ -119,7 +119,7 @@ const chartrec_t * chart_row_get(size_t row)
  * @param rec       record
  * @return true | false
  */
-bool chart_record_in_chart(const chartrec_t *rec)
+bool chart_record_in_chart(const struct chartrec *rec)
 {
     size_t i = 0;
     while(i < chart.num && rec->scores < chart.r[i].scores)

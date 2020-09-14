@@ -8,8 +8,8 @@
  *      Author: mastersan
  */
 
-#ifndef SRC_G_CTL_LIB_H_
-#define SRC_G_CTL_LIB_H_
+#ifndef SRC_G_ENG_EXPORTS_H_
+#define SRC_G_ENG_EXPORTS_H_
 
 #include "Z_mem.h"
 
@@ -20,7 +20,9 @@
 #include "sys_utils.h"
 #include "sys_time.h"
 
-/* game engine */
+/**
+ * @brief Game engine functions
+ */
 struct game_engine
 {
     /* game */
@@ -55,16 +57,23 @@ struct game_engine
 };
 
 /**
- * @brief game control
+ * @brief Game library entry point
  */
-struct gamelib_ctl
+struct gamelib_entrypoint
 {
     /* requested maximum entities */
     size_t max_entities;
     int (*init)(const struct game_engine * geng);
     void (*done)(void);
-    void (*game_tick)(void);
+    void (*tick)(void);
 
 };
 
-#endif /* SRC_G_CTL_LIB_H_ */
+/**
+ * @brief The first function called in game library to setup.
+ * @note Should be defined in game library.
+ * @note Fields of the `gamelib_entrypoint` should be set.
+ */
+void gamelib_entrypoint(struct gamelib_entrypoint * gamelib_entrypoint);
+
+#endif /* SRC_G_ENG_EXPORTS_H_ */

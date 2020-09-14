@@ -36,23 +36,23 @@
         mvwprintw(ren.mainwindow, y, x, format, ##__VA_ARGS__)
 
 
-typedef struct
+struct render_model
 {
     int x;
     int y;
     int bg_atr;
-    const model_t * model;
-} render_model_t;
+    const struct model * model;
+};
 
-typedef struct
+struct render_text
 {
     int x;
     int y;
     int bg_atr;
     char * text;
-} render_text_t;
+};
 
-typedef struct
+struct render
 {
     WINDOW * mainwindow;
 
@@ -61,14 +61,14 @@ typedef struct
     uint64_t bg_ch;
 
     size_t model_list_num;
-    render_model_t model_list[RENDER_MODEL_LIST_SIZE];
+    struct render_model model_list[RENDER_MODEL_LIST_SIZE];
 
     size_t text_list_num;
-    render_text_t text_list[RENDER_TEXT_LIST_SIZE];
+    struct render_text text_list[RENDER_TEXT_LIST_SIZE];
 
-} render_t;
+};
 
-static render_t ren = {};
+static struct render ren = {};
 
 int render_init(void)
 {
@@ -266,7 +266,7 @@ void render_clearbuf(void)
     /* clear text */
     for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &ren.text_list[i];
+        struct render_text * rt = &ren.text_list[i];
         Z_free(rt->text);
     }
 
@@ -290,7 +290,7 @@ void render(void)
     /* render models */
     for(i = 0; i < ren.model_list_num; ++i)
     {
-        render_model_t * rm = &ren.model_list[i];
+        struct render_model * rm = &ren.model_list[i];
         /* simple, print the string :) */
         P_atr_set(rm->bg_atr);
         R_PRINT(rm->x, rm->y + 1, "%s", rm->model->s);
@@ -299,7 +299,7 @@ void render(void)
     /* render text */
     for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &ren.text_list[i];
+        struct render_text * rt = &ren.text_list[i];
         P_atr_set(rt->bg_atr);
         R_PRINT(rt->x, rt->y, "%s", rt->text);
     }
@@ -314,7 +314,7 @@ void render_background(int atr, uint64_t ch)
 
 void render_add_model(
         const origin_t * origin,
-        const model_t * model,
+        const struct model * model,
         size_t iskin
 )
 {
@@ -329,7 +329,7 @@ void render_add_model(
         return;
     }
 
-    render_model_t * rm = &ren.model_list[ren.model_list_num];
+    struct render_model * rm = &ren.model_list[ren.model_list_num];
 
     int atr = (iskin == 0 ? 0x1F : 0x44);
 
@@ -352,7 +352,7 @@ void render_add_text(int x, int y, int atr, const char * text)
         return;
     }
 
-    render_text_t * rt = &ren.text_list[ren.text_list_num];
+    struct render_text * rt = &ren.text_list[ren.text_list_num];
 
     rt->x = x;
     rt->y = y;

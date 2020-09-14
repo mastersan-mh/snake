@@ -155,7 +155,7 @@ void g_events_handle(void)
             case G_SYSEVENT_TICK:
             {
                 render_clearbuf();
-                g_ctl_game_tick();
+                g_eng_tick();
                 world_add_to_render();
                 ringbuf_flush(&g_events.events_ring);
                 break;

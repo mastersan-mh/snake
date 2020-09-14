@@ -5,11 +5,11 @@
  *      Author: mastersan
  */
 
-#include "gamelib_ctrl.h"
-
 #include "gamelib_menu.h"
 
 #include "gamelib_common.h"
+#include "gamelib_ctrl.h"
+#include "gamelib_chart.h"
 
 #include <string.h>
 
@@ -25,14 +25,14 @@
 
 #define SYS_SPECIAL_LEN (sizeof(sys_special) - 1)
 
-typedef struct
+struct menu
 {
     void (*event_on_enter)(void * ctx);
     void (*event_on_exit)(void * ctx);
-    menu_index_t (*event_on_event)(int key, void * ctx);
+    enum imenu (*event_on_event)(int key, void * ctx);
     void (*draw)(void * ctx);
     void * ctx;
-} menu_t;
+};
 
 static const char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
 static const char sys_special    [] = "Здесь никогда не будет вашей рекламы";
@@ -67,7 +67,7 @@ static struct menu_main_ctx
     int sub;
 } menu_main_ctx = {};
 
-static menu_index_t menu_main_on_event(int key, void * ctx_)
+static enum imenu menu_main_on_event(int key, void * ctx_)
 {
     struct menu_main_ctx * ctx = ctx_;
 
@@ -145,8 +145,7 @@ static void menu_main_draw(void * ctx_)
  */
 static void menu_newgame0_on_enter(void * ctx_)
 {
-    gamelib.stage = 0;
-    gamelib_game_create();
+    gamelib_game_create(0);
 }
 
 /**
@@ -154,8 +153,7 @@ static void menu_newgame0_on_enter(void * ctx_)
  */
 static void menu_newgame1_on_enter(void * ctx_)
 {
-    gamelib.stage = 1;
-    gamelib_game_create();
+    gamelib_game_create(1);
 }
 
 /**
@@ -163,21 +161,50 @@ static void menu_newgame1_on_enter(void * ctx_)
  */
 static void menu_newgame2_on_enter(void * ctx_)
 {
-    gamelib.stage = 2;
-    gamelib_game_create();
+    gamelib_game_create(2);
 }
 
 /**
  * @brief Chart table
  */
-static menu_index_t menu_chart_event_on_event(int key, void * ctx_)
+static enum imenu menu_chart_event_on_event(int key, void * ctx_)
 {
     return IMENU_MAIN;
 }
 
 static void menu_chart_draw(void * ctx_)
 {
-    gamelib_show_records();
+    static const char anti_war[] = "Нет войне! Даешь Rock-N-Roll!";
+
+    size_t row;
+    int lev;
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x09)
+    menu_print(20, 7, TEXT_ATR, "МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
+
+    size_t len = chart_len();
+
+    for(row = 1; row <= len; ++row)
+    {
+        const struct chartrec *rec = chart_row_get(row - 1);
+        lev = rec->scores/SCORES_PER_LEVEL;
+        if(lev > LEVEL_MAX - 1)
+        {
+            lev = LEVEL_MAX - 1;
+        }
+        menu_print(20, 7 + row, TEXT_ATR, "%-5d %-15s %-6d %-6d %-20s"
+                , (int)row
+                , rec->name
+                , (int)rec->scores
+                , (int)rec->weight
+                , (level_str[lev])
+        );
+    }
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x5f)
+    menu_print((80 - 29) / 2, 22, TEXT_ATR, anti_war);
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
@@ -187,7 +214,7 @@ static void menu_chart_draw(void * ctx_)
 /**
  * @brief Help
  */
-static menu_index_t menu_help_event_on_event(int key, void * ctx_)
+static enum imenu menu_help_event_on_event(int key, void * ctx_)
 {
     return IMENU_MAIN;
 }
@@ -221,7 +248,7 @@ static void menu_quit_on_enter(void * ctx_)
 }
 
 
-static const menu_t menus[] =
+static const struct menu menus[] =
 {
         { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx },/* IMENU_MAIN     */
         { menu_newgame0_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
@@ -232,13 +259,13 @@ static const menu_t menus[] =
         { menu_quit_on_enter    , NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
 };
 
-static menu_index_t m_imenu_prev = IMENU_MAIN;
-static menu_index_t m_imenu;
+static enum imenu m_imenu_prev = IMENU_MAIN;
+static enum imenu m_imenu;
 
 
 void menu_handle_input(int key)
 {
-    const menu_t * menu = &menus[m_imenu];
+    const struct menu * menu = &menus[m_imenu];
     void * ctx = menu->ctx;
     if(menu->event_on_event != NULL)
     {
@@ -252,13 +279,13 @@ void menu_handle_input(int key)
     /* Menu was changed */
     if(m_imenu_prev != m_imenu)
     {
-        const menu_t * menu_old = &menus[m_imenu_prev];
+        const struct menu * menu_old = &menus[m_imenu_prev];
         if(menu_old->event_on_exit != NULL)
         {
             menu_old->event_on_exit(menu_old->ctx);
         }
 
-        const menu_t * menu_new = &menus[m_imenu];
+        const struct menu * menu_new = &menus[m_imenu];
         if(menu_new->event_on_enter != NULL)
         {
             menu_new->event_on_enter(menu_new->ctx);
@@ -272,7 +299,7 @@ void menu_handle(void)
 
     gamelib.geng->render_background(0x00, ' ');
 
-    const menu_t * menu = &menus[m_imenu];
+    const struct menu * menu = &menus[m_imenu];
 
     if(menu->draw)
     {
@@ -281,7 +308,7 @@ void menu_handle(void)
     }
 }
 
-void menu_show_menu(menu_index_t imenu)
+void menu_show_menu(enum imenu imenu)
 {
     m_imenu = imenu;
     gamelib.showmenu = true;

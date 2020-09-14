@@ -1,11 +1,12 @@
-/*
- * g_ctl.c
+/**
+ * @file g_eng.c
  *
  *  Created on: 7 авг. 2018 г.
  *      Author: mastersan
  */
 
-#include "g_ctl.h"
+#include "g_eng.h"
+
 #include "game.h"
 #include "world_main.h"
 #include "models.h"
@@ -16,12 +17,10 @@
 
 #define FCHECK(xfunc, xres) if((xfunc) == NULL) { return xres; }
 
-static struct gamelib_ctl glibctl = {};
+static struct gamelib_entrypoint glibctl = {};
 static struct game_engine geng = {};
 
-void game_ent_ctl_init(struct gamelib_ctl *glibctl);
-
-int g_ctl_init(void)
+int g_eng_init(void)
 {
     geng.game_quit = game_quit;
 
@@ -44,27 +43,27 @@ int g_ctl_init(void)
     geng.key_pump = g_events_event_pump;
 
     glibctl.max_entities = 0;
-    game_ent_ctl_init(&glibctl);
+    gamelib_entrypoint(&glibctl);
     geng.max_entities = glibctl.max_entities;
 
     FCHECK(glibctl.init, 0);
     return glibctl.init(&geng);
 }
 
-void g_ctl_done(void)
+void g_eng_done(void)
 {
     FCHECK(glibctl.done, );
     glibctl.done();
 }
 
-size_t g_ctl_max_entities_get(void)
+size_t g_eng_entities_max_get(void)
 {
     return glibctl.max_entities;
 }
 
-void g_ctl_game_tick(void)
+void g_eng_tick(void)
 {
-    FCHECK(glibctl.game_tick, );
-    glibctl.game_tick();
+    FCHECK(glibctl.tick, );
+    glibctl.tick();
 }
 

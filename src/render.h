@@ -52,7 +52,7 @@ void render_background(int atr, uint64_t ch);
  */
 void render_add_model(
         const origin_t * origin,
-        const model_t * model,
+        const struct model * model,
         size_t iskin
 );
 
