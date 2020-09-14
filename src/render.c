@@ -36,23 +36,23 @@
         mvwprintw(ren.mainwindow, y, x, format, ##__VA_ARGS__)
 
 
-typedef struct
+struct render_model
 {
     int x;
     int y;
     int bg_atr;
-    const model_t * model;
-} render_model_t;
+    const struct model * model;
+};
 
-typedef struct
+struct render_text
 {
     int x;
     int y;
     int bg_atr;
     char * text;
-} render_text_t;
+};
 
-typedef struct
+struct render
 {
     WINDOW * mainwindow;
 
@@ -61,19 +61,15 @@ typedef struct
     uint64_t bg_ch;
 
     size_t model_list_num;
-    render_model_t model_list[RENDER_MODEL_LIST_SIZE];
+    struct render_model model_list[RENDER_MODEL_LIST_SIZE];
 
     size_t text_list_num;
-    render_text_t text_list[RENDER_TEXT_LIST_SIZE];
+    struct render_text text_list[RENDER_TEXT_LIST_SIZE];
 
-} render_t;
+};
 
-static render_t ren = {};
+static struct render ren = {};
 
-
-/**
- * @brief Init the render
- */
 int render_init(void)
 {
     /* TODO: ifdef color */
@@ -142,9 +138,6 @@ int render_init(void)
     return 0;
 }
 
-/**
- * @brief Done the render
- */
 void render_done(void)
 {
 #ifdef RENDER_USE_STDSCR
@@ -167,9 +160,6 @@ void render_end(void)
     wrefresh(ren.mainwindow);
 }
 
-/**
- * @brief Action on window [size] changing
- */
 void render_winch(void)
 {
     struct winsize w;
@@ -239,6 +229,10 @@ int P_calculate_atr(uint8_t atr)
     {
         additional_atr = additional_atr | A_BLINK;
     }
+    else
+    {
+        additional_atr = additional_atr | A_NORMAL;
+    }
     uint8_t bg = ((atr & 0x70) >> 4);
     uint8_t fg = (atr & 0x0F);
 
@@ -256,12 +250,10 @@ int P_calculate_atr(uint8_t atr)
 
 static void P_atr_set(uint8_t atr)
 {
+    wattroff(ren.mainwindow, ~(attr_t)0);
     wattron(ren.mainwindow, P_calculate_atr(atr));
 };
 
-/**
- * @brief Clear a render buffers
- */
 void render_clearbuf(void)
 {
     size_t i;
@@ -274,16 +266,13 @@ void render_clearbuf(void)
     /* clear text */
     for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &ren.text_list[i];
+        struct render_text * rt = &ren.text_list[i];
         Z_free(rt->text);
     }
 
     ren.text_list_num = 0;
 }
 
-/**
- * @brief Render
- */
 void render(void)
 {
     size_t i;
@@ -301,7 +290,7 @@ void render(void)
     /* render models */
     for(i = 0; i < ren.model_list_num; ++i)
     {
-        render_model_t * rm = &ren.model_list[i];
+        struct render_model * rm = &ren.model_list[i];
         /* simple, print the string :) */
         P_atr_set(rm->bg_atr);
         R_PRINT(rm->x, rm->y + 1, "%s", rm->model->s);
@@ -310,24 +299,11 @@ void render(void)
     /* render text */
     for(i = 0; i < ren.text_list_num; ++i)
     {
-        render_text_t * rt = &ren.text_list[i];
+        struct render_text * rt = &ren.text_list[i];
         P_atr_set(rt->bg_atr);
         R_PRINT(rt->x, rt->y, "%s", rt->text);
     }
-
-    /*
-    {
-        int i;
-        for(i = 0; i <= 8*8; ++i)
-        {
-            attron(COLOR_PAIR(i));
-//            attron(A_NORMAL);
-            r_print((i / 8) * 4, i % 8, "%2dt", i);
-        }
-    }
-     */
 }
-
 
 void render_background(int atr, uint64_t ch)
 {
@@ -336,13 +312,9 @@ void render_background(int atr, uint64_t ch)
     ren.bg_ch = ch;
 }
 
-
-/**
- * @brief Add a model to a render list
- */
 void render_add_model(
         const origin_t * origin,
-        const model_t * model,
+        const struct model * model,
         size_t iskin
 )
 {
@@ -357,7 +329,7 @@ void render_add_model(
         return;
     }
 
-    render_model_t * rm = &ren.model_list[ren.model_list_num];
+    struct render_model * rm = &ren.model_list[ren.model_list_num];
 
     int atr = (iskin == 0 ? 0x1F : 0x44);
 
@@ -371,9 +343,6 @@ void render_add_model(
 
 }
 
-/**
- * @brief Add a text to a text render list
- */
 void render_add_text(int x, int y, int atr, const char * text)
 {
     if(ren.text_list_num >= RENDER_TEXT_LIST_SIZE)
@@ -383,7 +352,7 @@ void render_add_text(int x, int y, int atr, const char * text)
         return;
     }
 
-    render_text_t * rt = &ren.text_list[ren.text_list_num];
+    struct render_text * rt = &ren.text_list[ren.text_list_num];
 
     rt->x = x;
     rt->y = y;
@@ -393,9 +362,6 @@ void render_add_text(int x, int y, int atr, const char * text)
     ++ren.text_list_num;
 }
 
-/**
- * @brief Add a formatted text to a render
- */
 void render_add_textf(int x, int y, int atr, const char * format, ...)
 {
 #undef BUFSIZE

@@ -10,14 +10,14 @@
 
 #include <stddef.h>
 
-typedef struct
+struct model
 {
     char * s;
-} model_t;
+};
 
 int models_init(void);
 void models_done(void);
 int model_precache(const char * s, size_t * imodel);
-const model_t * models_model_get(size_t imodel);
+const struct model * models_model_get(size_t imodel);
 
 #endif /* SRC_MODELS_H_ */

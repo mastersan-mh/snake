@@ -8,11 +8,10 @@
 #ifndef SRC_GAMELIB_CTRL_H_
 #define SRC_GAMELIB_CTRL_H_
 
-#include "g_ctl_lib.h"
-
+#include "g_eng_exports.h"
 #include "gamelib_objects.h"
 
-typedef enum
+enum model_index
 {
     MDL_DEFAULT,
     MDL_MARIJUANA ,
@@ -28,34 +27,40 @@ typedef enum
     MDL_SNAKE_BODY_CORNER_LEFT_DOWN,
     MDL_SNAKE_BODY_CORNER_RIGHT_DOWN,
     MDL__NUM
-} model_index_t;
+};
 
-typedef enum
+enum gamelib_state
 {
-    GSTATE_START,
+    GSTATE_NONE,
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,
     GSTATE_REQUEST_STOP,
     GSTATE_ENDGAME,
     GSTATE_RUN,
-} game_state_t;
+};
 
-typedef struct
+struct gamelib
 {
-    const game_ctx_t * ctx;
+    const struct game_engine * geng;
     size_t mdlidx[MDL__NUM];
-    game_state_t state;
+    bool started;
+    enum gamelib_state state;
+    bool showmenu;
     bool paused;
     bool intermission;
     long showtiming;
     /* ms */
     game_time_ms_t timing;
-} gamelib_t;
+    unsigned idle_cycles_num;
+    unsigned idle_cycle;
+};
 
-extern gamelib_t gamelib;
+extern struct gamelib gamelib;
 
-
-void ents_game_timing_update(ent_direction_t direction);
+void ents_game_timing_update(enum direction direction);
+void gamelib_handle_event_tick(void);
+int gamelib_game_create(int stage);
+void gamelib_game_destroy(void);
 
 
 #endif /* SRC_GAMELIB_CTRL_H_ */

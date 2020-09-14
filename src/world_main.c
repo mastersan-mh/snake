@@ -15,21 +15,21 @@
 
 #define PROTECT_IENT(xient, xres) if((xient) > entities_num) return xres;
 
-typedef struct
+struct entity
 {
-    bool bisy;
+    bool used;
     origin_t orig;
     origin_t orig_prev;
     size_t imodel;
     size_t iskin;
-} entity_t;
+};
 
 /* Maximum number of used entity */
 static world_ientity_t entities_max = 0;
 /* Amount of reserved entities */
 static world_ientity_t entities_num = 0;
 /* Array of entities */
-static entity_t * entities = NULL;
+static struct entity * entities = NULL;
 
 static void P_entities_map_update(world_ientity_t ient)
 {
@@ -42,7 +42,7 @@ static void P_entities_map_update(world_ientity_t ient)
 
 int world_init(size_t max_entities)
 {
-    entities = Z_calloc(max_entities, sizeof(entity_t));
+    entities = Z_calloc(max_entities, sizeof(struct entity));
     if(entities == NULL)
     {
         return -1;
@@ -60,32 +60,23 @@ void world_done(void)
     Z_free(entities);
 }
 
-/**
- * @brief Destroy the entities of the world
- */
 void world_destroy(void)
 {
     size_t i;
     for(i = 0; i < entities_max; ++i)
     {
-        entity_t * ent = &entities[i];
-        ent->bisy = false;
+        struct entity * ent = &entities[i];
+        ent->used = false;
     }
 }
 
-/**
- * @brief Get index of the first free entity
- * @param[out] ient     Index of free entity
- * @return 0            OK
- * @return < 0          No free entities
- */
 int world_find_first_free(world_ientity_t * ient)
 {
     size_t i;
     for(i = 0; i < entities_num; ++i)
     {
-        entity_t * ent = &entities[i];
-        if(!ent->bisy)
+        struct entity * ent = &entities[i];
+        if(!ent->used)
         {
             *ient = i;
             return 0;
@@ -94,40 +85,31 @@ int world_find_first_free(world_ientity_t * ient)
     return -1;
 }
 
-/**
- * @brief unlink the entity from world
- */
 int world_ent_unlink(world_ientity_t ient)
 {
     PROTECT_IENT(ient, -1);
-    entity_t * ent = &entities[ient];
-    ent->bisy = false;
+    struct entity * ent = &entities[ient];
+    ent->used = false;
     return 0;
 }
 
-/**
- * @brief link or relink entity to world
- */
 int world_ent_link(world_ientity_t ient)
 {
     PROTECT_IENT(ient, -1);
 
     P_entities_map_update(ient);
 
-    entity_t * ent = &entities[ient];
-    ent->bisy = true;
+    struct entity * ent = &entities[ient];
+    ent->used = true;
     return 0;
 }
 
-/**
- * @brief Update the entity (linked or unlinked) origin
- */
 int world_ent_update_orig(world_ientity_t ient, const origin_t * origin)
 {
     PROTECT_IENT(ient, -1);
 
-    entity_t * ent = &entities[ient];
-    if(!ent->bisy)
+    struct entity * ent = &entities[ient];
+    if(!ent->used)
     {
         ent->orig_prev = *origin;
     }
@@ -139,14 +121,11 @@ int world_ent_update_orig(world_ientity_t ient, const origin_t * origin)
     return 0;
 }
 
-/**
- * @brief Update the entity (linked or unlinked) model
- */
 int world_ent_update_model(world_ientity_t ient, size_t imodel)
 {
     PROTECT_IENT(ient, -1);
 
-    entity_t * ent = &entities[ient];
+    struct entity * ent = &entities[ient];
     ent->imodel = imodel;
     return 0;
 }
@@ -155,7 +134,7 @@ int world_ent_update_skin(world_ientity_t ient, size_t iskin)
 {
     PROTECT_IENT(ient, -1);
 
-    entity_t * ent = &entities[ient];
+    struct entity * ent = &entities[ient];
     ent->iskin = iskin;
     return 0;
 }
@@ -165,8 +144,8 @@ void world_add_to_render(void)
     size_t i;
     for(i = 0; i < entities_max; ++i)
     {
-        entity_t * ent = &entities[i];
-        if(!ent->bisy)
+        struct entity * ent = &entities[i];
+        if(!ent->used)
         {
             continue;
         }

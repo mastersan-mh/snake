@@ -12,7 +12,7 @@
 #define MODELS_MAX (16)
 static size_t models_num = 0;
 
-static model_t models[MODELS_MAX];
+static struct model models[MODELS_MAX];
 
 int models_init(void)
 {
@@ -40,7 +40,7 @@ int model_precache(const char * s, size_t * imodel)
     return 0;
 }
 
-const model_t * models_model_get(size_t imodel)
+const struct model * models_model_get(size_t imodel)
 {
     if(models_num >= MODELS_MAX)
     {

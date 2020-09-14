@@ -8,15 +8,41 @@
 #include "gamelib_objects.h"
 #include "gamelib_ctrl.h"
 
-#include "io.h"
-
 #include "Z_mem.h"
-#include "g_types.h"
-#include "game.h"
-
-#include "sys_time.h"
 
 #include <stdlib.h>
+
+/**
+ * @brief Segment of the snake
+ */
+struct snake_seg
+{
+    struct snake_seg *prev;
+    struct snake_seg *next;
+
+    world_ientity_t ient;
+    origin_t origin;
+};
+
+/**
+ * @brief snake
+ */
+#define SNAKE_COMMAND_QUEUE_MAX  8
+
+struct snake
+{
+    struct snake_seg *head;
+
+    ringbuf_t commands_queue;
+    enum direction commands[SNAKE_COMMAND_QUEUE_MAX];
+
+    /* movement direction */
+    enum direction movedir;
+    int       level;   //уровень развитости
+    bool      dead;     //умерла?
+    long      weight;  //вес змеи
+    long      scores;  //очки
+};
 
 char *level_str[LEVEL_MAX] =
 {
@@ -37,13 +63,13 @@ char *level_str[LEVEL_MAX] =
 static int pt0[1 * 3] = { 1, 2, 3 };
 static int pt1[7 * 23] =
 {
-         1, 2, 3, 4, 0,30,31, 0, 0,40,41, 0,71,72,73,74,75,76, 77, 78,79,80,81, //**** **  ** ***********
-         0, 0, 0, 5, 0,29,32, 0,38,39,42, 0,70, 0, 0, 0, 0, 0, 96, 95, 0, 0,82, //   * ** *** *     **  *
-         9, 8, 7, 6, 0,28,33,34,37, 0,43, 0,69,68,67,66,65, 0, 97, 94,93,92,83, //**** **** * ***** *****
-        10,11,12, 0, 0,27, 0,35,36, 0,44, 0,60,61,62,63,64, 0, 98, 99, 0,91,84, //***  * ** * ***** ** **
-         0, 0,13,14, 0,26, 0, 0, 0, 0,45, 0,59, 0, 0, 0, 0, 0,  0,100, 0,90,85, //  ** *    * *      * **
-        18,17,16,15, 0,25, 0, 0, 0, 0,46, 0,58,57,56,55,54, 0,102,101, 0,89,86, //**** *    * ***** ** **
-        19,20,21,22,23,24, 0, 0, 0, 0,47,48,49,50,51,52,53, 0,103,  0, 0,88,87  //******    ******* *  **
+         1, 2, 3, 4, 0,30,31, 0, 0,40,41, 0,71,72,73,74,75,76, 77, 78,79,80,81, /*  **** **  ** ***********  */
+         0, 0, 0, 5, 0,29,32, 0,38,39,42, 0,70, 0, 0, 0, 0, 0, 96, 95, 0, 0,82, /*     * ** *** *     **  *  */
+         9, 8, 7, 6, 0,28,33,34,37, 0,43, 0,69,68,67,66,65, 0, 97, 94,93,92,83, /*  **** **** * ***** *****  */
+        10,11,12, 0, 0,27, 0,35,36, 0,44, 0,60,61,62,63,64, 0, 98, 99, 0,91,84, /*  ***  * ** * ***** ** **  */
+         0, 0,13,14, 0,26, 0, 0, 0, 0,45, 0,59, 0, 0, 0, 0, 0,  0,100, 0,90,85, /*    ** *    * *      * **  */
+        18,17,16,15, 0,25, 0, 0, 0, 0,46, 0,58,57,56,55,54, 0,102,101, 0,89,86, /*  **** *    * ***** ** **  */
+        19,20,21,22,23,24, 0, 0, 0, 0,47,48,49,50,51,52,53, 0,103,  0, 0,88,87  /*  ******    ******* *  **  */
 };
 
 static int pt2[5 * 20] =
@@ -55,25 +81,24 @@ static int pt2[5 * 20] =
         81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
 };
 
-snake_pattern_t info_snake[] =
+struct snake_pattern info_snake[] =
 {
         {DIRECTION_EAST , 3 , 1, pt0},
         {DIRECTION_SOUTH, 23, 7, pt1},
         {DIRECTION_SOUTH, 20, 5, pt2}
 };
 
-
-static obj_t *Hobj = NULL;
-static snake_t snake;
+static struct obj_st *Hobj = NULL;
+static struct snake snake;
 
 /**
  * @brief create object on the map
  */
-void obj_new(int x, int y, obj_type_t objtype)
+void obj_new(int x, int y, enum obj_type objtype)
 {
     int res;
     bool clean = true;
-    obj_t *obj;
+    struct obj_st *obj;
 
     if(x < 0 || MAP_SX <= x || y < 0 || MAP_SY <= y)
         return;
@@ -92,13 +117,13 @@ void obj_new(int x, int y, obj_type_t objtype)
         return;
 
     world_ientity_t ient;
-    res = gamelib.ctx->world_find_first_free(&ient);
+    res = gamelib.geng->world_find_first_free(&ient);
     if(res)
     {
         return;
     }
 
-    obj = Z_malloc(sizeof(obj_t));
+    obj = Z_malloc(sizeof(struct obj_st));
     if(obj == NULL)
     {
         return;
@@ -106,7 +131,7 @@ void obj_new(int x, int y, obj_type_t objtype)
     obj->next = Hobj;
     Hobj = obj;
 
-    model_index_t model_index = -1;
+    enum model_index model_index = -1;
     switch(objtype)
     {
         case OBJ_MARIJUANA : model_index = MDL_MARIJUANA ; break;
@@ -120,9 +145,9 @@ void obj_new(int x, int y, obj_type_t objtype)
 
     origin_set(&obj->origin, x, y);
 
-    gamelib.ctx->world_ent_update_orig(ient, &obj->origin);
-    gamelib.ctx->world_ent_update_model(ient, imodel);
-    gamelib.ctx->world_ent_link(ient);
+    gamelib.geng->world_ent_update_orig(ient, &obj->origin);
+    gamelib.geng->world_ent_update_model(ient, imodel);
+    gamelib.geng->world_ent_link(ient);
 
     obj->type = objtype;
     switch(objtype)
@@ -139,12 +164,12 @@ void obj_new(int x, int y, obj_type_t objtype)
  */
 void obj_freeall(void)
 {
-    obj_t *obj;
+    struct obj_st *obj;
     while(Hobj != NULL)
     {
         obj    = Hobj;
         Hobj = Hobj->next;
-        gamelib.ctx->world_ent_unlink(obj->ient);
+        gamelib.geng->world_ent_unlink(obj->ient);
         Z_free(obj);
     }
 }
@@ -157,9 +182,9 @@ void obj_freeall(void)
  * @brief Erase object
  * param[in/out] obj    object
  */
-void obj_free(obj_t **obj)
+void obj_free(struct obj_st **obj)
 {
-    obj_t *P;
+    struct obj_st *P;
     if(Hobj == NULL || obj == NULL)
     {
         return;
@@ -168,7 +193,7 @@ void obj_free(obj_t **obj)
     if(Hobj == (*obj))
     {
         Hobj = Hobj->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        gamelib.geng->world_ent_unlink((*obj)->ient);
         Z_free((*obj));
         (*obj) = Hobj;
     }
@@ -180,7 +205,7 @@ void obj_free(obj_t **obj)
             P = P->next;
         }
         P->next = (*obj)->next;
-        gamelib.ctx->world_ent_unlink((*obj)->ient);
+        gamelib.geng->world_ent_unlink((*obj)->ient);
         Z_free((*obj));
         (*obj) = P;
     }
@@ -189,9 +214,9 @@ void obj_free(obj_t **obj)
 /**
  * @brief Enplace object on map in random place
  */
-void obj_put(obj_type_t id)
+void obj_put(enum obj_type objtype)
 {
-    snake_seg_t *snakeseg;
+    struct snake_seg * snakeseg;
     int x;
     int y;
     bool clean; /* the place is clean */
@@ -221,7 +246,7 @@ void obj_put(obj_type_t id)
         trycount++;
 
     }while(clean != true && trycount < 16);//чобы объект все-таки был создан
-    obj_new(x, y, id);
+    obj_new(x, y, objtype);
 }
 
 /**
@@ -229,7 +254,7 @@ void obj_put(obj_type_t id)
  */
 void obj_think(void)
 {
-    obj_t *obj;
+    struct obj_st *obj;
     int x;
     int y;
     int id;
@@ -273,7 +298,7 @@ void gamelib_HUD_draw(void)
 #undef TEXT_ART
 #define TEXT_ART (0x0F)
 
-    gamelib.ctx->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+    gamelib.geng->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
             , player_scores()
             , player_level()
             , player_weight()
@@ -281,7 +306,7 @@ void gamelib_HUD_draw(void)
 
     if(gamelib.showtiming > 0)
     {
-        gamelib.ctx->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
+        gamelib.geng->print(0, 24, TEXT_ART, "timing = %d", (int)gamelib.timing);
         --gamelib.showtiming;
     }
 }
@@ -291,34 +316,35 @@ void gamelib_HUD_draw(void)
  * выход:
  * *obj  -указатель на объект
  */
-int snake_obj_check(obj_t **obj){
-    (*obj)=Hobj;
-    while((*obj))
+static struct obj_st * P_snake_obj_check(void)
+{
+    struct obj_st * obj = Hobj;
+    while(obj)
     {
         switch(snake.movedir)
         {
             case DIRECTION_NORTH:
-                if(snake.head->origin.x     == (*obj)->origin.x && snake.head->origin.y - 1 == (*obj)->origin.y) return 1;
+                if(snake.head->origin.x     == obj->origin.x && snake.head->origin.y - 1 == obj->origin.y) return obj;
                 break;
             case DIRECTION_SOUTH:
-                if(snake.head->origin.x     == (*obj)->origin.x && snake.head->origin.y + 1 == (*obj)->origin.y) return 1;
+                if(snake.head->origin.x     == obj->origin.x && snake.head->origin.y + 1 == obj->origin.y) return obj;
                 break;
             case DIRECTION_WEST :
-                if(snake.head->origin.x - 1 == (*obj)->origin.x && snake.head->origin.y     == (*obj)->origin.y) return 1;
+                if(snake.head->origin.x - 1 == obj->origin.x && snake.head->origin.y     == obj->origin.y) return obj;
                 break;
             case DIRECTION_EAST :
-                if(snake.head->origin.x + 1 == (*obj)->origin.x && snake.head->origin.y     == (*obj)->origin.y) return 1;
+                if(snake.head->origin.x + 1 == obj->origin.x && snake.head->origin.y     == obj->origin.y) return obj;
                 break;
         }
-        (*obj)=(*obj)->next;
+        obj = obj->next;
     }
-    return 0;
+    return NULL;
 }
 
 /**
  * @brief Get the model of the snake segment
  */
-size_t snake_seg_model_get(const snake_seg_t *sseg)
+static size_t P_snake_seg_model_get(const struct snake_seg *sseg)
 {
     /* head */
     if(!sseg->prev) return gamelib.mdlidx[MDL_SNAKE_HEAD];
@@ -355,18 +381,18 @@ size_t snake_seg_model_get(const snake_seg_t *sseg)
     return -1;
 }
 
-void snake_seg_model_update(snake_seg_t *sseg)
+static void P_snake_seg_model_update(struct snake_seg *sseg)
 {
-    snake_seg_t *sseg_iter;
+    struct snake_seg *sseg_iter;
 
     int iskin = (snake.dead ? 1 : 0);
     /* update the model of the new segment and previous segment */
     int i;
     for(sseg_iter = sseg, i = 0; sseg_iter != NULL && i < 2; sseg_iter = sseg_iter->next, ++i)
     {
-        size_t imodel = snake_seg_model_get(sseg_iter);
-        gamelib.ctx->world_ent_update_model(sseg_iter->ient, imodel);
-        gamelib.ctx->world_ent_update_skin(sseg->ient, iskin);
+        size_t imodel = P_snake_seg_model_get(sseg_iter);
+        gamelib.geng->world_ent_update_model(sseg_iter->ient, imodel);
+        gamelib.geng->world_ent_update_skin(sseg->ient, iskin);
     }
 }
 
@@ -378,11 +404,11 @@ void snake_seg_model_update(snake_seg_t *sseg)
 static void P_snake_newseg(vec_t x, vec_t y)
 {
     int res;
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     world_ientity_t ient;
-    res = gamelib.ctx->world_find_first_free(&ient);
+    res = gamelib.geng->world_find_first_free(&ient);
     if(res) return;
-    sseg = Z_malloc(sizeof(snake_seg_t));
+    sseg = Z_malloc(sizeof(struct snake_seg));
 
     sseg->prev = NULL;
     sseg->next = snake.head;
@@ -392,10 +418,10 @@ static void P_snake_newseg(vec_t x, vec_t y)
     origin_set(&sseg->origin, x, y);
     sseg->ient = ient;
 
-    gamelib.ctx->world_ent_update_orig(ient, &sseg->origin);
-    gamelib.ctx->world_ent_link(ient);
+    gamelib.geng->world_ent_update_orig(ient, &sseg->origin);
+    gamelib.geng->world_ent_link(ient);
 
-    snake_seg_model_update(sseg);
+    P_snake_seg_model_update(sseg);
 
 
     ++snake.weight;
@@ -406,13 +432,16 @@ static void P_snake_newseg(vec_t x, vec_t y)
  * вход:
  * pat  -шаблон
  */
-void snake_init(const snake_pattern_t * pat)
+void snake_init(const struct snake_pattern * pat)
 {
     int x,y;
-    size_t count;
+    size_t index;
     char flag;
 
     snake.head = NULL;
+
+    ringbuf_init(&snake.commands_queue, SNAKE_COMMAND_QUEUE_MAX);
+
     snake.movedir = pat->dir;
 
     ents_game_timing_update(snake.movedir);
@@ -422,13 +451,18 @@ void snake_init(const snake_pattern_t * pat)
     snake.weight = 0;
     snake.scores = 0;
 
+#define OFFSET(pattern, x, y) \
+        ((y) * (pat)->sx + (x))
+
     x=0;
     y=0;
     flag=0;
-    //ищем хвост змеи
+    /* Find the snake tail */
+    index = 1;
+
     while(y<pat->sy && !flag){
         while(x<pat->sx && !flag){
-            if(pat->pat[y * pat->sx + x] == 1)
+            if(pat->pat[OFFSET(pat, x, y)] == index)
                 flag=1;
             else
                 x++;
@@ -436,37 +470,24 @@ void snake_init(const snake_pattern_t * pat)
         if(!flag) y++;
     }
 
-    count=1;
-    flag=0;
+    int edge_left = (MAP_SX - pat->sx) / 2;
+    int edge_up   = (MAP_SY - pat->sy) / 2;
+
     /* build the snake */
-    P_snake_newseg((MAP_SX - pat->sx) / 2 + x, (MAP_SY - pat->sy) / 2 + y);
-    while(count < (MAP_SX * MAP_SY) && !flag)
+    index++;
+    P_snake_newseg(edge_left + x, edge_up + y);
+    while(index < (MAP_SX * MAP_SY))
     {
-        if(y-1 >= 0       && pat->pat[(y-1)*pat->sx+x] == count + 1)
-        {
-            ++count;
-            --y;
-            P_snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
-        }
+        if     (y - 1 >= 0       && pat->pat[OFFSET(pat, x    , y - 1)] == index) y--;
+        else if(y + 1 <  pat->sy && pat->pat[OFFSET(pat, x    , y + 1)] == index) y++;
+        else if(x - 1 >= 0       && pat->pat[OFFSET(pat, x - 1, y    )] == index) x--;
+        else if(x + 1 <  pat->sx && pat->pat[OFFSET(pat, x + 1, y    )] == index) x++;
         else
-            if(y+1<pat->sy && pat->pat[(y+1)*pat->sx+x]==count+1){
-                ++count;
-                ++y;
-                P_snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
-            }
-            else
-                if(x-1>=0       && pat->pat[y*pat->sx+(x-1)]  ==count+1){
-                    ++count;
-                    --x;
-                    P_snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
-                }
-                else
-                    if(x+1<pat->sx && pat->pat[y*pat->sx+(x+1)]  ==count+1){
-                        ++count;
-                        ++x;
-                        P_snake_newseg((MAP_SX-pat->sx)/2+x,(MAP_SY-pat->sy)/2+y);
-                    }
-                    else flag = 1;
+        {
+            break;
+        }
+        index++;
+        P_snake_newseg(edge_left + x, edge_up + y);
     }
 }
 
@@ -475,12 +496,12 @@ void snake_init(const snake_pattern_t * pat)
  */
 void snake_done(void)
 {
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     while(snake.head)
     {
         sseg       = snake.head;
         snake.head = snake.head->next;
-        gamelib.ctx->world_ent_unlink(sseg->ient);
+        gamelib.geng->world_ent_unlink(sseg->ient);
         Z_free(sseg);
     }
 }
@@ -491,19 +512,19 @@ void snake_done(void)
 void snake_get_purgen(void)
 {
     int num = 2;
-    snake_seg_t *sseg;
+    struct snake_seg *sseg;
     sseg=snake.head;
     while(sseg->next) sseg = sseg->next;
     while(num > 0 && sseg->prev)
     {
         obj_new(sseg->origin.x, sseg->origin.y, OBJ_SHIT);
         sseg = sseg->prev;
-        gamelib.ctx->world_ent_unlink(sseg->next->ient);
+        gamelib.geng->world_ent_unlink(sseg->next->ient);
         Z_free(sseg->next);
         sseg->next = NULL;
-        snake_seg_model_update(sseg);
-        --snake.weight;
-        --num;
+        P_snake_seg_model_update(sseg);
+        snake.weight--;
+        num--;
     }
 }
 
@@ -522,9 +543,38 @@ void snake_get_shit()
  */
 void snake_think(void)
 {
-    snake_seg_t *sseg;
-    snake_seg_t *pt;
-    obj_t *obj;
+    struct snake_seg *sseg;
+    struct snake_seg *pt;
+    struct obj_st *obj;
+
+    if(!ringbuf_check_empty(&snake.commands_queue))
+    {
+        size_t head = ringbuf_head_get(&snake.commands_queue);
+        enum direction direction = snake.commands[head];
+        ringbuf_dequeue_head(&snake.commands_queue);
+
+        if(snake.head != NULL)
+        {
+            struct snake_seg *neck = snake.head->next;
+            switch(direction)
+            {
+                case DIRECTION_NORTH: /* fallthrough */
+                case DIRECTION_SOUTH: /* fallthrough */
+                    if(neck == NULL || neck->origin.x!=snake.head->origin.x)
+                    {
+                        snake.movedir = direction;
+                    }
+                    break;
+                case DIRECTION_WEST: /* fallthrough */
+                case DIRECTION_EAST: /* fallthrough */
+                    if(neck == NULL || neck->origin.y!=snake.head->origin.y)
+                    {
+                        snake.movedir = direction;
+                    }
+                    break;
+            }
+        }
+    }
 
     snake.level = snake.scores / SCORES_PER_LEVEL;
 
@@ -533,20 +583,21 @@ void snake_think(void)
         snake.level = LEVEL_MAX - 1;
     }
 
-    if(snake_obj_check(&obj))
+    obj = P_snake_obj_check();
+    if(obj != NULL)
     {
         /* objects eating */
         switch(obj->type)
         {
             case OBJ_MARIJUANA:
-                ++snake.scores;
+                snake.scores++;
                 P_snake_newseg(obj->origin.x, obj->origin.y);
                 obj_put(OBJ_MARIJUANA);
                 if(rand()%3==1) obj_put(OBJ_PURGEN);
                 break;
             case OBJ_MARIJUANAP:
                 /* growed up */
-                ++snake.scores;
+                snake.scores++;
                 P_snake_newseg(obj->origin.x, obj->origin.y);
                 break;
             case OBJ_PURGEN:
@@ -570,22 +621,22 @@ void snake_think(void)
         /* moving */
         if(snake.head->next == NULL)
         {
-            snake_seg_t * sseg = snake.head;
+            struct snake_seg * sseg = snake.head;
 
             switch(snake.movedir)
             {
-                case DIRECTION_NORTH: --sseg->origin.y;break;
-                case DIRECTION_SOUTH: ++sseg->origin.y;break;
-                case DIRECTION_WEST : --sseg->origin.x;break;
-                case DIRECTION_EAST : ++sseg->origin.x;break;
+                case DIRECTION_NORTH: sseg->origin.y--;break;
+                case DIRECTION_SOUTH: sseg->origin.y++;break;
+                case DIRECTION_WEST : sseg->origin.x--;break;
+                case DIRECTION_EAST : sseg->origin.x++;break;
             }
-            gamelib.ctx->world_ent_update_orig(sseg->ient, &sseg->origin);
+            gamelib.geng->world_ent_update_orig(sseg->ient, &sseg->origin);
         }
         else
         {
             /* more than one segment */
-            snake_seg_t * head;
-            snake_seg_t * tail;
+            struct snake_seg * head;
+            struct snake_seg * tail;
             tail = snake.head;
             while(tail->next != NULL)
             {
@@ -608,9 +659,9 @@ void snake_think(void)
                 case DIRECTION_WEST : head->origin.x = sseg->origin.x-1; head->origin.y = sseg->origin.y  ; break;
                 case DIRECTION_EAST : head->origin.x = sseg->origin.x+1; head->origin.y = sseg->origin.y  ; break;
             }
-            snake_seg_model_update(head);
-            snake_seg_model_update(tail);
-            gamelib.ctx->world_ent_update_orig(head->ient, &head->origin);
+            P_snake_seg_model_update(head);
+            P_snake_seg_model_update(tail);
+            gamelib.geng->world_ent_update_orig(head->ient, &head->origin);
         }
     }
     /* self-cross check */
@@ -641,13 +692,11 @@ void snake_die(void)
 {
     snake.dead = true;
 
-    snake_seg_t * sseg;
+    struct snake_seg * sseg;
     for(sseg = snake.head; sseg; sseg = sseg->next)
     {
-        snake_seg_model_update(sseg);
+        P_snake_seg_model_update(sseg);
     }
-
-
 }
 
 bool snake_is_dead(void)
@@ -660,30 +709,18 @@ bool snake_is_dead(void)
  * @param[in] player    змея
  * @param[in] movedir   направление
  */
-void player_setdir(ent_direction_t movedir)
+void player_setdir(enum direction movedir)
 {
-    snake_seg_t *neck;//шея змеи :)
-    if(snake.head == NULL)
+    if(ringbuf_check_full(&snake.commands_queue))
     {
         return;
     }
-    neck = snake.head->next;
-    switch(movedir)
-    {
-        case DIRECTION_NORTH:
-        case DIRECTION_SOUTH:
-            if(!neck || neck->origin.x!=snake.head->origin.x)
-                snake.movedir = movedir;
-            break;
-        case DIRECTION_WEST:
-        case DIRECTION_EAST:
-            if(!neck || neck->origin.y!=snake.head->origin.y)
-                snake.movedir = movedir;
-            break;
-    }
+    size_t tail = ringbuf_tail_get(&snake.commands_queue);
+    snake.commands[tail] = movedir;
+    ringbuf_enqueue_tail(&snake.commands_queue);
 }
 
-ent_direction_t player_direction(void)
+enum direction player_direction(void)
 {
     return snake.movedir;
 }
