@@ -54,6 +54,8 @@ typedef struct
     long showtiming;
     /* ms */
     game_time_ms_t timing;
+    unsigned idle_cycles_num;
+    unsigned idle_cycle;
 } gamelib_t;
 
 extern gamelib_t gamelib;

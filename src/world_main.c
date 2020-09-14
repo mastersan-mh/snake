@@ -60,9 +60,6 @@ void world_done(void)
     Z_free(entities);
 }
 
-/**
- * @brief Destroy the entities of the world
- */
 void world_destroy(void)
 {
     size_t i;
@@ -73,12 +70,6 @@ void world_destroy(void)
     }
 }
 
-/**
- * @brief Get index of the first free entity
- * @param[out] ient     Index of free entity
- * @return 0            OK
- * @return < 0          No free entities
- */
 int world_find_first_free(world_ientity_t * ient)
 {
     size_t i;
@@ -94,9 +85,6 @@ int world_find_first_free(world_ientity_t * ient)
     return -1;
 }
 
-/**
- * @brief unlink the entity from world
- */
 int world_ent_unlink(world_ientity_t ient)
 {
     PROTECT_IENT(ient, -1);
@@ -105,9 +93,6 @@ int world_ent_unlink(world_ientity_t ient)
     return 0;
 }
 
-/**
- * @brief link or relink entity to world
- */
 int world_ent_link(world_ientity_t ient)
 {
     PROTECT_IENT(ient, -1);
@@ -119,9 +104,6 @@ int world_ent_link(world_ientity_t ient)
     return 0;
 }
 
-/**
- * @brief Update the entity (linked or unlinked) origin
- */
 int world_ent_update_orig(world_ientity_t ient, const origin_t * origin)
 {
     PROTECT_IENT(ient, -1);
@@ -139,9 +121,6 @@ int world_ent_update_orig(world_ientity_t ient, const origin_t * origin)
     return 0;
 }
 
-/**
- * @brief Update the entity (linked or unlinked) model
- */
 int world_ent_update_model(world_ientity_t ient, size_t imodel)
 {
     PROTECT_IENT(ient, -1);

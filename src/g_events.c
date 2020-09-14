@@ -25,6 +25,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 #include <stdatomic.h>
+#include <signal.h>
 
 /* #define USE_TICK_LATE */
 
@@ -62,17 +63,6 @@ static int fd_n;
 static fd_set readfds;
 
 static clockid_t clock_id;
-
-#if 1
-#   define DEBUG_PRINT(format, ...)
-#   define DEBUG_PRINT_XY(x, y, format, ...)
-#else
-#   define DEBUG_PRINT(format, ...) __func__;
-#   define DEBUG_PRINT_XY(x, y, format, ...) debug_print(x, y, format, ##__VA_ARGS__)
-#endif
-
-
-#include <signal.h>
 
 struct sigaction act;
 
@@ -115,9 +105,6 @@ int g_events_init(void)
         return -1;
     }
 
-    DEBUG_PRINT("clock_id = %d\n", (int)clock_id );
-    DEBUG_PRINT("ts_resolution = " PRI_ts_x(12, 9) "\n", FMT_ts(ts_resolution) );
-
     fd_n = 1;
     FD_ZERO(&readfds);
     FD_SET(0, &readfds);
@@ -155,7 +142,6 @@ static void P_check_sig_raised(void)
     }
 
 }
-
 
 void g_events_handle(void)
 {
@@ -272,11 +258,6 @@ void g_events_pump(void)
     );
     timeout = ts_timeout;
 
-    /*
-    DEBUG_PRINT("ts_now = " PRI_ts_x(12, 9) "\n", FMP_ts(ts_now) );
-    DEBUG_PRINT("timeout = " PRI_ts_x(12, 9) "\n", FMP_ts(timeout) );
-    */
-
     res = pselect(fd_n, rfdsp, NULL, NULL, &timeout, NULL);
 
     clock_gettime(clock_id, &ts_now);
@@ -293,32 +274,24 @@ void g_events_pump(void)
         {
             tick = true;
             ++tick_on_ERROR_n;
-            DEBUG_PRINT("TICK ON ERROR\n");
         }
     }
     else if(res == 0)
     {
         /* timeout */
         tick = true;
-
-        DEBUG_PRINT("TICK ON TIMEOUT");
         ++tick_on_timeout_n;
-
     }
     else
     {
-
-
         if(FD_ISSET(0, rfdsp))
         {
-/*
+#if 0
             int key = 0;
             read(0, &key, 1);
-            DEBUG_PRINT("key = %d\n", key);
- */
-
+#else
             int key = io_getch();
-
+#endif
             data.KEYBOARD.key = key;
             g_event_send(G_SYSEVENT_KEYBOARD, &data);
         }
@@ -328,9 +301,7 @@ void g_events_pump(void)
         {
             tick = true;
             ++tick_on_read_n;
-            DEBUG_PRINT("TICK ON READ\n");
         }
-
 
     }
 
@@ -353,21 +324,6 @@ void g_events_pump(void)
         tick_n++;
 
     }
-
-
-    DEBUG_PRINT_XY(1, 1, "tick_n            = %d" , (long)tick_n);
-    DEBUG_PRINT_XY(1, 2, "tick_on_timeout_n = %ld", (long)tick_on_timeout_n);
-    DEBUG_PRINT_XY(1, 3, "tick_on_read_n    = %ld", (long)tick_on_read_n);
-
-    DEBUG_PRINT_XY(1, 5, "events_tick_time    = %ld" , (long)events_tick_time);
-    DEBUG_PRINT_XY(1, 6, "tv_events_tick_time = " G_PRI_ts(), G_FMT_ts(&ts_events_ticktime));
-    DEBUG_PRINT_XY(1, 7, "timeout             = " G_PRI_ts(), G_FMT_ts(&timeout));
-
-    DEBUG_PRINT_XY(1, 9, "ts_tick_next        = " G_PRI_ts(), G_FMT_ts(&ts_tick_next));
-#ifdef USE_TICK_LATE
-    DEBUG_PRINT_XY(1, 11, "TICK: tick_late_count = %ld", (long)tick_late_count);
-    DEBUG_PRINT_XY(1, 12, "TICK: ts_tick_late    = " G_PRI_ts(), G_FMT_ts(&ts_tick_late));
-#endif
 
 }
 

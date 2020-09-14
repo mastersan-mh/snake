@@ -70,10 +70,6 @@ typedef struct
 
 static render_t ren = {};
 
-
-/**
- * @brief Init the render
- */
 int render_init(void)
 {
     /* TODO: ifdef color */
@@ -142,9 +138,6 @@ int render_init(void)
     return 0;
 }
 
-/**
- * @brief Done the render
- */
 void render_done(void)
 {
 #ifdef RENDER_USE_STDSCR
@@ -167,9 +160,6 @@ void render_end(void)
     wrefresh(ren.mainwindow);
 }
 
-/**
- * @brief Action on window [size] changing
- */
 void render_winch(void)
 {
     struct winsize w;
@@ -264,9 +254,6 @@ static void P_atr_set(uint8_t atr)
     wattron(ren.mainwindow, P_calculate_atr(atr));
 };
 
-/**
- * @brief Clear a render buffers
- */
 void render_clearbuf(void)
 {
     size_t i;
@@ -286,9 +273,6 @@ void render_clearbuf(void)
     ren.text_list_num = 0;
 }
 
-/**
- * @brief Render
- */
 void render(void)
 {
     size_t i;
@@ -319,20 +303,7 @@ void render(void)
         P_atr_set(rt->bg_atr);
         R_PRINT(rt->x, rt->y, "%s", rt->text);
     }
-
-    /*
-    {
-        int i;
-        for(i = 0; i <= 8*8; ++i)
-        {
-            attron(COLOR_PAIR(i));
-//            attron(A_NORMAL);
-            r_print((i / 8) * 4, i % 8, "%2dt", i);
-        }
-    }
-     */
 }
-
 
 void render_background(int atr, uint64_t ch)
 {
@@ -341,10 +312,6 @@ void render_background(int atr, uint64_t ch)
     ren.bg_ch = ch;
 }
 
-
-/**
- * @brief Add a model to a render list
- */
 void render_add_model(
         const origin_t * origin,
         const model_t * model,
@@ -376,9 +343,6 @@ void render_add_model(
 
 }
 
-/**
- * @brief Add a text to a text render list
- */
 void render_add_text(int x, int y, int atr, const char * text)
 {
     if(ren.text_list_num >= RENDER_TEXT_LIST_SIZE)
@@ -398,9 +362,6 @@ void render_add_text(int x, int y, int atr, const char * text)
     ++ren.text_list_num;
 }
 
-/**
- * @brief Add a formatted text to a render
- */
 void render_add_textf(int x, int y, int atr, const char * format, ...)
 {
 #undef BUFSIZE

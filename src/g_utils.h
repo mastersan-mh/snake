@@ -10,7 +10,14 @@
 
 #include <stdio.h>
 
-#define ERROR(format, ...) printf(format, ##__VA_ARGS__)
+#define ERROR(format, ...) fprintf(stderr, format, ##__VA_ARGS__)
+#if 1
+#   define DEBUG_PRINT(format, ...)
+#   define DEBUG_PRINT_XY(x, y, format, ...)
+#else
+#   define DEBUG_PRINT(format, ...) __func__;
+#   define DEBUG_PRINT_XY(x, y, format, ...) debug_print(x, y, format, ##__VA_ARGS__)
+#endif
 
 int game_directories_init(const char * homedir);
 void game_directories_done(void);

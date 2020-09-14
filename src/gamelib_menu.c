@@ -182,7 +182,6 @@ static void menu_chart_draw(void * ctx_)
 #undef TEXT_ATR
 #define TEXT_ATR (0x8F)
     menu_print((80-16)/2, 23, TEXT_ATR, "PRESS ANY KEY...");
-    menu_print((80-16)/2, 24, 0x0F, "PRESS ANY KEY1...");
 }
 
 /**

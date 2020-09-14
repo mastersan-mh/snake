@@ -14,7 +14,8 @@
 #include "gamelib_payer_death.h"
 #include "gamelib_common.h"
 
-#define ENTS_GAME_DEFAULT_TIMING 300
+#define ENTS_GAME_DEFAULT_TIMING  40
+#define ILDE_CYCLES               (8 - 1)
 
 gamelib_t gamelib = {};
 
@@ -87,7 +88,7 @@ static void game_handle_event_tick(void)
         case GSTATE_REQUEST_STOP:
 #undef TEXT_ATR
 #define TEXT_ATR (0x0F)
-            gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШ[Y/N]?");
+            gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШЬ[Y/N]?");
             break;
         case GSTATE_ENDGAME:
         {
@@ -99,11 +100,21 @@ static void game_handle_event_tick(void)
             {
                 break;
             }
-            obj_think();
-            snake_think();
-            if(snake_is_dead())
+
+            if(gamelib.idle_cycle < gamelib.idle_cycles_num)
             {
-                gamelib.state = GSTATE_STOP_LOSE;
+                gamelib.idle_cycle++;
+            }
+            else
+            {
+                obj_think();
+                snake_think();
+                if(snake_is_dead())
+                {
+                    gamelib.state = GSTATE_STOP_LOSE;
+                }
+
+                gamelib.idle_cycle = 0;
             }
 
             break;
@@ -274,6 +285,9 @@ static int gamelib_init(const struct game_engine * geng)
     geng->model_precache("L" /* 200 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_DOWN]);
     geng->model_precache("J" /* 188 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_DOWN]);
 
+    gamelib.idle_cycles_num = ILDE_CYCLES;
+    gamelib.idle_cycle = 0;
+
     return 0;
 }
 
@@ -301,7 +315,6 @@ int gamelib_game_create(void)
 
     gamelib.paused = false;
     gamelib.intermission = false;
-    gamelib.timing = 300;
     gamelib.showtiming = 0;
 
     return 0;
