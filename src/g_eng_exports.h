@@ -25,6 +25,8 @@
  */
 struct game_engine
 {
+    /* envinronment */
+    const char * homedir; /**< User home directory */
     /* engine */
     void (*ticktime_set)(game_time_ms_t ticktime);
     /* game */

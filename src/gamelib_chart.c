@@ -5,9 +5,9 @@
  *      Author: mastersan
  */
 
-#include "g_utils.h"
-
 #include "gamelib_chart.h"
+
+#include "gamelib_ctrl.h"
 
 #define CHART_RMAX 10
 
@@ -33,7 +33,7 @@ void chart_load(void)
     chart.num = 0;
 
 
-    if((F = fopen(game_file_scores_get(), "rb")) == NULL)
+    if((F = fopen(gamelib.filename_scores, "rb")) == NULL)
     {
         return;
     }
@@ -62,7 +62,7 @@ void chart_save(void)
         return;
     }
 
-    if((F = fopen(game_file_scores_get(), "wb")) == NULL)
+    if((F = fopen(gamelib.filename_scores, "wb")) == NULL)
     {
         return;
     }

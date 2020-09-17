@@ -5,8 +5,6 @@
  *      Author: mastersan
  */
 
-#include "g_defs.h"
-
 #include "sys_utils.h"
 
 #include "Z_mem.h"
@@ -17,12 +15,14 @@
 
 char * app_path_build(
         const char * path1,
-        const char * path2
+        size_t path1_maxlen,
+        const char * path2,
+        size_t path2_maxlen
 )
 {
     char * path;
-    size_t path1_len = strnlen(path1, GAME_FILENAME_LEN);
-    size_t path2_len = strnlen(path2, GAME_FILENAME_LEN);
+    size_t path1_len = strnlen(path1, path1_maxlen);
+    size_t path2_len = strnlen(path2, path2_maxlen);
     path = Z_malloc(path1_len + path2_len + 1);
     if(path == NULL)
     {
@@ -33,22 +33,24 @@ char * app_path_build(
     return path;
 }
 
-void app_directory_check(const char * path)
+int app_directory_check(const char * path)
 {
+    int res;
     DIR * dir = opendir(path);
-    if(dir == NULL)
+    if(dir != NULL)
     {
-        mkdir(path, 0755);
+        closedir(dir);
+        res = 0;
     }
     else
     {
-        closedir(dir);
+        res = mkdir(path, 0755);
     }
+    return res;
 }
 
 /**
- * @brief Check the key is valid letterbool str_key_is_character(int key)
- *
+ * @brief Check the key is valid letter
  */
 bool str_key_is_character(int key)
 {

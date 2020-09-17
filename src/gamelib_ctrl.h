@@ -42,6 +42,9 @@ enum gamelib_state
 struct gamelib
 {
     const struct game_engine * geng;
+    char * dirname_home;
+    char * dirname_conf;
+    char * filename_scores;
     size_t mdlidx[MDL__NUM];
     bool started;
     enum gamelib_state state;
