@@ -224,8 +224,8 @@ void obj_put(enum obj_type objtype)
 
     do{
 
-        x = rand()%MAP_SX;
-        y = rand()%MAP_SY;
+        x = gamelib.geng->rand() % MAP_SX;
+        y = gamelib.geng->rand() % MAP_SY;
 
         origin_t origin;
         origin_set(&origin, x, y);
@@ -593,7 +593,7 @@ void snake_think(void)
                 snake.scores++;
                 P_snake_newseg(obj->origin.x, obj->origin.y);
                 obj_put(OBJ_MARIJUANA);
-                if(rand()%3==1) obj_put(OBJ_PURGEN);
+                if(gamelib.geng->rand() % 3 == 1) obj_put(OBJ_PURGEN);
                 break;
             case OBJ_MARIJUANAP:
                 /* growed up */

@@ -40,7 +40,7 @@ void gamelib_handle_event_tick(void)
     enum g_event_type type;
     struct g_event_data data;
 
-    while(gamelib.geng->key_pump(&type, &data))
+    while(gamelib.geng->event_pump(&type, &data))
     {
         switch(type)
         {

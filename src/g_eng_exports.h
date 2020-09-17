@@ -25,8 +25,17 @@
  */
 struct game_engine
 {
+    /* envinronment */
+    const char * homedir; /**< User home directory */
+    /* engine */
+    void (*ticktime_set)(game_time_ms_t ticktime);
     /* game */
     void (*game_quit)(void);
+    bool (*event_pump)(
+            enum g_event_type * type,
+            struct g_event_data * data
+    );
+    uint16_t (*rand)(void);
 
     /* render */
     void (*render_background)(int atr, uint64_t ch);
@@ -44,15 +53,9 @@ struct game_engine
     /* models */
     int (*model_precache)(const char * s, size_t * imodel);
 
-    /* stop the game cycle */
-    void (*ticktime_set)(game_time_ms_t ticktime);
     void (*print)(int x, int y, int atr, const char * format, ...);
     void (*print_centerscreen)(size_t text_width, int atr, const char * format, ...);
     void (*putch)(int x, int y, int atr, char ch);
-    bool (*key_pump)(
-            enum g_event_type * type,
-            struct g_event_data * data
-    );
 
 };
 

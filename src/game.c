@@ -44,9 +44,6 @@ int game_init(void)
         ERROR("Environment variable HOME is NULL");
         return -1;
     }
-    game_directories_init(home_dir);
-
-    srand(time(NULL));
 
     res = models_init();
     if(res)
@@ -55,8 +52,11 @@ int game_init(void)
     }
 
     g_events_init();
-    res = g_eng_init();
-    if(res) return res;
+    res = g_eng_init(home_dir);
+    if(res)
+    {
+        return res;
+    }
 
     size_t max_entities = g_eng_entities_max_get();
     res = world_init(max_entities);
@@ -88,7 +88,6 @@ void game_done(void)
     g_eng_done();
     g_events_done();
     models_done();
-    game_directories_done();
 }
 
 bool game_is_quit(void)

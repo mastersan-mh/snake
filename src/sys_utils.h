@@ -10,16 +10,23 @@
 
 #include "g_types.h"
 
+#include <stdlib.h>
+
 #ifndef ARRAY_SIZE
 #   define ARRAY_SIZE(arr) (sizeof(arr) / sizeof((arr)[0]))
 #endif
 
 char * app_path_build(
         const char * path1,
-        const char * path2
+        size_t path1_maxlen,
+        const char * path2,
+        size_t path2_maxlen
 );
 
-void app_directory_check(const char * path);
+/**
+ * @brief Check the directory. If not exist - create it
+ */
+int app_directory_check(const char * path);
 
 bool str_key_is_character(int key);
 

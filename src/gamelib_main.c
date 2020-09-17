@@ -14,9 +14,56 @@
 
 struct gamelib gamelib = {};
 
+#define GAME_DIR_REL_HOME "/.mh-snake"
+#define GAME_DIR_REL_CONF GAME_DIR_REL_HOME
+
+#define GAME_FILE_REL_SCORES  GAME_DIR_REL_HOME "/snake.frg"
+
+int game_directories_init(void)
+{
+    int res;
+    size_t len = strlen(gamelib.geng->homedir);
+    gamelib.dirname_home  = app_path_build(gamelib.geng->homedir, len, GAME_DIR_REL_HOME, strlen(GAME_DIR_REL_HOME));
+    if(gamelib.dirname_home == NULL)
+    {
+        return -1;
+    }
+    gamelib.dirname_conf  = app_path_build(gamelib.geng->homedir, len, GAME_DIR_REL_CONF, strlen(GAME_DIR_REL_CONF));
+    if(gamelib.dirname_conf == NULL)
+    {
+        return -1;
+    }
+    gamelib.filename_scores = app_path_build(gamelib.geng->homedir, len, GAME_FILE_REL_SCORES, strlen(GAME_FILE_REL_SCORES));
+    if(gamelib.filename_scores == NULL)
+    {
+        return -1;
+    }
+
+    res = app_directory_check(gamelib.dirname_home);
+    if(res) return res;
+    res = app_directory_check(gamelib.dirname_conf);
+    if(res) return res;
+
+    return 0;
+}
+
+static void P_directories_done(void)
+{
+    Z_free(gamelib.dirname_home);
+    Z_free(gamelib.dirname_conf);
+    Z_free(gamelib.filename_scores);
+}
+
 static int gamelib_init(const struct game_engine * geng)
 {
+    int res;
+
     gamelib.geng = geng;
+
+   res = game_directories_init();
+   if(res) return res;
+
+    gamelib.started = false;
     gamelib.state = GSTATE_NONE;
 
     menu_show_menu(IMENU_MAIN);
@@ -48,6 +95,7 @@ static int gamelib_init(const struct game_engine * geng)
 static void gamelib_done(void)
 {
     chart_save();
+    P_directories_done();
 }
 
 static void gamelib_tick(void)
