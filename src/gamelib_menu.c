@@ -37,6 +37,26 @@ struct menu
 static const char sys_progversion[] = "SNAKE ver 1.55 (modif: 03.05.2007 ,create(v0.1b): 25.03.2004)";
 static const char sys_special    [] = "Здесь никогда не будет вашей рекламы";
 
+static const char rotator[] = "|/-\\";
+#define ROTATOR_FRAMES  (sizeof(rotator) - 1)
+
+int rotator_frame_next(int frame)
+{
+    if(frame >= ROTATOR_FRAMES - 1)
+    {
+        return 0;
+    }
+    return frame + 1;
+}
+
+int rotator_frame_prev(int frame)
+{
+    if(frame <= 0)
+    {
+        return ROTATOR_FRAMES - 1;
+    }
+    return frame - 1;
+}
 
 static void P_menu_dec(int menu_amount, int * imenu)
 {
@@ -65,6 +85,9 @@ static void P_menu_inc(int menu_amount, int * imenu)
 static struct menu_main_ctx
 {
     int sub;
+    int frame_l;
+    int frame_r;
+    int waiter;
 } menu_main_ctx = {};
 
 static enum imenu menu_main_on_event(int key, void * ctx_)
@@ -135,8 +158,22 @@ static void menu_main_draw(void * ctx_)
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x05)
-    menu_print((80 - 10) / 2 - 2 , 12 + ctx->sub, TEXT_ATR, "->");
-    menu_print((80 - 10) / 2 + 10, 12 + ctx->sub, TEXT_ATR, "<-");
+    char left = rotator[ctx->frame_l];
+    char right = rotator[ctx->frame_r];
+
+    if(ctx->waiter >= 5)
+    {
+        ctx->waiter = 0;
+        ctx->frame_l = rotator_frame_next(ctx->frame_l);
+        ctx->frame_r = rotator_frame_prev(ctx->frame_r);
+    }
+    else
+    {
+        ctx->waiter++;
+    }
+
+    menu_print((80 - 10) / 2 - 3 , 12 + ctx->sub, TEXT_ATR, "%c->", left);
+    menu_print((80 - 10) / 2 + 10, 12 + ctx->sub, TEXT_ATR, "<-%c", right);
 
 }
 
