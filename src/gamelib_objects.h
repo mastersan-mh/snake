@@ -20,8 +20,8 @@ enum direction
 {
     DIRECTION_NORTH,
     DIRECTION_SOUTH,
-    DIRECTION_WEST,
-    DIRECTION_EAST
+    DIRECTION_WEST ,
+    DIRECTION_EAST ,
 };
 
 enum obj_type
@@ -55,7 +55,7 @@ struct obj_st
  */
 struct snake_pattern
 {
-    char dir;
+    char dir_format;
     int  sx,sy;
     int  *pat;
 };
@@ -71,7 +71,7 @@ void obj_free(struct obj_st **obj);
 void obj_put(enum obj_type objtype);
 void obj_think(void);
 
-void snake_init(const struct snake_pattern * pat);
+int snake_init(const struct snake_pattern * pat);
 void snake_done(void);
 void snake_think(void);
 void snake_die(void);

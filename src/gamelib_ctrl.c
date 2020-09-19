@@ -249,6 +249,7 @@ static void gamelib_game_input(int key)
 
 int gamelib_game_create(int stage)
 {
+    int res;
     if(stage < 0 || 2 < stage)
     {
         return -1;
@@ -257,7 +258,11 @@ int gamelib_game_create(int stage)
     gamelib.timing = ENTS_GAME_DEFAULT_TIMING;
     gamelib.geng->ticktime_set(gamelib.timing);
 
-    snake_init(&info_snake[stage]);
+    res = snake_init(&info_snake[stage]);
+    if(res)
+    {
+        return res;
+    }
 
     obj_put(OBJ_MARIJUANA);
     gamelib.state = GSTATE_RUN;

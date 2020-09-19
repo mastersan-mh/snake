@@ -72,20 +72,54 @@ static int pt1[7 * 23] =
         19,20,21,22,23,24, 0, 0, 0, 0,47,48,49,50,51,52,53, 0,103,  0, 0,88,87  /*  ******    ******* *  **  */
 };
 
-static int pt2[5 * 20] =
+#define TAIL_FLAG  (0x10 << 0)
+#define HEAD_FLAG  (0x10 << 1)
+#define DIR_MASK   (0x0f)
+#define Z  0
+#define U  DIRECTION_NORTH
+#define D  DIRECTION_SOUTH
+#define L  DIRECTION_WEST
+#define R  DIRECTION_EAST
+
+/* tail */
+#define TU  (DIRECTION_NORTH | TAIL_FLAG)
+#define TD  (DIRECTION_SOUTH | TAIL_FLAG)
+#define TL  (DIRECTION_WEST  | TAIL_FLAG)
+#define TR  (DIRECTION_EAST  | TAIL_FLAG)
+
+/* head */
+#define HU  (DIRECTION_NORTH | HEAD_FLAG)
+#define HD  (DIRECTION_SOUTH | HEAD_FLAG)
+#define HL  (DIRECTION_WEST  | HEAD_FLAG)
+#define HR  (DIRECTION_EAST  | HEAD_FLAG)
+
+static int pt2[] = /* SNAKE */
 {
-         1, 2, 3, 4, 5, 6, 7, 8, 9,10,11,12,13,14,15,16,17,18,19, 20,
-        40,39,38,37,36,35,34,33,32,31,30,29,28,27,26,25,24,23,22, 21,
-        41,42,43,44,45,46,47,48,49,50,51,52,53,54,55,56,57,58,59, 60,
-        80,79,78,77,76,75,74,73,72,71,70,69,68,67,66,65,64,63,62, 61,
-        81,82,83,84,85,86,87,88,89,90,91,92,93,94,95,96,97,98,99,100
+     /* 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 */
+        D,L,L,TL,0,R,D,0,0,0,R,R,R,R,D,R,R,R,R,R,R,D,0,0,R,R,R,D,0,R,R,R,R,HR,  /* **** **   ************  **** ***** */
+        D,0,0, 0,0,U,D,0,0,0,U,0,0,0,D,U,L,L,0,0,0,D,0,R,U,D,L,L,0,U,0,0,0, 0,  /* *    **   *   *****  * ***** *     */
+        R,R,R, D,0,U,R,D,0,0,U,0,0,D,L,0,0,U,L,0,0,D,0,U,D,L,0,0,0,U,L,L,L, L,  /* **** ***  *  **  **  * ***   ***** */
+        0,0,0, D,0,U,0,R,D,0,U,0,0,D,R,R,R,D,U,L,0,D,R,U,D,0,0,0,0,R,R,R,R, U,  /*    * * ** *  ******* ****    ***** */
+        0,0,0, D,0,U,0,0,D,0,U,0,D,L,U,0,0,R,D,U,0,D,U,0,R,R,D,0,0,U,0,0,0, 0,  /*    * *  * * ***  *** ** ***  *     */
+        D,L,L, L,0,U,0,0,R,D,U,0,D,R,U,0,0,0,D,U,0,D,U,0,0,0,R,D,0,U,L,L,L, L,  /* **** *  *** ***   ** **   ** ***** */
+        R,R,R, R,R,U,0,0,0,R,U,0,R,U,0,0,0,0,R,U,0,R,U,0,0,0,0,R,R,R,R,R,R, U,  /* ******   ** **    ** **    ******* */
 };
+
+/*
+
+**** *  *  **  *  * ****
+*    *  * *  * * *  *
+**** ** * *  * **   ****
+   * * ** **** * *  *
+**** *  * *  * *  * ****
+
+*/
 
 struct snake_pattern info_snake[] =
 {
         {DIRECTION_EAST , 3 , 1, pt0},
         {DIRECTION_SOUTH, 23, 7, pt1},
-        {DIRECTION_SOUTH, 20, 5, pt2}
+        {-1             , 34, 7, pt2}
 };
 
 static struct obj_st *Hobj = NULL;
@@ -427,36 +461,26 @@ static void P_snake_newseg(vec_t x, vec_t y)
     ++snake.weight;
 }
 
+#define OFFSET(pattern, x, y) \
+        ((y) * (pat)->sx + (x))
+
 /**
  * @brief инициализация змеи(создать змею по шаблону)
  * вход:
  * pat  -шаблон
  */
-void snake_init(const struct snake_pattern * pat)
+static void P_snake_init_pattern_v1(const struct snake_pattern * pat)
 {
-    int x,y;
+    int x;
+    int y;
     size_t index;
     char flag;
 
-    snake.head = NULL;
+    snake.movedir = pat->dir_format;
 
-    ringbuf_init(&snake.commands_queue, SNAKE_COMMAND_QUEUE_MAX);
-
-    snake.movedir = pat->dir;
-
-    ents_game_timing_update(snake.movedir);
-
-    snake.level = 0;
-    snake.dead = 0;
-    snake.weight = 0;
-    snake.scores = 0;
-
-#define OFFSET(pattern, x, y) \
-        ((y) * (pat)->sx + (x))
-
-    x=0;
-    y=0;
-    flag=0;
+    x = 0;
+    y = 0;
+    flag = 0;
     /* Find the snake tail */
     index = 1;
 
@@ -489,6 +513,99 @@ void snake_init(const struct snake_pattern * pat)
         index++;
         P_snake_newseg(edge_left + x, edge_up + y);
     }
+}
+
+static int P_snake_init_pattern_v2(const struct snake_pattern * pat)
+{
+    int x;
+    int y;
+    bool flag;
+
+    x = 0;
+    y = 0;
+    flag = false;
+    /* Find the snake tail */
+
+    while(y < pat->sy && !flag)
+    {
+        while(x < pat->sx && !flag)
+        {
+            int cell = pat->pat[OFFSET(pat, x, y)];
+            if((cell & TAIL_FLAG) == TAIL_FLAG)
+            {
+                flag = true;
+            }
+            else
+            {
+                x++;
+            }
+        }
+        if(!flag)
+        {
+            y++;
+        }
+    }
+
+    if(!flag)
+    {
+        return -1;
+    }
+
+    int edge_left = (MAP_SX - pat->sx) / 2;
+    int edge_up   = (MAP_SY - pat->sy) / 2;
+
+    /* build the snake */
+    P_snake_newseg(edge_left + x, edge_up + y);
+    while(1)
+    {
+        int cell = pat->pat[OFFSET(pat, x, y)];
+        enum direction dir = cell & DIR_MASK;
+        switch(dir)
+        {
+            case DIRECTION_NORTH: y--; break;
+            case DIRECTION_SOUTH: y++; break;
+            case DIRECTION_WEST : x--; break;
+            case DIRECTION_EAST : x++; break;
+        }
+
+        P_snake_newseg(edge_left + x, edge_up + y);
+
+        if((cell & HEAD_FLAG) == HEAD_FLAG)
+        {
+            snake.movedir = dir;
+            return 0;
+        }
+    }
+
+    return -1;
+}
+
+int snake_init(const struct snake_pattern * pat)
+{
+    int res;
+
+    ringbuf_init(&snake.commands_queue, SNAKE_COMMAND_QUEUE_MAX);
+
+    snake.head = NULL;
+    snake.level = 0;
+    snake.dead = 0;
+    snake.weight = 0;
+    snake.scores = 0;
+
+    if(pat->dir_format >= 0)
+    {
+        P_snake_init_pattern_v1(pat);
+        res = 0;
+    }
+    else
+    {
+        res = P_snake_init_pattern_v2(pat);
+    }
+    if(res == 0)
+    {
+        ents_game_timing_update(snake.movedir);
+    }
+    return res;
 }
 
 /**
