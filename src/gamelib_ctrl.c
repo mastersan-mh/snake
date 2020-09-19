@@ -192,6 +192,7 @@ static void gamelib_game_input(int key)
                     case '=':
                     case '+':
                     {
+                        if(gamelib.paused) break;
                         if(gamelib.timing < 1000)
                         {
                             gamelib.timing += 10;
@@ -203,6 +204,7 @@ static void gamelib_game_input(int key)
                     case '-':
                     case '_':
                     {
+                        if(gamelib.paused) break;
                         if(gamelib.timing > 10)
                         {
                             gamelib.timing -= 10;
@@ -213,30 +215,35 @@ static void gamelib_game_input(int key)
                     }
                     case IO_KB_UP:
                     {
+                        if(gamelib.paused) break;
                         player_setdir(DIRECTION_NORTH);
                         ents_game_timing_update(DIRECTION_NORTH);
                         break;
                     }
                     case IO_KB_DN:
                     {
+                        if(gamelib.paused) break;
                         player_setdir(DIRECTION_SOUTH);
                         ents_game_timing_update(DIRECTION_SOUTH);
                         break;
                     }
                     case IO_KB_LF:
                     {
+                        if(gamelib.paused) break;
                         player_setdir(DIRECTION_WEST);
                         ents_game_timing_update(DIRECTION_WEST);
                         break;
                     }
                     case IO_KB_RT:
                     {
+                        if(gamelib.paused) break;
                         player_setdir(DIRECTION_EAST);
                         ents_game_timing_update(DIRECTION_EAST);
                         break;
                     }
                     case IO_KB_ESC:
                     {
+                        if(gamelib.paused) break;
                         gamelib.state = GSTATE_REQUEST_STOP;
                         break;
                     }
