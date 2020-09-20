@@ -330,9 +330,9 @@ void obj_think(void)
 void gamelib_HUD_draw(void)
 {
 #undef TEXT_ART
-#define TEXT_ART (0x0F)
+#define TEXT_ART (0x3F)
 
-    gamelib.geng->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s ВАШ ВЕС: %6d "
+    gamelib.geng->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s МАССА: %6d              "
             , player_scores()
             , player_level()
             , player_weight()

@@ -96,14 +96,22 @@ static enum imenu menu_main_on_event(int key, void * ctx_)
 
     switch(key)
     {
+        case IO_KB_ESC:
+        {
+            if(gamelib.state != GSTATE_NONE)
+            {
+                menu_hide_menu();
+            }
+            break;
+        }
         case IO_KB_UP:
         {
-            P_menu_dec(6, &ctx->sub);
+            P_menu_dec(IMENU_MAINMENU__MAX, &ctx->sub);
             break;
         }
         case IO_KB_DN:
         {
-            P_menu_inc(6, &ctx->sub);
+            P_menu_inc(IMENU_MAINMENU__MAX, &ctx->sub);
             break;
         }
         case IO_KB_ENTER:
@@ -113,9 +121,18 @@ static enum imenu menu_main_on_event(int key, void * ctx_)
                 case 0: return IMENU_NEWGAME0;
                 case 1: return IMENU_NEWGAME1;
                 case 2: return IMENU_NEWGAME2;
-                case 3: return IMENU_CHART;
-                case 4: return IMENU_HELP;
-                case 5: return IMENU_QUIT;
+                case 3:
+                {
+                    if(gamelib.state != GSTATE_NONE)
+                    {
+                        gamelib.state = GSTATE_STOP_WIN;
+                        menu_hide_menu();
+                    }
+                    break;
+                }
+                case 4: return IMENU_CHART;
+                case 5: return IMENU_HELP;
+                case 6: return IMENU_QUIT;
             }
             break;
         }
@@ -128,33 +145,45 @@ static void menu_main_draw(void * ctx_)
 {
     struct menu_main_ctx * ctx = ctx_;
 
+#define MENU_LINE_WIDTH  16
+
+    if(gamelib.state == GSTATE_NONE)
+    {
+        gamelib.geng->render_background(0x00, ' ');
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
-    menu_print(29, 1, TEXT_ATR, "**** **  ** ***********");
-    menu_print(29, 2, TEXT_ATR, "   * ** *** *     **  *");
-    menu_print(29, 3, TEXT_ATR, "**** **** * ***** *****");
-    menu_print(29, 4, TEXT_ATR, "***  * ** * ***** ** **");
-    menu_print(29, 5, TEXT_ATR, "  ** *    * *      * **");
-    menu_print(29, 6, TEXT_ATR, "**** *    * ***** ** **");
-    menu_print(29, 7, TEXT_ATR, "******    ******* *  **");
+        menu_print(29, 1, TEXT_ATR, "**** **  ** ***********");
+        menu_print(29, 2, TEXT_ATR, "   * ** *** *     **  *");
+        menu_print(29, 3, TEXT_ATR, "**** **** * ***** *****");
+        menu_print(29, 4, TEXT_ATR, "***  * ** * ***** ** **");
+        menu_print(29, 5, TEXT_ATR, "  ** *    * *      * **");
+        menu_print(29, 6, TEXT_ATR, "**** *    * ***** ** **");
+        menu_print(29, 7, TEXT_ATR, "******    ******* *  **");
 
-    menu_print(40-(SYS_SPECIAL_LEN / 2), 9, TEXT_ATR, sys_special);
+        menu_print(40-(SYS_SPECIAL_LEN / 2), 9, TEXT_ATR, sys_special);
 
-    menu_print(1, 24,  TEXT_ATR, sys_progversion);
-
-#undef TEXT_ATR
-#define TEXT_ATR (0x5F)
-    menu_print((80-10)/2, 12, TEXT_ATR, " НОВАЯ 1  ");
-    menu_print((80-10)/2, 13, TEXT_ATR, " НОВАЯ 2  ");
-    menu_print((80-10)/2, 14, TEXT_ATR, " НОВАЯ 3  ");
-    menu_print((80-10)/2, 15, TEXT_ATR, "ПОБЕДИТЕЛИ");
-    menu_print((80-10)/2, 16, TEXT_ATR, "  ПОМОЩЬ  ");
-    menu_print((80-10)/2, 17, TEXT_ATR, "  ВЫХОД   ");
+        menu_print(1, 24,  TEXT_ATR, sys_progversion);
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x0F)
-    menu_print( 7, 22, TEXT_ATR, "Mad House Software");
-    menu_print(10, 23, TEXT_ATR, "Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+        menu_print( 7, 22, TEXT_ATR, "Mad House Software");
+        menu_print(10, 23, TEXT_ATR, "Programming: Ремнёв Александр a.k.a. MasterSan[MH]");
+
+    }
+
+#undef TEXT_ATR
+#define TEXT_ATR (0x5F)
+    menu_print((80 - MENU_LINE_WIDTH)/2, 12, TEXT_ATR, "    НОВАЯ 1     ");
+    menu_print((80 - MENU_LINE_WIDTH)/2, 13, TEXT_ATR, "    НОВАЯ 2     ");
+    menu_print((80 - MENU_LINE_WIDTH)/2, 14, TEXT_ATR, "    НОВАЯ 3     ");
+    if(gamelib.state != GSTATE_NONE)
+    {
+    menu_print((80 - MENU_LINE_WIDTH)/2, 15, TEXT_ATR, " ЗАВЕРШИТЬ ИГРУ ");
+    }
+    menu_print((80 - MENU_LINE_WIDTH)/2, 16, TEXT_ATR, "   ПОБЕДИТЕЛИ   ");
+    menu_print((80 - MENU_LINE_WIDTH)/2, 17, TEXT_ATR, "     ПОМОЩЬ     ");
+    menu_print((80 - MENU_LINE_WIDTH)/2, 18, TEXT_ATR, "     ВЫХОД      ");
+
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x05)
@@ -172,8 +201,8 @@ static void menu_main_draw(void * ctx_)
         ctx->waiter++;
     }
 
-    menu_print((80 - 10) / 2 - 3 , 12 + ctx->sub, TEXT_ATR, "%c->", left);
-    menu_print((80 - 10) / 2 + 10, 12 + ctx->sub, TEXT_ATR, "<-%c", right);
+    menu_print((80 - MENU_LINE_WIDTH) / 2 - 3 , 12 + ctx->sub, TEXT_ATR, "%c->", left);
+    menu_print((80 - MENU_LINE_WIDTH) / 2 + MENU_LINE_WIDTH, 12 + ctx->sub, TEXT_ATR, "<-%c", right);
 
 }
 
@@ -216,9 +245,16 @@ static void menu_chart_draw(void * ctx_)
     size_t row;
     int lev;
 
+    if(gamelib.state == GSTATE_NONE)
+    {
+        gamelib.geng->render_background(0x00, ' ');
+    }
+
+#define CHART_LEFT  10
+
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
-    menu_print(20, 7, TEXT_ATR, "МЕСТО ИМЯ             ФРАГИ  ВЕС    СТАТУС");
+    menu_print(CHART_LEFT, 7, TEXT_ATR, "##  ИМЯ              СЪЕЛ    МАССА   ЗВАНИЕ              ");
 
     size_t len = chart_len();
 
@@ -230,7 +266,7 @@ static void menu_chart_draw(void * ctx_)
         {
             lev = LEVEL_MAX - 1;
         }
-        menu_print(20, 7 + row, TEXT_ATR, "%-5d %-15s %-6d %-6d %-20s"
+        menu_print(CHART_LEFT, 7 + row, TEXT_ATR, "%2d  %-15s  %06d  %06d  %-20s"
                 , (int)row
                 , rec->name
                 , (int)rec->scores
@@ -258,19 +294,23 @@ static enum imenu menu_help_event_on_event(int key, void * ctx_)
 
 static void menu_help_draw(void * ctx_)
 {
+    if(gamelib.state == GSTATE_NONE)
+    {
+        gamelib.geng->render_background(0x00, ' ');
+    }
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
-    menu_print((80-13)/2 , 5, TEXT_ATR, "ТИПА ЭТО ХЕЛП");
+    menu_print((80 - 4)/2 , 5, TEXT_ATR, "HELP");
     menu_print(20, 7+ 0, TEXT_ATR, "Управление:");
     menu_print(20, 7+ 1, TEXT_ATR, "Стрелки - Указание направления движения");
     menu_print(20, 7+ 2, TEXT_ATR, "+,-     - Управление скоростью игры");
     menu_print(20, 7+ 3, TEXT_ATR, "P       - Пауза");
     menu_print(20, 7+ 4, TEXT_ATR, "ESC     - Выход в меню");
     menu_print(20, 7+ 6, TEXT_ATR, "Предметы:");
-    menu_print(20, 7+ 7, TEXT_ATR, "\5 - конопля");
-    menu_print(20, 7+ 8, TEXT_ATR, "\6 - выросшая конопля");
-    menu_print(20, 7+ 9, TEXT_ATR, "\13 - пурген");
+    menu_print(20, 7+ 7, TEXT_ATR, "m - конопля");
+    menu_print(20, 7+ 8, TEXT_ATR, "M - выросшая конопля");
+    menu_print(20, 7+ 9, TEXT_ATR, "P - пурген");
     menu_print(20, 7+10, TEXT_ATR, "@ - дерьмо");
 
 #undef TEXT_ATR
@@ -287,13 +327,14 @@ static void menu_quit_on_enter(void * ctx_)
 
 static const struct menu menus[] =
 {
-        { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx },/* IMENU_MAIN     */
-        { menu_newgame0_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME0 */
-        { menu_newgame1_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME1 */
-        { menu_newgame2_on_enter, NULL, NULL, NULL, NULL },/* IMENU_NEWGAME2 */
-        { NULL, NULL, menu_chart_event_on_event, menu_chart_draw, NULL },/* IMENU_CHART    */
-        { NULL, NULL, menu_help_event_on_event , menu_help_draw, NULL },/* IMENU_HELP     */
-        { menu_quit_on_enter    , NULL, NULL, NULL, NULL },/* IMENU_QUIT     */
+        { NULL, NULL, menu_main_on_event, menu_main_draw , &menu_main_ctx }, /* IMENU_MAIN     */
+        { menu_newgame0_on_enter, NULL, NULL, NULL, NULL }, /* IMENU_NEWGAME0 */
+        { menu_newgame1_on_enter, NULL, NULL, NULL, NULL }, /* IMENU_NEWGAME1 */
+        { menu_newgame2_on_enter, NULL, NULL, NULL, NULL }, /* IMENU_NEWGAME2 */
+        { NULL, NULL, NULL, NULL, NULL }, /* IMENU_STOPGAME */
+        { NULL, NULL, menu_chart_event_on_event, menu_chart_draw, NULL }, /* IMENU_CHART    */
+        { NULL, NULL, menu_help_event_on_event , menu_help_draw, NULL }, /* IMENU_HELP     */
+        { menu_quit_on_enter    , NULL, NULL, NULL, NULL }, /* IMENU_QUIT     */
 };
 
 static enum imenu m_imenu_prev = IMENU_MAIN;
@@ -340,9 +381,6 @@ void menu_handle_input(int key)
 
 void menu_draw(void)
 {
-
-    gamelib.geng->render_background(0x00, ' ');
-
     const struct menu * menu = &menus[m_imenu];
 
     if(menu->draw != NULL)
@@ -356,4 +394,9 @@ void menu_show_menu(enum imenu imenu)
 {
     P_menu_change(imenu);
     gamelib.showmenu = true;
+}
+
+void menu_hide_menu(void)
+{
+    gamelib.showmenu = false;
 }

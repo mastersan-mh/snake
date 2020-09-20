@@ -115,7 +115,7 @@ void gamelib_intermision_draw(void)
 #undef TEXT_ATR
 #define TEXT_ATR (0x0f)
 
-    gamelib.geng->print(32,  3, TEXT_ATR, "Tы типа сдох :-(");
+    gamelib.geng->print(32,  3, TEXT_ATR, "Tы проиграл!");
 #undef TEXT_ATR
 #define TEXT_ATR (0x2f)
     gamelib.geng->print(30,  5, TEXT_ATR, "  ****************  ");

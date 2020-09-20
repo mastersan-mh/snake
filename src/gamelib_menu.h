@@ -14,9 +14,11 @@ enum imenu
     IMENU_NEWGAME0,
     IMENU_NEWGAME1,
     IMENU_NEWGAME2,
+    IMENU_STOPGAME,
     IMENU_CHART   ,
     IMENU_HELP    ,
     IMENU_QUIT    ,
+#define IMENU_MAINMENU__MAX  (7)
 };
 
 void menu_handle_input(int key);
@@ -24,6 +26,7 @@ void menu_handle_input(int key);
 void menu_draw(void);
 
 void menu_show_menu(enum imenu imenu);
+void menu_hide_menu(void);
 
 
 #endif /* SRC_GAMELIB_MENU_H_ */

@@ -52,82 +52,76 @@ void gamelib_handle_event_tick(void)
         }
     }
 
+    switch(gamelib.state)
+    {
+        case GSTATE_NONE:
+            break;
+        case GSTATE_STOP_WIN:
+        {
+            gamelib_HUD_draw();
+            gamelib.state = GSTATE_ENDGAME;
+            menu_death_on_enter();
+            gamelib.intermission = true;
+            break;
+        }
+        case GSTATE_STOP_LOSE:
+        {
+            gamelib_HUD_draw();
+            gamelib.state = GSTATE_ENDGAME;
+            menu_death_on_enter();
+            gamelib.intermission = true;
+            break;
+        }
+        case GSTATE_ENDGAME:
+        {
+            gamelib_HUD_draw();
+            /* show your scores an enter your name */
+            break;
+        }
+        case GSTATE_RUN:
+        {
+            gamelib_HUD_draw();
+
+            if(gamelib.showmenu || gamelib.paused)
+            {
+                break;
+            }
+
+            if(gamelib.idle_cycle < gamelib.idle_cycles_num)
+            {
+                gamelib.idle_cycle++;
+            }
+            else
+            {
+                obj_think();
+                snake_think();
+                if(snake_is_dead())
+                {
+                    gamelib.state = GSTATE_STOP_LOSE;
+                }
+
+                gamelib.idle_cycle = 0;
+            }
+
+            break;
+        }
+    }
+
+    if(gamelib.intermission)
+    {
+        gamelib_intermision_draw();
+    }
+
+    if(gamelib.paused)
+    {
+#undef TEXT_ATR
+#define TEXT_ATR (0x8F)
+        gamelib.geng->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
+    }
+
     if(gamelib.showmenu)
     {
         menu_draw();
-    }
-    else
-    {
-        switch(gamelib.state)
-        {
-            case GSTATE_NONE:
-                break;
-            case GSTATE_STOP_WIN:
-            {
-                gamelib.state = GSTATE_ENDGAME;
-                menu_death_on_enter();
-                gamelib.intermission = true;
-                break;
-            }
-            case GSTATE_STOP_LOSE:
-            {
-                gamelib.state = GSTATE_ENDGAME;
-                menu_death_on_enter();
-                gamelib.intermission = true;
-                break;
-            }
-            case GSTATE_REQUEST_STOP:
-            {
-#undef TEXT_ATR
-#define TEXT_ATR (0x0F)
-                gamelib.geng->print_centerscreen(16, TEXT_ATR, "УЖЕ УХОДИШЬ[Y/N]?");
-                break;
-            }
-            case GSTATE_ENDGAME:
-            {
-                /* show your scores an enter your name */
-                break;
-            }
-            case GSTATE_RUN:
-            {
-                if(gamelib.paused)
-                {
-                    break;
-                }
-
-                if(gamelib.idle_cycle < gamelib.idle_cycles_num)
-                {
-                    gamelib.idle_cycle++;
-                }
-                else
-                {
-                    obj_think();
-                    snake_think();
-                    if(snake_is_dead())
-                    {
-                        gamelib.state = GSTATE_STOP_LOSE;
-                    }
-
-                    gamelib.idle_cycle = 0;
-                }
-
-                break;
-            }
-        }
-
-        gamelib_HUD_draw();
-
-        if(gamelib.paused)
-        {
-#undef TEXT_ATR
-#define TEXT_ATR (0x8F)
-            gamelib.geng->print_centerscreen(17, TEXT_ATR, "-= P A U S E D =-");
-        }
-
-        if(gamelib.intermission)
-        {
-            gamelib_intermision_draw();
-        }
     }
 
 }
@@ -148,26 +142,6 @@ static void gamelib_game_input(int key)
                 break;
             case GSTATE_STOP_LOSE:
                 break;
-            case GSTATE_REQUEST_STOP:
-            {
-                switch(key)
-                {
-                    case 'Y':
-                    case 'y':
-                    {
-                        gamelib.state = GSTATE_STOP_WIN;
-                        break;
-                    }
-                    case IO_KB_ESC:
-                    case 'N':
-                    case 'n':
-                    {
-                        gamelib.state = GSTATE_RUN;
-                        break;
-                    }
-                }
-                break;
-            }
             case GSTATE_ENDGAME:
             {
                 bool exit = menu_death_on_event(key);
@@ -176,6 +150,7 @@ static void gamelib_game_input(int key)
                     gamelib_game_destroy();
                     menu_show_menu(IMENU_MAIN);
                     gamelib.state = GSTATE_NONE;
+                    gamelib.intermission = false;
                 }
                 break;
             }
@@ -244,7 +219,7 @@ static void gamelib_game_input(int key)
                     case IO_KB_ESC:
                     {
                         if(gamelib.paused) break;
-                        gamelib.state = GSTATE_REQUEST_STOP;
+                        menu_show_menu(IMENU_MAIN);
                         break;
                     }
                 }
@@ -274,7 +249,7 @@ int gamelib_game_create(int stage)
     obj_put(OBJ_MARIJUANA);
     gamelib.state = GSTATE_RUN;
 
-    gamelib.showmenu = false;
+    menu_hide_menu();
 
     gamelib.paused = false;
     gamelib.intermission = false;

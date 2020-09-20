@@ -34,7 +34,6 @@ enum gamelib_state
     GSTATE_NONE,
     GSTATE_STOP_WIN,
     GSTATE_STOP_LOSE,
-    GSTATE_REQUEST_STOP,
     GSTATE_ENDGAME,
     GSTATE_RUN,
 };
