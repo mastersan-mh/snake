@@ -254,7 +254,7 @@ static void menu_chart_draw(void * ctx_)
 
 #undef TEXT_ATR
 #define TEXT_ATR (0x09)
-    menu_print(CHART_LEFT, 7, TEXT_ATR, "##  ИМЯ              СЪЕЛ    МАССА   ЗВАНИЕ              ");
+    menu_print(CHART_LEFT, 7, TEXT_ATR, "##  ИМЯ              ОЧКИ    МАССА   ЗВАНИЕ              ");
 
     size_t len = chart_len();
 

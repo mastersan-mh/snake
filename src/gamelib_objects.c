@@ -8,6 +8,8 @@
 #include "gamelib_objects.h"
 #include "gamelib_ctrl.h"
 
+#include "gamelib_common.h"
+
 #include "Z_mem.h"
 
 #include <stdlib.h>
@@ -39,9 +41,11 @@ struct snake
     /* movement direction */
     enum direction movedir;
     int       level;   //уровень развитости
+    int       level_prev;
     bool      dead;     //умерла?
     long      weight;  //вес змеи
     long      scores;  //очки
+    long      speed;   /* Speed of the snake */
 };
 
 char *level_str[LEVEL_MAX] =
@@ -332,10 +336,12 @@ void gamelib_HUD_draw(void)
 #undef TEXT_ART
 #define TEXT_ART (0x3F)
 
-    gamelib.geng->print( 0, 0, TEXT_ART, " СОЖРАЛ КОНОПЛИ: %6d СТАТУС: %-20s МАССА: %6d              "
+//  gamelib.geng->print( 0, 0, TEXT_ART, " ОЧКИ: %6d ЗВАНИЕ: %-20s МАССА: %6d                        "
+    gamelib.geng->print( 0, 0, TEXT_ART, " ОЧКИ: %6d ЗВАНИЕ: %-20s МАССА: %6d СКОРОСТЬ: %6ld       "
             , player_scores()
             , player_level()
             , player_weight()
+            , player_speed()
     );
 
     if(gamelib.showtiming > 0)
@@ -588,9 +594,11 @@ int snake_init(const struct snake_pattern * pat)
 
     snake.head = NULL;
     snake.level = 0;
+    snake.level_prev = snake.level;
     snake.dead = 0;
     snake.weight = 0;
     snake.scores = 0;
+    snake.speed = SNAKE_SPEED_DEFAULT;
 
     if(pat->dir_format >= 0)
     {
@@ -695,6 +703,13 @@ void snake_think(void)
 
     snake.level = snake.scores / SCORES_PER_LEVEL;
 
+    if(snake.level_prev != snake.level)
+    {
+        snake.speed += SNAKE_SPEED_STEP * (snake.level - snake.level_prev);
+    }
+
+    snake.level_prev = snake.level;
+
     if(snake.level >= LEVEL_MAX)
     {
         snake.level = LEVEL_MAX - 1;
@@ -707,20 +722,25 @@ void snake_think(void)
         switch(obj->type)
         {
             case OBJ_MARIJUANA:
-                snake.scores++;
+                snake.scores += 1;
                 P_snake_newseg(obj->origin.x, obj->origin.y);
                 obj_put(OBJ_MARIJUANA);
-                if(gamelib.geng->rand() % 3 == 1) obj_put(OBJ_PURGEN);
+                if(gamelib.geng->rand() % 3 == 1)
+                {
+                    obj_put(OBJ_PURGEN);
+                }
                 break;
             case OBJ_MARIJUANAP:
                 /* growed up */
-                snake.scores++;
+                snake.scores += 4;
                 P_snake_newseg(obj->origin.x, obj->origin.y);
                 break;
             case OBJ_PURGEN:
+                snake.scores += 2;
                 snake_get_purgen();
                 break;
             case OBJ_SHIT:
+                snake.speed += SNAKE_SPEED_STEP;
                 snake_get_shit();
                 break;
         }
@@ -845,6 +865,11 @@ enum direction player_direction(void)
 int player_scores(void)
 {
     return snake.scores;
+}
+
+long player_speed(void)
+{
+    return snake.speed;
 }
 
 const char * player_level(void)
