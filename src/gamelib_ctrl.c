@@ -35,6 +35,17 @@ void ents_game_timing_update(enum direction direction)
     }
 }
 
+double map(
+        double x,
+        double in_min,
+        double in_max,
+        double out_min,
+        double out_max
+)
+{
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
+}
+
 void gamelib_handle_event_tick(void)
 {
     enum g_event_type type;
@@ -87,7 +98,13 @@ void gamelib_handle_event_tick(void)
                 break;
             }
 
-            if(gamelib.idle_cycle < gamelib.idle_cycles_num)
+            /* gamelib.idle_cycles_num */
+            long idle_cycles_num = map(
+                    player_speed(),
+                    SNAKE_SPEED_DEFAULT, SNAKE_SPEED_MAX,
+                    ILDE_CYCLES, 0
+            );
+            if(gamelib.idle_cycle < idle_cycles_num)
             {
                 gamelib.idle_cycle++;
             }

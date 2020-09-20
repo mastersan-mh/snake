@@ -10,11 +10,10 @@
 
 #include "g_eng_exports.h"
 
+#include "gamelib_common.h"
+
 #define MAP_SX 80
 #define MAP_SY 24
-
-#define SCORES_PER_LEVEL 100
-#define LEVEL_MAX 11
 
 enum direction
 {
@@ -83,6 +82,7 @@ enum direction player_direction(void);
 void gamelib_HUD_draw(void);
 
 int player_scores(void);
+long player_speed(void);
 const char * player_level(void);
 int player_weight(void);
 

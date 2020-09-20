@@ -86,7 +86,6 @@ static int gamelib_init(const struct game_engine * geng)
     geng->model_precache("L" /* 200 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_LEFT_DOWN]);
     geng->model_precache("J" /* 188 */, &gamelib.mdlidx[MDL_SNAKE_BODY_CORNER_RIGHT_DOWN]);
 
-    gamelib.idle_cycles_num = ILDE_CYCLES;
     gamelib.idle_cycle = 0;
 
     return 0;
