@@ -132,8 +132,7 @@ void gamelib_intermision_draw(void)
     gamelib.geng->print(30, 16, TEXT_ATR, "*                  *");
     gamelib.geng->print(30, 17, TEXT_ATR, " **              ** ");
     gamelib.geng->print(30, 18, TEXT_ATR, "   **************   ");
-    gamelib.geng->print(26, 20, TEXT_ATR, "ОЧКИ: ");
-    gamelib.geng->print(26+20, 20, TEXT_ATR, "%d", (int)player_scores());
+    gamelib.geng->print(30, 20, TEXT_ATR, "ОЧКИ: %d", player_scores());
 
     if(!ctx->top10)
     {
